@@ -70,6 +70,8 @@ const nextAuthInstance = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "text" },
+        image: { label: "Image", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -78,6 +80,8 @@ const nextAuthInstance = NextAuth({
 
         const email = credentials.email as string;
         const password = credentials.password as string;
+        const oauthName = credentials.name as string | undefined;
+        const oauthImage = credentials.image as string | undefined;
 
         const isOffline = await isDatabaseOffline();
 
@@ -90,10 +94,17 @@ const nextAuthInstance = NextAuth({
                 dbUser = await prisma.user.create({
                   data: {
                     email,
-                    name: email.split("@")[0].toUpperCase(),
+                    name: oauthName || email.split("@")[0].toUpperCase(),
+                    image: oauthImage || null,
                     role: "REGISTERED",
                     username: email.split("@")[0],
                   }
+                });
+              } else if (oauthImage && !dbUser.image) {
+                // Keep image updated if not set
+                dbUser = await prisma.user.update({
+                  where: { email },
+                  data: { image: oauthImage }
                 });
               }
               return {
@@ -112,7 +123,7 @@ const nextAuthInstance = NextAuth({
           let fUser = findUserByEmail(email);
           if (!fUser) {
             fUser = createUser({
-              name: email.split("@")[0].toUpperCase(),
+              name: oauthName || email.split("@")[0].toUpperCase(),
               email,
               role: "REGISTERED",
             });
@@ -121,7 +132,7 @@ const nextAuthInstance = NextAuth({
             id: fUser.id,
             email: fUser.email,
             name: fUser.name,
-            image: null,
+            image: oauthImage || null,
           };
         }
 

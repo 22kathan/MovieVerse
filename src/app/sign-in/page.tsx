@@ -103,43 +103,43 @@ function SignInForm() {
   const handleOAuthSignIn = async (provider: string) => {
     setError("");
 
-    if (isStaticDeployment()) {
-      if (provider === "google") {
-        setLoading(true);
-        const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        if (!googleClientId) {
-          setError("Google Client ID is not configured. Please define NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment.");
-          setLoading(false);
-          return;
+    if (provider === "google") {
+      setLoading(true);
+      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!googleClientId) {
+        setError("Google Client ID is not configured. Please define NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (!(window as any).google?.accounts?.oauth2) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://accounts.google.com/gsi/client";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Failed to load Google Sign-In library."));
+            document.body.appendChild(script);
+          });
         }
 
-        try {
-          if (!(window as any).google?.accounts?.oauth2) {
-            await new Promise<void>((resolve, reject) => {
-              const script = document.createElement("script");
-              script.src = "https://accounts.google.com/gsi/client";
-              script.async = true;
-              script.defer = true;
-              script.onload = () => resolve();
-              script.onerror = () => reject(new Error("Failed to load Google Sign-In library."));
-              document.body.appendChild(script);
-            });
-          }
-
-          const client = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: googleClientId,
-            scope: "openid email profile",
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse && tokenResponse.access_token) {
-                try {
-                  const userInfoRes = await fetch(
-                    `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`
-                  );
-                  if (!userInfoRes.ok) {
-                    throw new Error("Failed to fetch user info from Google");
-                  }
-                  const userInfo = await userInfoRes.json();
-                  
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "openid email profile",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                const userInfoRes = await fetch(
+                  `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`
+                );
+                if (!userInfoRes.ok) {
+                  throw new Error("Failed to fetch user info from Google");
+                }
+                const userInfo = await userInfoRes.json();
+                
+                if (isStaticDeployment()) {
                   const mockUser = {
                     user: {
                       id: userInfo.sub || `google_${Math.random().toString(36).substr(2, 9)}`,
@@ -156,29 +156,48 @@ function SignInForm() {
                   localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
                   router.push(callbackUrl);
                   router.refresh();
-                } catch (fetchErr: any) {
-                  setError("Google Login failed to retrieve user info: " + fetchErr.message);
-                  setLoading(false);
+                } else {
+                  // Live deployment: Log in via NextAuth using credentials provider with bypass password
+                  const result = await signIn("credentials", {
+                    email: userInfo.email,
+                    password: "simulated_oauth_secret_bypass",
+                    name: userInfo.name || "",
+                    image: userInfo.picture || "",
+                    redirect: false,
+                  });
+
+                  if (result?.error) {
+                    setError("Google login succeeded, but database session creation failed: " + result.error);
+                    setLoading(false);
+                  } else {
+                    router.push(callbackUrl);
+                    router.refresh();
+                  }
                 }
-              } else {
-                setError("Google Login authorization failed.");
+              } catch (fetchErr: any) {
+                setError("Google Login failed to retrieve user info: " + fetchErr.message);
                 setLoading(false);
               }
-            },
-            error_callback: (err: any) => {
-              setError("Google Sign-In Error: " + (err.message || "Unknown error"));
+            } else {
+              setError("Google Login authorization failed.");
               setLoading(false);
             }
-          });
+          },
+          error_callback: (err: any) => {
+            setError("Google Sign-In Error: " + (err.message || "Unknown error"));
+            setLoading(false);
+          }
+        });
 
-          client.requestAccessToken();
-        } catch (err: any) {
-          setError("Failed to initialize Google Sign-In: " + err.message);
-          setLoading(false);
-        }
-        return;
+        client.requestAccessToken();
+      } catch (err: any) {
+        setError("Failed to initialize Google Sign-In: " + err.message);
+        setLoading(false);
       }
+      return;
+    }
 
+    if (isStaticDeployment()) {
       setLoading(true);
       const mockUser = {
         user: {
@@ -197,14 +216,6 @@ function SignInForm() {
         router.refresh();
       }, 800);
       return;
-    }
-
-    if (provider === "google") {
-      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      if (!googleClientId) {
-        setError("Google Client ID is not configured in your .env file. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable live Google sign-in.");
-        return;
-      }
     }
 
     setLoading(true);
