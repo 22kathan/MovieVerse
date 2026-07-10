@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Browse and filter through thousands of TV shows by genre, score, and release date.",
 };
 
+export const dynamic = "force-static";
+
 export default async function TVExplorePage({ searchParams }: TVPageProps) {
   const resolvedParams = await searchParams;
   const genre = resolvedParams.genre || "";

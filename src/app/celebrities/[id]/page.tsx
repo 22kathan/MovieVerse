@@ -9,6 +9,12 @@ interface CelebrityPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateStaticParams() {
+  return ["101", "102", "104", "105", "106", "201", "202"].map((id) => ({ id }));
+}
+
+export const dynamicParams = false;
+
 export async function generateMetadata({ params }: CelebrityPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const personId = parseInt(resolvedParams.id);

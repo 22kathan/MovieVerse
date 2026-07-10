@@ -12,6 +12,12 @@ interface ProfilePageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateStaticParams() {
+  return ["admin-default-id", "1"].map((id) => ({ id }));
+}
+
+export const dynamicParams = false;
+
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const resolvedParams = await params;
   let user;

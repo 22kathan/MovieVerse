@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Browse and filter through thousands of movies by genre, rating, release date, and streaming availability.",
 };
 
+export const dynamic = "force-static";
+
 export default async function MoviesExplorePage({ searchParams }: MoviesPageProps) {
   const resolvedParams = await searchParams;
   const genre = resolvedParams.genre || "";

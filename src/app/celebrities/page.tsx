@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Discover the most popular actors, directors, and creators in the entertainment industry.",
 };
 
+export const dynamic = "force-static";
+
 export default async function CelebritiesPage({ searchParams }: CelebritiesPageProps) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || "1");

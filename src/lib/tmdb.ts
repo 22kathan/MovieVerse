@@ -70,7 +70,7 @@ async function getApiKey(): Promise<string> {
   }
   
   // 2. Server-side cookie check
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" && process.env.STATIC_EXPORT !== "true") {
     try {
       const { cookies } = require("next/headers");
       const cookieStore = await cookies();

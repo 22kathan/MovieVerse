@@ -46,7 +46,7 @@ for (const [key, fn] of Object.entries(prismaAdapter)) {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuthInstance = NextAuth({
   adapter: fallbackAdapter,
   session: {
     strategy: "jwt",
@@ -237,3 +237,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut } = nextAuthInstance;
+export const auth = process.env.STATIC_EXPORT === "true"
+  ? async () => null
+  : nextAuthInstance.auth;

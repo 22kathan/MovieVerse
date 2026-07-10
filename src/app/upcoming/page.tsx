@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Discover new movies scheduled to release in theatres and digital streaming soon.",
 };
 
+export const dynamic = "force-static";
+
 export default async function UpcomingPage({ searchParams }: UpcomingPageProps) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || "1");

@@ -20,6 +20,12 @@ interface TVPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateStaticParams() {
+  return Array.from({ length: 80 }, (_, i) => ({ id: (i + 1).toString() }));
+}
+
+export const dynamicParams = false;
+
 export async function generateMetadata({ params }: TVPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const tvId = parseInt(resolvedParams.id);

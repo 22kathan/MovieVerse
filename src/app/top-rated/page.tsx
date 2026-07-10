@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Browse the highest rated movies of all time as voted by the community.",
 };
 
+export const dynamic = "force-static";
+
 export default async function TopRatedPage({ searchParams }: TopRatedPageProps) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || "1");

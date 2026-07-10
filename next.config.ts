@@ -5,6 +5,7 @@ const isStaticExport = process.env.STATIC_EXPORT === "true";
 const nextConfig: NextConfig = {
   output: isStaticExport ? "export" : undefined,
   basePath: isStaticExport ? "/portfolio/movieverse" : "",
+  trailingSlash: true,
   images: {
     unoptimized: isStaticExport ? true : false,
     remotePatterns: [

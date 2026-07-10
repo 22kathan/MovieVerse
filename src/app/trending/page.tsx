@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Explore the most trending movies and TV shows watched worldwide today.",
 };
 
+export const dynamic = "force-static";
+
 export default async function TrendingPage({ searchParams }: TrendingPageProps) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || "1");
