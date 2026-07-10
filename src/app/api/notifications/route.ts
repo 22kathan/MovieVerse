@@ -6,10 +6,15 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, isDatabaseOffline } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
+    const isOffline = await isDatabaseOffline();
+    if (isOffline) {
+      return NextResponse.json({ notifications: [], unreadCount: 0 });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,6 +55,11 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const isOffline = await isDatabaseOffline();
+    if (isOffline) {
+      return NextResponse.json({ success: true, offline: true });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

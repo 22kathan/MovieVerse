@@ -22,5 +22,38 @@
     "isPremium": false,
     "premiumUntil": null,
     "createdAt": "2026-07-09T05:15:08.450Z"
+  },
+  {
+    "id": "mock_0mu8px0yh",
+    "name": "mee",
+    "email": "me@example.com",
+    "hashedPassword": "$2b$12$S9RfF1aDW5/NvVH7aBckmOMFdljtQDubpkbrTorMw6nmLSx.0j5Oe",
+    "username": "me",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-10T06:04:14.778Z"
+  },
+  {
+    "id": "mock_ulrfh3jkt",
+    "name": "mee",
+    "email": "mee@example.com",
+    "hashedPassword": "$2b$12$rMWGDeswfdAhTpM4C1db5O7ElLln7JU.kkesaAW/Bpk5wxuVw3rdG",
+    "username": "mee",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-10T06:09:34.042Z"
+  },
+  {
+    "id": "mock_6gueerrcv",
+    "name": "GOOGLE.TESTER",
+    "email": "google.tester@gmail.com",
+    "hashedPassword": null,
+    "username": null,
+    "role": "PREMIUM",
+    "isPremium": true,
+    "premiumUntil": "2026-08-09T06:17:56.498Z",
+    "createdAt": "2026-07-10T06:13:46.312Z"
   }
 ]

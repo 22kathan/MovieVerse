@@ -18,6 +18,8 @@ export interface MockUser {
   isPremium: boolean;
   premiumUntil: string | null;
   createdAt: string;
+  bio?: string | null;
+  country?: string | null;
 }
 
 // Ensure the fallback database file exists

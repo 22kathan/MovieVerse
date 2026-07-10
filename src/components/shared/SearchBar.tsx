@@ -104,10 +104,10 @@ export default function SearchBar() {
             <li key={item.id} className="border-b border-gray-700 last:border-b-0">
               <Link href={getResultLink(item)} onClick={handleResultClick} className="flex items-center p-3 hover:bg-gray-700 transition-colors duration-150">
                 <div className="w-10 h-14 bg-gray-700 rounded-md flex-shrink-0 flex items-center justify-center">
-                  {item.poster_path || item.profile_path ? (
+                  {((item as any).poster_path || (item as any).profile_path) ? (
                     <Image
-                      src={`https://image.tmdb.org/t/p/w92${item.poster_path || item.profile_path}`}
-                      alt={getResultTitle(item)}
+                      src={`https://image.tmdb.org/t/p/w92${(item as any).poster_path || (item as any).profile_path}`}
+                      alt={getResultTitle(item) || 'Movie Poster'}
                       width={40}
                       height={56}
                       className="rounded-md object-cover"
