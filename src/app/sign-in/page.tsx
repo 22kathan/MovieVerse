@@ -15,10 +15,70 @@ function SignInForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isStaticDeployment = () => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.location.hostname.includes("github.io") ||
+      window.location.port === "8000" ||
+      process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
+    );
+  };
+
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (isStaticDeployment()) {
+      const usersJson = localStorage.getItem("movieverse_users") || "[]";
+      const users = JSON.parse(usersJson);
+
+      // Default Admin Credentials
+      if (email === "admin@movieverse.com" && password === "password123") {
+        const mockUser = {
+          user: {
+            id: "admin-default-id",
+            name: "Admin User",
+            email: "admin@movieverse.com",
+            role: "ADMIN",
+            username: "admin",
+            isPremium: true,
+          },
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+        setTimeout(() => {
+          router.push(callbackUrl);
+          router.refresh();
+        }, 800);
+        return;
+      }
+
+      // Check registered users in localStorage
+      const matchedUser = users.find((u: any) => u.email === email && u.password === password);
+      if (matchedUser) {
+        const mockUser = {
+          user: {
+            id: matchedUser.id || `mock_${Math.random().toString(36).substr(2, 9)}`,
+            name: matchedUser.name,
+            email: matchedUser.email,
+            role: "REGISTERED",
+            username: matchedUser.email.split("@")[0],
+            isPremium: false,
+          },
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+        setTimeout(() => {
+          router.push(callbackUrl);
+          router.refresh();
+        }, 800);
+      } else {
+        setError("Invalid email or password");
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const result = await signIn("credentials", {
@@ -43,6 +103,27 @@ function SignInForm() {
   const handleOAuthSignIn = async (provider: string) => {
     setError("");
 
+    if (isStaticDeployment()) {
+      setLoading(true);
+      const mockUser = {
+        user: {
+          id: `${provider}-mock-id`,
+          name: provider === "google" ? "Google User" : "GitHub User",
+          email: `${provider}.user@movieverse.com`,
+          role: "REGISTERED",
+          username: `${provider}user`,
+          isPremium: false,
+        },
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+      setTimeout(() => {
+        router.push(callbackUrl);
+        router.refresh();
+      }, 800);
+      return;
+    }
+
     if (provider === "google") {
       const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
       if (!googleClientId) {
@@ -52,8 +133,6 @@ function SignInForm() {
     }
 
     setLoading(true);
-    // Directly call live Google/GitHub OAuth redirection.
-    // This allows the browser to show its native accounts list during consent check.
     signIn(provider, { callbackUrl });
   };
 

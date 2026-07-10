@@ -14,10 +14,60 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isStaticDeployment = () => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.location.hostname.includes("github.io") ||
+      window.location.port === "8000" ||
+      process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
+    );
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (isStaticDeployment()) {
+      const usersJson = localStorage.getItem("movieverse_users") || "[]";
+      const users = JSON.parse(usersJson);
+
+      if (users.some((u: any) => u.email === email)) {
+        setError("Email already registered");
+        setLoading(false);
+        return;
+      }
+
+      const newUser = {
+        id: `mock_${Math.random().toString(36).substr(2, 9)}`,
+        name,
+        email,
+        password,
+      };
+
+      users.push(newUser);
+      localStorage.setItem("movieverse_users", JSON.stringify(users));
+
+      // Auto sign-in
+      const mockUser = {
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: "REGISTERED",
+          username: newUser.email.split("@")[0],
+          isPremium: false,
+        },
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 800);
+      return;
+    }
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -56,6 +106,27 @@ export default function SignUpPage() {
   };
 
   const handleOAuthSignIn = (provider: string) => {
+    if (isStaticDeployment()) {
+      setLoading(true);
+      const mockUser = {
+        user: {
+          id: `${provider}-mock-id`,
+          name: provider === "google" ? "Google User" : "GitHub User",
+          email: `${provider}.user@movieverse.com`,
+          role: "REGISTERED",
+          username: `${provider}user`,
+          isPremium: false,
+        },
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 800);
+      return;
+    }
+
     signIn(provider, { callbackUrl: "/" });
   };
 
