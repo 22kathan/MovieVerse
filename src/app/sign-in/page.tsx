@@ -104,6 +104,81 @@ function SignInForm() {
     setError("");
 
     if (isStaticDeployment()) {
+      if (provider === "google") {
+        setLoading(true);
+        const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!googleClientId) {
+          setError("Google Client ID is not configured. Please define NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment.");
+          setLoading(false);
+          return;
+        }
+
+        try {
+          if (!(window as any).google?.accounts?.oauth2) {
+            await new Promise<void>((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = "https://accounts.google.com/gsi/client";
+              script.async = true;
+              script.defer = true;
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error("Failed to load Google Sign-In library."));
+              document.body.appendChild(script);
+            });
+          }
+
+          const client = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: googleClientId,
+            scope: "openid email profile",
+            callback: async (tokenResponse: any) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                try {
+                  const userInfoRes = await fetch(
+                    `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`
+                  );
+                  if (!userInfoRes.ok) {
+                    throw new Error("Failed to fetch user info from Google");
+                  }
+                  const userInfo = await userInfoRes.json();
+                  
+                  const mockUser = {
+                    user: {
+                      id: userInfo.sub || `google_${Math.random().toString(36).substr(2, 9)}`,
+                      name: userInfo.name || "Google User",
+                      email: userInfo.email,
+                      image: userInfo.picture || null,
+                      role: "REGISTERED",
+                      username: userInfo.email.split("@")[0],
+                      isPremium: false,
+                    },
+                    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                  };
+                  
+                  localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+                  router.push(callbackUrl);
+                  router.refresh();
+                } catch (fetchErr: any) {
+                  setError("Google Login failed to retrieve user info: " + fetchErr.message);
+                  setLoading(false);
+                }
+              } else {
+                setError("Google Login authorization failed.");
+                setLoading(false);
+              }
+            },
+            error_callback: (err: any) => {
+              setError("Google Sign-In Error: " + (err.message || "Unknown error"));
+              setLoading(false);
+            }
+          });
+
+          client.requestAccessToken();
+        } catch (err: any) {
+          setError("Failed to initialize Google Sign-In: " + err.message);
+          setLoading(false);
+        }
+        return;
+      }
+
       setLoading(true);
       const mockUser = {
         user: {
