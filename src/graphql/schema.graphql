@@ -1,0 +1,596 @@
+// ============================================
+// MovieVerse — GraphQL Schema
+// Complete API schema for the platform
+// ============================================
+
+// ---- Scalars ----
+scalar DateTime
+scalar JSON
+
+// ---- Enums ----
+enum MediaType {
+  MOVIE
+  TV_SHOW
+}
+
+enum UserRole {
+  GUEST
+  REGISTERED
+  PREMIUM
+  ADMIN
+}
+
+enum OTTType {
+  STREAM
+  RENT
+  BUY
+  FREE
+}
+
+enum AwardResult {
+  WON
+  NOMINATED
+}
+
+enum SortBy {
+  POPULARITY
+  RATING
+  RELEASE_DATE
+  TITLE
+  VOTE_COUNT
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}
+
+// ============================================
+// TYPES
+// ============================================
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  username: String!
+  avatar: String
+  bio: String
+  role: UserRole!
+  country: String
+  isPremium: Boolean!
+  createdAt: DateTime!
+
+  # Computed fields
+  reviewCount: Int!
+  ratingCount: Int!
+  watchlistCount: Int!
+  listCount: Int!
+  followerCount: Int!
+  followingCount: Int!
+  isFollowing: Boolean
+}
+
+type Movie {
+  id: ID!
+  tmdbId: Int!
+  imdbId: String
+  title: String!
+  originalTitle: String
+  tagline: String
+  overview: String
+  posterPath: String
+  backdropPath: String
+  mediaType: MediaType!
+  releaseDate: DateTime
+  runtime: Int
+  budget: Float
+  revenue: Float
+  status: String
+  originalLang: String
+  popularity: Float!
+  voteAverage: Float!
+  voteCount: Int!
+  trailerKey: String
+
+  # TV-specific
+  numberOfSeasons: Int
+  numberOfEpisodes: Int
+  firstAirDate: DateTime
+  lastAirDate: DateTime
+
+  # Platform scores
+  avgUserRating: Float
+  criticScore: Int
+  audienceScore: Int
+  totalReviews: Int!
+  totalRatings: Int!
+
+  # Relations
+  genres: [Genre!]!
+  cast(limit: Int): [CastMember!]!
+  crew(limit: Int): [CrewMember!]!
+  reviews(limit: Int, offset: Int): ReviewConnection!
+  ottPlatforms: [MovieOTTPlatform!]!
+  awards: [Award!]!
+  videos: [VideoAsset!]!
+  similar(limit: Int): [MovieCard!]!
+  recommendations(limit: Int): [MovieCard!]!
+  ratingDistribution: [RatingBucket!]!
+
+  # User-specific
+  userRating: Float
+  isInWatchlist: Boolean
+  userReview: Review
+}
+
+type MovieCard {
+  id: ID!
+  tmdbId: Int!
+  title: String!
+  posterPath: String
+  backdropPath: String
+  mediaType: MediaType!
+  releaseDate: DateTime
+  voteAverage: Float!
+  avgUserRating: Float
+  genres: [Genre!]!
+  overview: String
+}
+
+type Genre {
+  id: ID!
+  tmdbId: Int!
+  name: String!
+  slug: String!
+  movieCount: Int
+}
+
+type Person {
+  id: ID!
+  tmdbId: Int!
+  imdbId: String
+  name: String!
+  biography: String
+  birthday: DateTime
+  deathday: DateTime
+  placeOfBirth: String
+  gender: Int
+  profilePath: String
+  popularity: Float!
+  knownForDept: String
+
+  filmography: [FilmographyEntry!]!
+  awards: [Award!]!
+  knownFor: [MovieCard!]!
+  photos: [MediaAsset!]!
+}
+
+type CastMember {
+  id: ID!
+  character: String
+  castOrder: Int!
+  person: PersonSummary!
+}
+
+type CrewMember {
+  id: ID!
+  department: String
+  job: String
+  person: PersonSummary!
+}
+
+type PersonSummary {
+  id: ID!
+  tmdbId: Int!
+  name: String!
+  profilePath: String
+}
+
+type FilmographyEntry {
+  movie: MovieCard!
+  character: String
+  department: String
+  job: String
+}
+
+type Review {
+  id: ID!
+  title: String
+  content: String!
+  rating: Float!
+  spoiler: Boolean!
+  helpful: Int!
+  unhelpful: Int!
+  approved: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  user: UserSummary!
+  movie: MovieCard
+  commentCount: Int!
+  userVote: Boolean
+}
+
+type UserSummary {
+  id: ID!
+  name: String!
+  username: String!
+  avatar: String
+}
+
+type Comment {
+  id: ID!
+  content: String!
+  likes: Int!
+  createdAt: DateTime!
+  user: UserSummary!
+  replies: [Comment!]
+}
+
+type RatingBucket {
+  score: Int!
+  count: Int!
+  percentage: Float!
+}
+
+type WatchlistItem {
+  id: ID!
+  addedAt: DateTime!
+  watched: Boolean!
+  watchedAt: DateTime
+  notes: String
+  movie: MovieCard!
+}
+
+type UserList {
+  id: ID!
+  name: String!
+  description: String
+  isPublic: Boolean!
+  coverImage: String
+  slug: String!
+  likes: Int!
+  itemCount: Int!
+  createdAt: DateTime!
+  user: UserSummary!
+  items(limit: Int, offset: Int): [ListItem!]!
+}
+
+type ListItem {
+  id: ID!
+  sortOrder: Int!
+  note: String
+  addedAt: DateTime!
+  movie: MovieCard!
+}
+
+type MovieOTTPlatform {
+  id: ID!
+  type: OTTType!
+  price: Float
+  deepLink: String
+  platform: OTTPlatform!
+}
+
+type OTTPlatform {
+  id: ID!
+  name: String!
+  slug: String!
+  logoPath: String
+}
+
+type Award {
+  id: ID!
+  name: String!
+  ceremony: String!
+  year: Int!
+  category: String!
+  result: AwardResult!
+  movie: MovieCard
+  person: PersonSummary
+}
+
+type VideoAsset {
+  id: ID!
+  type: String!
+  name: String
+  key: String!
+  site: String!
+  official: Boolean!
+}
+
+type MediaAsset {
+  id: ID!
+  type: String!
+  filePath: String!
+  width: Int
+  height: Int
+  cdnUrl: String
+}
+
+type NewsArticle {
+  id: ID!
+  title: String!
+  slug: String!
+  excerpt: String
+  content: String!
+  coverImage: String
+  authorName: String
+  publishedAt: DateTime
+  tags: [NewsTag!]!
+  relatedMovies: [MovieCard!]!
+}
+
+type NewsTag {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type Activity {
+  id: ID!
+  type: String!
+  targetId: String!
+  metadata: JSON
+  createdAt: DateTime!
+  user: UserSummary!
+}
+
+type Notification {
+  id: ID!
+  title: String!
+  message: String!
+  link: String
+  read: Boolean!
+  createdAt: DateTime!
+}
+
+# AI Types
+type AIRecommendationGroup {
+  title: String!
+  type: String!
+  movies: [AIRecommendation!]!
+}
+
+type AIRecommendation {
+  movie: MovieCard!
+  score: Float!
+  reason: String!
+}
+
+type AIReviewSummary {
+  id: ID!
+  summary: String!
+  sentiment: String!
+  keyThemes: [String!]!
+  basedOn: Int!
+}
+
+# Search
+type SearchResult {
+  movies: [MovieCard!]!
+  tvShows: [MovieCard!]!
+  people: [PersonSummary!]!
+  totalResults: Int!
+}
+
+type SearchSuggestion {
+  id: ID!
+  title: String!
+  type: String!
+  posterPath: String
+  year: String
+  rating: Float
+}
+
+# Admin
+type DashboardStats {
+  totalMovies: Int!
+  totalUsers: Int!
+  totalReviews: Int!
+  activeSessions: Int!
+  newUsersToday: Int!
+  newReviewsToday: Int!
+  premiumUsers: Int!
+  reportedReviews: Int!
+}
+
+# Pagination
+type ReviewConnection {
+  edges: [Review!]!
+  totalCount: Int!
+  hasMore: Boolean!
+}
+
+type MovieConnection {
+  edges: [MovieCard!]!
+  totalCount: Int!
+  totalPages: Int!
+  currentPage: Int!
+  hasMore: Boolean!
+}
+
+// ============================================
+// INPUT TYPES
+// ============================================
+
+input SearchFilters {
+  query: String
+  mediaType: MediaType
+  genres: [Int!]
+  yearFrom: Int
+  yearTo: Int
+  ratingMin: Float
+  ratingMax: Float
+  language: String
+  sortBy: SortBy
+  sortOrder: SortOrder
+  page: Int
+  limit: Int
+}
+
+input CreateReviewInput {
+  movieId: ID!
+  title: String
+  content: String!
+  rating: Float!
+  spoiler: Boolean
+}
+
+input UpdateReviewInput {
+  title: String
+  content: String
+  rating: Float
+  spoiler: Boolean
+}
+
+input CreateListInput {
+  name: String!
+  description: String
+  isPublic: Boolean
+}
+
+input UpdateListInput {
+  name: String
+  description: String
+  isPublic: Boolean
+  coverImage: String
+}
+
+input UpdateProfileInput {
+  name: String
+  username: String
+  bio: String
+  avatar: String
+  country: String
+  language: String
+  darkMode: Boolean
+}
+
+input UpdatePreferencesInput {
+  favoriteGenres: [Int!]
+  dislikedGenres: [Int!]
+  preferredLanguages: [String!]
+  adultContent: Boolean
+  emailNotifications: Boolean
+}
+
+// ============================================
+// QUERIES
+// ============================================
+
+type Query {
+  # Movies
+  movie(id: ID, tmdbId: Int): Movie
+  movies(filters: SearchFilters): MovieConnection!
+  trendingMovies(timeWindow: String, page: Int): MovieConnection!
+  popularMovies(page: Int): MovieConnection!
+  topRatedMovies(page: Int): MovieConnection!
+  upcomingMovies(page: Int): MovieConnection!
+  nowPlayingMovies(page: Int): MovieConnection!
+
+  # TV Shows
+  tvShow(id: ID, tmdbId: Int): Movie
+  popularTVShows(page: Int): MovieConnection!
+  topRatedTVShows(page: Int): MovieConnection!
+
+  # People
+  person(id: ID, tmdbId: Int): Person
+  popularPeople(page: Int): [Person!]!
+
+  # Search
+  search(filters: SearchFilters!): MovieConnection!
+  searchMulti(query: String!): SearchResult!
+  searchSuggestions(query: String!, limit: Int): [SearchSuggestion!]!
+
+  # Genres
+  genres(mediaType: MediaType): [Genre!]!
+
+  # Reviews
+  review(id: ID!): Review
+  movieReviews(movieId: ID!, limit: Int, offset: Int, sortBy: String): ReviewConnection!
+  userReviews(userId: ID!, limit: Int, offset: Int): ReviewConnection!
+  latestReviews(limit: Int): [Review!]!
+
+  # User
+  me: User
+  user(id: ID, username: String): User
+  userWatchlist(userId: ID!, limit: Int, offset: Int): [WatchlistItem!]!
+  userLists(userId: ID!, limit: Int, offset: Int): [UserList!]!
+  userList(id: ID!): UserList
+  userActivities(userId: ID!, limit: Int): [Activity!]!
+  myNotifications(unreadOnly: Boolean, limit: Int): [Notification!]!
+  followers(userId: ID!): [UserSummary!]!
+  following(userId: ID!): [UserSummary!]!
+
+  # News
+  newsArticles(limit: Int, offset: Int, tag: String): [NewsArticle!]!
+  newsArticle(slug: String!): NewsArticle
+
+  # Awards
+  awards(movieId: ID, personId: ID, year: Int, name: String): [Award!]!
+
+  # AI
+  recommendations(limit: Int): [AIRecommendationGroup!]!
+  aiReviewSummary(movieId: ID!): AIReviewSummary
+  aiSearch(query: String!): MovieConnection!
+
+  # Admin
+  dashboardStats: DashboardStats!
+  adminLogs(limit: Int, offset: Int): [Activity!]!
+  reportedReviews(limit: Int, offset: Int): ReviewConnection!
+}
+
+// ============================================
+// MUTATIONS
+// ============================================
+
+type Mutation {
+  # Reviews
+  createReview(input: CreateReviewInput!): Review!
+  updateReview(id: ID!, input: UpdateReviewInput!): Review!
+  deleteReview(id: ID!): Boolean!
+  voteReview(reviewId: ID!, helpful: Boolean!): Review!
+  reportReview(reviewId: ID!, reason: String): Boolean!
+
+  # Ratings
+  rateMovie(movieId: ID!, score: Float!): Float!
+  deleteRating(movieId: ID!): Boolean!
+
+  # Watchlist
+  addToWatchlist(movieId: ID!, notes: String): WatchlistItem!
+  removeFromWatchlist(movieId: ID!): Boolean!
+  markWatched(movieId: ID!): WatchlistItem!
+
+  # Lists
+  createList(input: CreateListInput!): UserList!
+  updateList(id: ID!, input: UpdateListInput!): UserList!
+  deleteList(id: ID!): Boolean!
+  addToList(listId: ID!, movieId: ID!, note: String): ListItem!
+  removeFromList(listId: ID!, movieId: ID!): Boolean!
+  reorderListItems(listId: ID!, itemIds: [ID!]!): UserList!
+
+  # Comments
+  addComment(reviewId: ID!, content: String!, parentId: ID): Comment!
+  deleteComment(id: ID!): Boolean!
+
+  # Social
+  followUser(userId: ID!): Boolean!
+  unfollowUser(userId: ID!): Boolean!
+
+  # Profile
+  updateProfile(input: UpdateProfileInput!): User!
+  updatePreferences(input: UpdatePreferencesInput!): Boolean!
+
+  # Notifications
+  markNotificationRead(id: ID!): Boolean!
+  markAllNotificationsRead: Boolean!
+
+  # Admin
+  approveReview(id: ID!): Review!
+  rejectReview(id: ID!, reason: String): Boolean!
+  banUser(userId: ID!, reason: String): Boolean!
+  unbanUser(userId: ID!): Boolean!
+  updateUserRole(userId: ID!, role: UserRole!): User!
+}

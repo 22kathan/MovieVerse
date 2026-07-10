@@ -1,0 +1,695 @@
+// MovieVerse — Complete Database Schema
+// PostgreSQL via Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTH (NextAuth.js compatible)
+// ============================================
+
+enum UserRole {
+  GUEST
+  REGISTERED
+  PREMIUM
+  ADMIN
+}
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  image           String?
+  hashedPassword  String?   // For credentials (email/password) auth
+  username        String?   @unique
+  bio             String?
+  role            UserRole  @default(REGISTERED)
+  country         String?
+  language        String    @default("en")
+  darkMode        Boolean   @default(true)
+  isPremium       Boolean   @default(false)
+  premiumUntil    DateTime?
+  stripeCustomerId String?   @unique @map("stripe_customer_id")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // NextAuth.js relations
+  accounts      Account[]
+  sessions      Session[]
+
+  // App relations
+  reviews       Review[]
+  watchlist     WatchlistItem[]
+  lists         UserList[]
+  ratings       Rating[]
+  followers     Follow[]       @relation("Following")
+  following     Follow[]       @relation("Follower")
+  activities    Activity[]
+  notifications Notification[]
+  preferences   UserPreference?
+  comments      Comment[]
+  reviewVotes   ReviewVote[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteGenres     Int[]    // Array of genre TMDB IDs
+  dislikedGenres     Int[]
+  preferredLanguages String[] @default(["en"])
+  adultContent       Boolean  @default(false)
+  emailNotifications Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ============================================
+// MOVIES & TV SHOWS
+// ============================================
+
+enum MediaType {
+  MOVIE
+  TV_SHOW
+}
+
+model Movie {
+  id             String    @id @default(cuid())
+  tmdbId         Int       @unique // The Movie Database ID
+  imdbId         String?   @unique // IMDb ID (e.g., tt1375666)
+  title          String
+  originalTitle  String?
+  tagline        String?
+  overview       String?   @db.Text
+  posterPath     String?
+  backdropPath   String?
+  mediaType      MediaType @default(MOVIE)
+  releaseDate    DateTime?
+  runtime        Int?      // minutes
+  budget         BigInt?
+  revenue        BigInt?
+  status         String?   // Released, Post Production, etc.
+  originalLang   String?
+  popularity     Float     @default(0)
+  voteAverage    Float     @default(0) // TMDB vote average
+  voteCount      Int       @default(0)
+  adult          Boolean   @default(false)
+  homepage       String?
+  trailerKey     String?   // YouTube key for official trailer
+
+  // TV-specific fields
+  numberOfSeasons  Int?
+  numberOfEpisodes Int?
+  firstAirDate     DateTime?
+  lastAirDate      DateTime?
+  inProduction     Boolean?
+
+  // Our platform's aggregated scores
+  avgUserRating    Float?   // 1-10 scale (IMDb-style)
+  criticScore      Int?     // 0-100 percentage (RT-style)
+  audienceScore    Int?     // 0-100 percentage (RT-style)
+  totalReviews     Int      @default(0)
+  totalRatings     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  genres         MovieGenre[]
+  cast           MovieCast[]
+  crew           MovieCrew[]
+  reviews        Review[]
+  ratings        Rating[]
+  watchlistItems WatchlistItem[]
+  listItems      ListItem[]
+  ottPlatforms   MovieOTT[]
+  awards         Award[]
+  photos         MediaAsset[]    @relation("MoviePhotos")
+  videos         VideoAsset[]
+  keywords       MovieKeyword[]
+  news           NewsArticle[]   @relation("NewsMovies")
+
+  @@index([tmdbId])
+  @@index([mediaType])
+  @@index([releaseDate])
+  @@index([popularity])
+  @@index([avgUserRating])
+  @@index([title])
+}
+
+model Genre {
+  id       String       @id @default(cuid())
+  tmdbId   Int          @unique
+  name     String       @unique
+  slug     String       @unique
+  movies   MovieGenre[]
+
+  @@index([tmdbId])
+}
+
+model MovieGenre {
+  movieId String
+  genreId String
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, genreId])
+}
+
+model MovieKeyword {
+  id      String @id @default(cuid())
+  movieId String
+  tmdbId  Int
+  name    String
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([name])
+}
+
+// ============================================
+// CAST & CREW (CELEBRITIES)
+// ============================================
+
+model Person {
+  id             String    @id @default(cuid())
+  tmdbId         Int       @unique
+  imdbId         String?   @unique
+  name           String
+  originalName   String?
+  biography      String?   @db.Text
+  birthday       DateTime?
+  deathday       DateTime?
+  placeOfBirth   String?
+  gender         Int?      // 0=Not set, 1=Female, 2=Male, 3=Non-binary
+  profilePath    String?
+  homepage       String?
+  popularity     Float     @default(0)
+  knownForDept   String?   // Acting, Directing, Writing, etc.
+  country        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  movieCast MovieCast[]
+  movieCrew MovieCrew[]
+  awards    Award[]
+  photos    MediaAsset[] @relation("PersonPhotos")
+
+  @@index([tmdbId])
+  @@index([name])
+  @@index([popularity])
+}
+
+model MovieCast {
+  id            String @id @default(cuid())
+  movieId       String
+  personId      String
+  character     String?
+  castOrder     Int     @default(0) // Billing order
+  movie         Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  person        Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, personId, character])
+  @@index([movieId])
+  @@index([personId])
+}
+
+model MovieCrew {
+  id         String @id @default(cuid())
+  movieId    String
+  personId   String
+  department String? // Directing, Writing, Production, etc.
+  job        String? // Director, Screenplay, Producer, etc.
+  movie      Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  person     Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([personId])
+  @@index([department])
+}
+
+// ============================================
+// REVIEWS & RATINGS
+// ============================================
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   String
+  title     String?
+  content   String   @db.Text
+  rating    Float    // 1-10 scale
+  spoiler   Boolean  @default(false)
+  helpful   Int      @default(0)
+  unhelpful Int      @default(0)
+  reported  Boolean  @default(false)
+  approved  Boolean  @default(true) // Moderation flag
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie    Movie        @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  votes    ReviewVote[]
+
+  @@unique([userId, movieId]) // One review per user per movie
+  @@index([movieId])
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model ReviewVote {
+  id       String  @id @default(cuid())
+  userId   String
+  reviewId String
+  helpful  Boolean // true = helpful, false = unhelpful
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+}
+
+model Rating {
+  id      String @id @default(cuid())
+  userId  String
+  movieId String
+  score   Float  // 1-10 scale
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([movieId])
+  @@index([userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  reviewId  String
+  parentId  String?  // For nested/threaded comments
+  content   String   @db.Text
+  likes     Int      @default(0)
+  reported  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentThread", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentThread")
+
+  @@index([reviewId])
+  @@index([userId])
+}
+
+// ============================================
+// WATCHLIST & LISTS
+// ============================================
+
+model WatchlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   String
+  addedAt   DateTime @default(now())
+  watched   Boolean  @default(false)
+  watchedAt DateTime?
+  notes     String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([userId])
+}
+
+model UserList {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+  coverImage  String?
+  slug        String
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items ListItem[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model ListItem {
+  id        String   @id @default(cuid())
+  listId    String
+  movieId   String
+  sortOrder Int      @default(0)
+  note      String?
+  addedAt   DateTime @default(now())
+
+  list  UserList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  movie Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, movieId])
+  @@index([listId])
+}
+
+// ============================================
+// OTT PLATFORMS
+// ============================================
+
+model OTTPlatform {
+  id       String     @id @default(cuid())
+  name     String     @unique // Netflix, Prime Video, Disney+, etc.
+  slug     String     @unique
+  logoPath String?
+  baseUrl  String?
+  country  String     @default("IN")
+  movies   MovieOTT[]
+
+  @@index([slug])
+}
+
+enum OTTType {
+  STREAM     // Included with subscription
+  RENT       // Pay per view rental
+  BUY        // Purchase to own
+  FREE       // Free with ads
+}
+
+model MovieOTT {
+  id         String      @id @default(cuid())
+  movieId    String
+  platformId String
+  type       OTTType     @default(STREAM)
+  price      Float?      // Price in USD for RENT/BUY
+  deepLink   String?     // Direct link to watch
+  addedAt    DateTime    @default(now())
+  expiresAt  DateTime?
+
+  movie    Movie       @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  platform OTTPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, platformId, type])
+  @@index([movieId])
+  @@index([platformId])
+}
+
+// ============================================
+// AWARDS & NOMINATIONS
+// ============================================
+
+enum AwardResult {
+  WON
+  NOMINATED
+}
+
+model Award {
+  id        String      @id @default(cuid())
+  name      String      // Oscar, Golden Globe, BAFTA, Emmy
+  ceremony  String      // 96th Academy Awards
+  year      Int
+  category  String      // Best Picture, Best Director, etc.
+  result    AwardResult
+  movieId   String?
+  personId  String?
+
+  movie  Movie?  @relation(fields: [movieId], references: [id], onDelete: SetNull)
+  person Person? @relation(fields: [personId], references: [id], onDelete: SetNull)
+
+  @@index([movieId])
+  @@index([personId])
+  @@index([year])
+  @@index([name])
+}
+
+// ============================================
+// MEDIA ASSETS (Photos & Videos)
+// ============================================
+
+enum AssetType {
+  POSTER
+  BACKDROP
+  STILL
+  PROFILE
+  LOGO
+}
+
+model MediaAsset {
+  id       String    @id @default(cuid())
+  movieId  String?
+  personId String?
+  type     AssetType
+  filePath String
+  width    Int?
+  height   Int?
+  s3Key    String?   // AWS S3 key
+  cdnUrl   String?   // CloudFront URL
+
+  movie  Movie?  @relation("MoviePhotos", fields: [movieId], references: [id], onDelete: Cascade)
+  person Person? @relation("PersonPhotos", fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([personId])
+}
+
+enum VideoType {
+  TRAILER
+  TEASER
+  CLIP
+  BEHIND_THE_SCENES
+  FEATURETTE
+}
+
+model VideoAsset {
+  id       String    @id @default(cuid())
+  movieId  String
+  type     VideoType @default(TRAILER)
+  name     String?
+  key      String    // YouTube video key
+  site     String    @default("YouTube")
+  size     Int?      // 360, 480, 720, 1080
+  official Boolean   @default(true)
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+}
+
+// ============================================
+// NEWS & ARTICLES
+// ============================================
+
+model NewsArticle {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String   @db.Text
+  coverImage  String?
+  authorName  String?
+  source      String?
+  sourceUrl   String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  movies Movie[] @relation("NewsMovies")
+  tags   NewsTag[]
+
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model NewsTag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  articles  NewsArticle[]
+
+  @@index([slug])
+}
+
+// ============================================
+// ACTIVITY FEED & NOTIFICATIONS
+// ============================================
+
+enum ActivityType {
+  RATED
+  REVIEWED
+  WATCHLISTED
+  LISTED
+  FOLLOWED
+  COMMENTED
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  userId    String
+  type      ActivityType
+  targetId  String       // ID of the movie, review, user, etc.
+  metadata  Json?        // Additional context (movie title, rating value, etc.)
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  link      String?  // URL to navigate to
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// ============================================
+// AI & RECOMMENDATIONS
+// ============================================
+
+model RecommendationCache {
+  id          String   @id @default(cuid())
+  userId      String
+  movieId     String
+  score       Float    // Recommendation confidence score 0-1
+  reason      String?  // "Because you watched Interstellar"
+  algorithm   String?  // collaborative, content-based, hybrid
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@unique([userId, movieId])
+  @@index([userId, score(sort: Desc)])
+  @@index([expiresAt])
+}
+
+model AIReviewSummary {
+  id        String   @id @default(cuid())
+  movieId   String   @unique
+  summary   String   @db.Text // AI-generated summary of all reviews
+  sentiment String?  // positive, mixed, negative
+  keyThemes String[] // ["stunning visuals", "complex plot", "great acting"]
+  basedOn   Int      // Number of reviews summarized
+  model     String?  // GPT-4, Gemini, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([movieId])
+}
+
+// ============================================
+// ADMIN & ANALYTICS
+// ============================================
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String   // "deleted_review", "banned_user", "edited_movie"
+  targetType String  // "review", "user", "movie"
+  targetId  String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model SiteMetric {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  totalUsers     Int @default(0)
+  newUsers       Int @default(0)
+  totalReviews   Int @default(0)
+  newReviews     Int @default(0)
+  totalRatings   Int @default(0)
+  pageViews      Int @default(0)
+  activeUsers    Int @default(0)
+  topGenreId     String?
+  topMovieId     String?
+
+  @@unique([date])
+  @@index([date])
+}

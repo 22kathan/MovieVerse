@@ -1,0 +1,26 @@
+[
+  {
+    "id": "admin-default-id",
+    "name": "Admin User",
+    "email": "admin@movieverse.com",
+    "hashedPassword": "$2b$12$5bTjowuU8ds97dhA7XfPMeEKUKrcNqxkiBYO6iyUbUhB4nLTNhEGm",
+    "username": "admin",
+    "role": "ADMIN",
+    "isPremium": true,
+    "premiumUntil": null,
+    "createdAt": "2026-07-09T05:13:30.813Z",
+    "bio": "",
+    "country": "IN"
+  },
+  {
+    "id": "mock_8xx3d6wp2",
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "hashedPassword": "$2b$12$EVkYDPV9X/JGeCb0lCjVU.tZzLk/DZ6PLLI8M6R63sHFnPurKOxei",
+    "username": "testuser",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-09T05:15:08.450Z"
+  }
+]
