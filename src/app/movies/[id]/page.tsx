@@ -16,6 +16,7 @@ import MovieCard from "@/components/movie/MovieCard";
 import MediaActions from "@/components/movie/MediaActions";
 import ReviewForm from "@/components/movie/ReviewForm";
 import AIReviewSummary from "@/components/movie/AIReviewSummary";
+import AISimilarContent from "@/components/movie/AISimilarContent";
 
 interface MoviePageProps {
   params: Promise<{ id: string }>;
@@ -363,6 +364,16 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
           mediaPoster={movie.poster_path}
           mediaType="movie"
         />
+
+        {/* AI Similar Content Insights */}
+        {similar?.results && similar.results.length > 0 && (
+          <AISimilarContent
+            movieId={movie.id}
+            movieTitle={movie.title || "Untitled"}
+            genres={movie.genres ? movie.genres.map((g: any) => g.name) : []}
+            similarMovies={similar.results.slice(0, 5).map((sim: any) => sim.title || sim.name || "")}
+          />
+        )}
 
         {/* Similar Movies Section */}
         {similar?.results && similar.results.length > 0 && (

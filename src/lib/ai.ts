@@ -373,3 +373,127 @@ Query: "${query}"`;
     industry,
   };
 }
+
+export interface AISimilarityItem {
+  title: string;
+  reason: string;
+  theme: string;
+}
+
+export interface AISimilarityResponse {
+  connections: AISimilarityItem[];
+  summary: string;
+}
+
+/**
+ * Get AI-powered similarity insights between the main movie and recommendations
+ */
+export async function getAISimilarityInsights(
+  movieTitle: string,
+  genres: string[],
+  similarMovies: string[]
+): Promise<AISimilarityResponse> {
+  const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+
+  const prompt = `You are a cinematic AI analyst for MovieVerse.
+Your task is to analyze the connection between the main movie "${movieTitle}" (genres: ${genres.join(', ')}) and the following similar movies: ${similarMovies.slice(0, 5).join(', ')}.
+For each similar movie, provide:
+1. "title": The name of the similar movie.
+2. "theme": A short thematic link (e.g. "Psychological Guilt", "Dreamlike Ambience", "Non-linear Memory").
+3. "reason": A short 1-2 sentence explanation of why a fan of "${movieTitle}" would love this movie, focusing on style, themes, director connections, or plot vibes.
+
+Also provide a general 2-sentence "summary" detailing the common cinematic elements that tie these selections together.
+
+Your output MUST be a valid JSON object matching this schema:
+{
+  "connections": [
+    { "title": "Movie Title", "theme": "Thematic Link", "reason": "Explanation" }
+  ],
+  "summary": "General summary sentence."
+}`;
+
+  // 1. Try Gemini
+  if (apiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (responseText) {
+          const parsed = cleanAndParseJSON<AISimilarityResponse>(responseText);
+          if (parsed) return parsed;
+        }
+      }
+    } catch (err) {
+      console.error("Gemini getAISimilarityInsights API error:", err);
+    }
+  }
+
+  // 2. Try OpenAI
+  if (openaiKey) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: 'You output JSON objects.' },
+            { role: 'user', content: prompt },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const responseText = data.choices?.[0]?.message?.content;
+        if (responseText) {
+          const parsed = cleanAndParseJSON<AISimilarityResponse>(responseText);
+          if (parsed) return parsed;
+        }
+      }
+    } catch (err) {
+      console.error("OpenAI getAISimilarityInsights API error:", err);
+    }
+  }
+
+  // 3. Fallback
+  console.log("Using fallback mock similarity insights for movie:", movieTitle);
+  const connections = similarMovies.map((simTitle, idx) => {
+    const themes = [
+      "Thematic Parallel & Narrative Pacing",
+      "Stylistic Tone & Director Direction",
+      "Character Psychology & Development",
+      "Visual Aesthetics & Audio Score",
+      "Narrative Depth & Plot Twists",
+      "Genre-defining Structural Tropes"
+    ];
+    const theme = themes[idx % themes.length];
+    return {
+      title: simTitle,
+      theme,
+      reason: `Shares a high-quality stylistic flow with ${movieTitle}. Fans of ${movieTitle} will enjoy the narrative depth, character motives, and similar pacing.`
+    };
+  });
+
+  return {
+    connections,
+    summary: `These films are handpicked for their overlapping thematic depths in the ${genres.join(' / ')} genres, delivering a matching vibe and storytelling style to ${movieTitle}.`
+  };
+}

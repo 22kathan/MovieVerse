@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchMulti } from "@/lib/tmdb";
+import { searchWithElastic } from "@/lib/elasticsearch";
 
 export async function GET(request: Request) {
   try {
@@ -10,35 +10,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ suggestions: [] });
     }
 
-    const response = await searchMulti(query.trim(), 1);
+    const response = await searchWithElastic(query.trim(), "all", 1);
     
-    interface TMDBMultiSearchItem {
-      id: number;
-      title?: string;
-      name?: string;
-      media_type: string;
-      release_date?: string;
-      first_air_date?: string;
-      poster_path?: string;
-      profile_path?: string;
-      vote_average?: number;
-    }
-
-    // Process and clean results
-    const suggestions = ((response.results || []) as TMDBMultiSearchItem[])
+    // Process and clean results from elasticsearch rankings
+    const suggestions = response.results
       .slice(0, 6)
       .map((item) => {
-        const title = item.title || item.name || "Untitled";
-        const date = item.release_date || item.first_air_date || "";
-        const releaseYear = date ? new Date(date).getFullYear() : null;
-        
         return {
           id: item.id,
-          title,
+          title: item.title,
+          highlightedTitle: item.highlightedTitle || item.title,
           media_type: item.media_type,
-          release_year: releaseYear,
-          image_path: item.poster_path || item.profile_path || null,
-          rating: item.vote_average || null,
+          release_year: item.release_year || null,
+          image_path: item.poster_path || null,
+          rating: item.rating || null,
+          score: item.score
         };
       });
 

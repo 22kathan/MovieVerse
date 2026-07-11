@@ -27,6 +27,7 @@ import NotificationBell from "@/components/shared/NotificationBell";
 interface SearchSuggestion {
   id: number;
   title: string;
+  highlightedTitle?: string;
   media_type: string;
   release_year: number | null;
   image_path: string | null;
@@ -254,9 +255,16 @@ export default function Header() {
 
                         {/* Title and details */}
                         <div className="flex-1 min-w-0 space-y-0.5">
-                          <h4 className="text-sm font-semibold text-white group-hover:text-[var(--brand-primary-light)] transition-colors truncate">
-                            {item.title}
-                          </h4>
+                          {item.highlightedTitle ? (
+                            <h4 
+                              className="text-sm font-semibold text-white group-hover:text-[var(--brand-primary-light)] transition-colors truncate"
+                              dangerouslySetInnerHTML={{ __html: item.highlightedTitle }}
+                            />
+                          ) : (
+                            <h4 className="text-sm font-semibold text-white group-hover:text-[var(--brand-primary-light)] transition-colors truncate">
+                              {item.title}
+                            </h4>
+                          )}
                           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                             <span className="capitalize px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-[10px] font-bold tracking-wider text-[var(--text-tertiary)]">
                               {item.media_type === "movie"

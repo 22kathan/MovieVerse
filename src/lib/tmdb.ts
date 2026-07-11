@@ -95,6 +95,31 @@ async function tmdbFetch<T>(
     return getMockDataForEndpoint(endpoint) as T;
   }
 
+  const cacheKey = `tmdb:fetch:${endpoint}:${JSON.stringify(params)}`;
+
+  if (typeof window === "undefined") {
+    try {
+      const { getCachedData } = require("./redis");
+      return await getCachedData(
+        cacheKey,
+        async () => {
+          return await fetchDirectTMDB<T>(endpoint, params, apiKey);
+        },
+        3600 // 1 hour cache
+      );
+    } catch (cacheErr) {
+      console.warn("Redis client cache bypass, fetching directly:", cacheErr);
+    }
+  }
+
+  return await fetchDirectTMDB<T>(endpoint, params, apiKey);
+}
+
+async function fetchDirectTMDB<T>(
+  endpoint: string,
+  params: Record<string, string | number | boolean>,
+  apiKey: string
+): Promise<T> {
   try {
     const searchParams = new URLSearchParams({
       api_key: apiKey,

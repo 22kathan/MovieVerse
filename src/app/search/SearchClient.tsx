@@ -15,6 +15,7 @@ export default function SearchClient() {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "elastic">("grid");
 
   useEffect(() => {
     if (!query.trim()) {
@@ -27,9 +28,11 @@ export default function SearchClient() {
       setLoading(true);
       setErrorMsg("");
       try {
-        const response = await searchMulti(query.trim());
+        const res = await fetch(`/api/search?query=${encodeURIComponent(query.trim())}`);
+        if (!res.ok) throw new Error("Failed to fetch search results.");
+        const data = await res.json();
         if (active) {
-          setResults(response?.results || []);
+          setResults(data?.results || []);
         }
       } catch (e: any) {
         if (active) {
@@ -61,6 +64,9 @@ export default function SearchClient() {
       genre_ids: item.genre_ids || [],
       overview: item.overview || "",
       media_type: item.media_type || "movie",
+      highlightedTitle: item.highlightedTitle,
+      highlightedOverview: item.highlightedOverview,
+      score: item.score || 1.0,
     }));
 
   const celebrityResults = results
@@ -76,11 +82,38 @@ export default function SearchClient() {
 
   return (
     <div className="px-6 py-8 space-y-12 mx-auto min-h-screen" style={{ maxWidth: "var(--container-max)" }}>
-      <div>
-        <SectionHeader
-          title={query ? `🔍 Search Results` : "Search MovieVerse"}
-          subtitle={query ? `Found ${movieAndTvResults.length + celebrityResults.length} results matching "${query}"` : "Enter a search term above to explore."}
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-primary)]/60 pb-5">
+        <div>
+          <SectionHeader
+            title={query ? `🔍 Search Results` : "Search MovieVerse"}
+            subtitle={query ? `Found ${movieAndTvResults.length + celebrityResults.length} results matching "${query}"` : "Enter a search term above to explore."}
+          />
+        </div>
+
+        {query.trim() && movieAndTvResults.length > 0 && (
+          <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-primary)] self-start sm:self-center shrink-0">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-white"
+              }`}
+            >
+              Grid View
+            </button>
+            <button
+              onClick={() => setViewMode("elastic")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "elastic"
+                  ? "bg-amber-600/90 text-white shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-white"
+              }`}
+            >
+              <span>⚡ Elasticsearch Matches</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {errorMsg && (
@@ -145,8 +178,61 @@ export default function SearchClient() {
       {/* Movies and TV Shows Section */}
       {!loading && movieAndTvResults.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-white border-b border-[var(--border-primary)] pb-2">🎬 Movies & TV Shows</h3>
-          <MovieGrid movies={movieAndTvResults} />
+          <h3 className="text-lg font-bold text-white border-b border-[var(--border-primary)] pb-2 flex items-center gap-2">
+            <span>🎬</span> Movies & TV Shows
+            {viewMode === "elastic" && (
+              <span className="text-[10px] font-extrabold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 uppercase tracking-widest ml-2">
+                Elasticsearch Ranked
+              </span>
+            )}
+          </h3>
+          
+          {viewMode === "grid" ? (
+            <MovieGrid movies={movieAndTvResults} />
+          ) : (
+            <div className="space-y-3 pt-2">
+              {movieAndTvResults.map((movie) => {
+                const posterUrl = movie.poster_path
+                  ? `https://image.tmdb.org/t/p/w185${movie.poster_path}`
+                  : null;
+                const path = movie.media_type === "tv" ? "tv" : "movies";
+                return (
+                  <div key={movie.id} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] hover:border-[var(--border-secondary)] transition-all flex gap-4 relative overflow-hidden group">
+                    {/* Score badge */}
+                    <div className="absolute top-3 right-3 text-[10px] font-black bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+                      SCORE: {movie.score.toFixed(1)}
+                    </div>
+                    
+                    {/* Poster */}
+                    <Link href={`/${path}/${movie.id}`} className="w-14 sm:w-16 shrink-0 aspect-[2/3] relative rounded-lg overflow-hidden border border-white/5 bg-black/25">
+                      {posterUrl ? (
+                        <Image src={posterUrl} alt={movie.title} fill className="object-cover group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-[var(--text-muted)] font-bold">No Image</div>
+                      )}
+                    </Link>
+                    
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 pr-20 space-y-1.5">
+                      <div>
+                        <Link href={`/${path}/${movie.id}`} className="text-sm sm:text-base font-extrabold text-white group-hover:text-[var(--brand-primary-light)] transition-colors inline-block" dangerouslySetInnerHTML={{ __html: movie.highlightedTitle || movie.title }} />
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] sm:text-xs text-[var(--text-secondary)]">
+                          <span className="capitalize font-bold text-[var(--brand-primary-light)]">
+                            {movie.media_type === "tv" ? "TV Show" : "Movie"}
+                          </span>
+                          {movie.release_date && <span>• {new Date(movie.release_date).getFullYear()}</span>}
+                          {movie.vote_average > 0 && <span>• ⭐ {movie.vote_average.toFixed(1)}</span>}
+                        </div>
+                      </div>
+                      
+                      {/* Highlighted overview snippet */}
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-2" dangerouslySetInnerHTML={{ __html: movie.highlightedOverview || movie.overview || "No description available." }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

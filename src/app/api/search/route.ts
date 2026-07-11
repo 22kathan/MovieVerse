@@ -1,45 +1,43 @@
 import { NextResponse } from 'next/server';
+import { searchWithElastic } from '@/lib/elasticsearch';
 
 /**
- * Handles multi-search queries against The Movie Database (TMDB) API.
- * This route handler acts as a server-side proxy to search for movies,
- * TV shows, and people based on a user's query.
+ * Handles multi-search queries using the Elasticsearch-like helper.
  *
  * @param {Request} request - The incoming request object, expected to have a `query` search parameter.
  * @returns {Promise<NextResponse>} A promise that resolves to the search results or an error response.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('query');
-  const tmdbApiKey = process.env.TMDB_API_KEY;
-
-  // Validate that the TMDB API key is configured
-  if (!tmdbApiKey) {
-    console.error('TMDB_API_KEY is not set in environment variables.');
-    return NextResponse.json(
-      { error: 'API key for TMDB is not configured.' },
-      { status: 500 },
-    );
-  }
+  const query = searchParams.get('query') || searchParams.get('q');
+  const mediaType = (searchParams.get('type') || 'all') as 'movie' | 'tv' | 'all';
+  const page = parseInt(searchParams.get('page') || '1');
 
   // Validate that a search query was provided
   if (!query) {
     return NextResponse.json({ error: 'Search query is required.' }, { status: 400 });
   }
 
-  const url = `https://api.themoviedb.org/3/search/multi?api_key=${tmdbApiKey}&language=en-US&query=${encodeURIComponent(
-    query,
-  )}&page=1&include_adult=false`;
-
   try {
-    const tmdbResponse = await fetch(url);
-    if (!tmdbResponse.ok) {
-      const errorData = await tmdbResponse.json();
-      return NextResponse.json({ error: errorData.status_message || 'Failed to fetch search results from TMDB' }, { status: tmdbResponse.status });
-    }
-    const data = await tmdbResponse.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
+    const elasticResults = await searchWithElastic(query, mediaType, page);
+    return NextResponse.json({
+      results: elasticResults.results.map(item => ({
+        id: item.id,
+        title: item.title,
+        media_type: item.media_type,
+        poster_path: item.poster_path || null,
+        vote_average: item.rating || 0,
+        release_date: item.release_date || '',
+        overview: item.overview || '',
+        score: item.score,
+        highlightedTitle: item.highlightedTitle,
+        highlightedOverview: item.highlightedOverview
+      })),
+      took: elasticResults.took,
+      total: elasticResults.total
+    });
+  } catch (error: any) {
+    console.error("Elasticsearch API error:", error);
+    return NextResponse.json({ error: 'An error occurred while fetching Elasticsearch results.' }, { status: 500 });
   }
 }
