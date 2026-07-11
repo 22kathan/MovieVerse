@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { parseSearchQuery } from "@/lib/ai";
+import { discoverMovies, discoverTVShows, searchMovies, searchTVShows } from "@/lib/tmdb";
 
 // ============================================
 // MovieVerse — AI Search Assistant (Phase 4 Rebuild)
@@ -67,8 +69,17 @@ export default function AISearchPage() {
     "Preparing your personalized results...",
   ];
 
-  const handleSearch = async (searchQuery?: string) => {
-    const q = (searchQuery || query).trim();
+  const isStaticDeployment = () => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.location.hostname.includes("github.io") ||
+      window.location.port === "8000" ||
+      process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
+    );
+  };
+
+  const handleSearch = async (searchQueryInput?: string) => {
+    const q = (searchQueryInput || query).trim();
     if (!q) return;
 
     if (!isPremium) {
@@ -95,6 +106,222 @@ export default function AISearchPage() {
     }, 800);
 
     try {
+      if (isStaticDeployment()) {
+        // Run AI query parsing client-side
+        const parsed = await parseSearchQuery(q);
+
+        // Apply robust searchQuery cleaning (identical to backend)
+        if (parsed.searchQuery) {
+          const words = parsed.searchQuery.toLowerCase().split(/[\s\-_,./]+/);
+          const fillers = new Set([
+            'top', 'best', 'latest', 'recent', 'newest', 'highly', 'good', 'great', 'popular', 'trending',
+            'rated', 'scores', 'score', 'movie', 'movies', 'show', 'shows', 'tv', 'series', 'film', 'films',
+            'recommend', 'recommendations', 'suggest', 'suggestions', 'find', 'search', 'lookup', 'please',
+            'me', 'want', 'watch', 'of', 'from', 'in', 'at', 'with', 'and', 'or', 'the', 'a', 'an', 'to', 'for',
+            'about', 'starred', 'starring', 'directed', 'by', 'director', 'actor', 'actress', 'cast', 'list',
+            'like', 'similar'
+          ]);
+
+          const genres = new Set([
+            'action', 'adventure', 'animation', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy',
+            'history', 'horror', 'music', 'mystery', 'romance', 'sci-fi', 'scifi', 'science', 'fiction',
+            'thriller', 'war', 'western'
+          ]);
+
+          const cleanedWords = words.filter(word => {
+            if (!word) return false;
+            if (fillers.has(word)) return false;
+            if (genres.has(word)) return false;
+            if (parsed.year && word === String(parsed.year)) return false;
+            if (parsed.genreName && word === parsed.genreName.toLowerCase()) return false;
+            if (/^\d+(\.\d+)?$/.test(word)) return false;
+            return true;
+          });
+
+          if (cleanedWords.length === 0) {
+            parsed.searchQuery = undefined;
+          } else {
+            const cleanedStr = cleanedWords.join(' ').trim();
+            parsed.searchQuery = cleanedStr.length > 1 ? cleanedStr : undefined;
+          }
+        }
+
+        // Execute TMDB client calls directly
+        const mediaType = parsed.mediaType || 'all';
+        const industry = parsed.industry || 'both';
+        const indianLanguages = ['hi', 'te', 'ta', 'ml', 'kn', 'bn', 'pa', 'mr', 'gu', 'or', 'as'];
+
+        let resultsList: any[] = [];
+
+        const runDiscoverClient = async (params: any) => {
+          let discoverResults: any[] = [];
+          if (mediaType === 'tv') {
+            const response = await discoverTVShows(params);
+            discoverResults = (response?.results || []).map((item: any) => ({ ...item, media_type: 'tv' }));
+          } else if (mediaType === 'movie') {
+            const response = await discoverMovies(params);
+            discoverResults = (response?.results || []).map((item: any) => ({ ...item, media_type: 'movie' }));
+          } else {
+            const [movieRes, tvRes] = await Promise.all([
+              discoverMovies(params),
+              discoverTVShows(params),
+            ]);
+            const movieItems = (movieRes?.results || []).map((item: any) => ({ ...item, media_type: 'movie' }));
+            const tvItems = (tvRes?.results || []).map((item: any) => ({ ...item, media_type: 'tv' }));
+            
+            const combined: any[] = [];
+            const maxLen = Math.max(movieItems.length, tvItems.length);
+            for (let i = 0; i < maxLen; i++) {
+              if (movieItems[i]) combined.push(movieItems[i]);
+              if (tvItems[i]) combined.push(tvItems[i]);
+            }
+            discoverResults = combined;
+          }
+          return discoverResults;
+        };
+
+        if (parsed.searchQuery) {
+          let combinedResults: any[] = [];
+          if (mediaType === 'tv') {
+            const response = await searchTVShows(parsed.searchQuery);
+            combinedResults = response?.results || [];
+          } else if (mediaType === 'movie') {
+            const response = await searchMovies(parsed.searchQuery);
+            combinedResults = response?.results || [];
+          } else {
+            const [movieRes, tvRes] = await Promise.all([
+              searchMovies(parsed.searchQuery),
+              searchTVShows(parsed.searchQuery),
+            ]);
+            const movieItems = (movieRes?.results || []).map((item: any) => ({ ...item, media_type: 'movie' }));
+            const tvItems = (tvRes?.results || []).map((item: any) => ({ ...item, media_type: 'tv' }));
+            
+            const maxLen = Math.max(movieItems.length, tvItems.length);
+            for (let i = 0; i < maxLen; i++) {
+              if (movieItems[i]) combinedResults.push(movieItems[i]);
+              if (tvItems[i]) combinedResults.push(tvItems[i]);
+            }
+          }
+
+          resultsList = combinedResults;
+          if (parsed.genreId || parsed.year || parsed.minRating || industry !== 'both') {
+            resultsList = combinedResults.filter((item: any) => {
+              if (industry === 'bollywood') {
+                if (!indianLanguages.includes(item.original_language)) return false;
+              } else if (industry === 'hollywood') {
+                if (item.original_language !== 'en') return false;
+              }
+              if (parsed.genreId) {
+                const genres = item.genre_ids || [];
+                if (!genres.includes(parsed.genreId)) return false;
+              }
+              if (parsed.year) {
+                const dateStr = item.release_date || item.first_air_date || '';
+                const itemYear = dateStr ? new Date(dateStr).getFullYear() : null;
+                if (itemYear !== parsed.year) return false;
+              }
+              if (parsed.minRating) {
+                const rating = item.vote_average || 0;
+                if (rating < parsed.minRating) return false;
+              }
+              return true;
+            });
+          }
+        } else {
+          const discoverParams: any = {
+            page: 1,
+            sortBy: parsed.sortBy || 'popularity.desc',
+          };
+          if (parsed.genreId) {
+            discoverParams.withGenres = String(parsed.genreId);
+          }
+          if (parsed.year) {
+            discoverParams.primaryReleaseDateGte = `${parsed.year}-01-01`;
+            discoverParams.primaryReleaseDateLte = `${parsed.year}-12-31`;
+          }
+          if (parsed.minRating) {
+            discoverParams.voteAverageGte = parsed.minRating;
+          }
+
+          if (industry === 'bollywood') {
+            resultsList = await runDiscoverClient({ ...discoverParams, withOriginalLanguage: 'hi|te|ta|ml|kn|bn' });
+          } else if (industry === 'hollywood') {
+            resultsList = await runDiscoverClient({ ...discoverParams, withOriginalLanguage: 'en' });
+          } else {
+            const [bollyRes, hollyRes] = await Promise.all([
+              runDiscoverClient({ ...discoverParams, withOriginalLanguage: 'hi|te|ta|ml|kn|bn' }),
+              runDiscoverClient({ ...discoverParams, withOriginalLanguage: 'en' }),
+            ]);
+            const interleaved: any[] = [];
+            const maxLen = Math.max(bollyRes.length, hollyRes.length);
+            for (let i = 0; i < maxLen; i++) {
+              if (bollyRes[i]) interleaved.push(bollyRes[i]);
+              if (hollyRes[i]) interleaved.push(hollyRes[i]);
+            }
+            resultsList = interleaved;
+          }
+
+          // Apply in-memory filtering to discover results to ensure they match parsed filters (important for mock fallback database)
+          if (parsed.genreId || parsed.year || parsed.minRating) {
+            resultsList = resultsList.filter((item: any) => {
+              if (parsed.genreId) {
+                const genres = item.genre_ids || [];
+                if (!genres.includes(parsed.genreId)) return false;
+              }
+              if (parsed.year) {
+                const dateStr = item.release_date || item.first_air_date || '';
+                const itemYear = dateStr ? new Date(dateStr).getFullYear() : null;
+                if (itemYear !== parsed.year) return false;
+              }
+              if (parsed.minRating) {
+                const rating = item.vote_average || 0;
+                if (rating < parsed.minRating) return false;
+              }
+              return true;
+            });
+          }
+        }
+
+        const normalized = resultsList.map((item: any) => ({
+          id: item.id,
+          title: item.title || item.name || 'Untitled',
+          poster_path: item.poster_path || null,
+          backdrop_path: item.backdrop_path || null,
+          vote_average: item.vote_average || 0,
+          release_date: item.release_date || item.first_air_date || '',
+          genre_ids: item.genre_ids || [],
+          overview: item.overview || '',
+          media_type: mediaType === 'all' ? (item.title ? 'movie' : 'tv') : mediaType,
+        }));
+
+        const seen = new Set<string>();
+        const deduplicated = normalized.filter((item: any) => {
+          const key = `${item.mediaType || item.media_type}-${item.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        clearInterval(phaseInterval);
+        const finalResults = deduplicated.slice(0, 18);
+        setResults(finalResults);
+        setParsedFilters(parsed as any);
+
+        const newItem: SearchHistoryItem = {
+          query: q,
+          timestamp: Date.now(),
+          resultCount: finalResults.length,
+        };
+        const updated = [newItem, ...searchHistory.filter((h) => h.query !== q)].slice(0, 10);
+        setSearchHistory(updated);
+        localStorage.setItem("movieverse_ai_history", JSON.stringify(updated));
+
+        setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+        setLoading(false);
+        setThinkingPhase("");
+        return;
+      }
+
       const res = await fetch("/api/ai/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

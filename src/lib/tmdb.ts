@@ -174,23 +174,24 @@ function getMockDataForEndpoint(endpoint: string): unknown {
   }
 
   // TV Details
-  if (cleanEndpoint.startsWith('/tv/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images')) {
+  if (cleanEndpoint.startsWith('/tv/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
     const id = parseInt(cleanEndpoint.split('/')[2]) || 1;
+    const mockShow = MOCK_TV_SHOWS_DB[id] || MOCK_TV_SHOWS_DB[1];
     return {
-      id,
-      name: "Breaking Bad",
-      overview: "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.",
-      poster_path: "/ztkUQIL6Z1zJ47Xd56rqR168665.jpg",
-      backdrop_path: "/9fa59fe565551ba3ca98c2d829.jpg",
-      vote_average: 9.5,
+      id: mockShow.id,
+      name: mockShow.name,
+      overview: mockShow.overview,
+      poster_path: mockShow.poster_path,
+      backdrop_path: mockShow.backdrop_path,
+      vote_average: mockShow.vote_average,
       vote_count: 8500,
-      first_air_date: "2008-01-20",
-      episode_run_time: [49],
-      genres: [{ id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
-      number_of_seasons: 5,
-      number_of_episodes: 62,
-      status: "Ended",
-      tagline: "Remember my name.",
+      first_air_date: mockShow.first_air_date,
+      episode_run_time: mockShow.episode_run_time || [45],
+      genres: mockShow.genres,
+      number_of_seasons: mockShow.number_of_seasons || 3,
+      number_of_episodes: mockShow.number_of_episodes || 30,
+      status: "Released",
+      tagline: mockShow.tagline || "Must-watch TV series.",
     };
   }
 
@@ -341,17 +342,55 @@ function getMockDataForEndpoint(endpoint: string): unknown {
   }
 
   // Default List Responses (Trending, Search, etc.)
-  const defaultResults = Object.values(MOCK_MOVIES_DB).map(m => ({
-    id: m.id,
-    title: m.title,
-    overview: m.overview,
-    poster_path: m.poster_path,
-    backdrop_path: m.backdrop_path,
-    vote_average: m.vote_average,
-    release_date: m.release_date,
-    genre_ids: m.genres.map(g => g.id),
-    media_type: "movie",
-  }));
+  const isMulti = cleanEndpoint.includes('/multi');
+  const isTv = cleanEndpoint.includes('/tv/') || cleanEndpoint.includes('/tv') || cleanEndpoint.includes('tv');
+  
+  let defaultResults: any[];
+  if (isMulti) {
+    // Combine both movies and TV shows
+    const movies = Object.values(MOCK_MOVIES_DB).map((m: any) => ({
+      id: m.id,
+      title: m.title,
+      name: m.title,
+      overview: m.overview,
+      poster_path: m.poster_path,
+      backdrop_path: m.backdrop_path,
+      vote_average: m.vote_average,
+      release_date: m.release_date,
+      first_air_date: m.release_date,
+      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+      media_type: "movie",
+    }));
+    const tvShows = Object.values(MOCK_TV_SHOWS_DB).map((m: any) => ({
+      id: m.id,
+      title: m.name,
+      name: m.name,
+      overview: m.overview,
+      poster_path: m.poster_path,
+      backdrop_path: m.backdrop_path,
+      vote_average: m.vote_average,
+      release_date: m.first_air_date,
+      first_air_date: m.first_air_date,
+      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+      media_type: "tv",
+    }));
+    defaultResults = [...movies, ...tvShows];
+  } else {
+    const database = isTv ? MOCK_TV_SHOWS_DB : MOCK_MOVIES_DB;
+    defaultResults = Object.values(database).map((m: any) => ({
+      id: m.id,
+      title: m.title || m.name || "",
+      name: m.name || m.title || "",
+      overview: m.overview,
+      poster_path: m.poster_path,
+      backdrop_path: m.backdrop_path,
+      vote_average: m.vote_average,
+      release_date: m.release_date || m.first_air_date || "",
+      first_air_date: m.first_air_date || m.release_date || "",
+      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+      media_type: isTv ? "tv" : "movie",
+    }));
+  }
 
   return {
     page: 1,
@@ -1559,6 +1598,512 @@ const MOCK_MOVIES_DB: Record<number, {
     revenue: 187700000,
     poster_path: "/12_years_slave_poster.jpg",
     backdrop_path: "/12_years_slave_backdrop.jpg"
+  },
+  81: {
+    id: 81,
+    title: "3 Idiots",
+    vote_average: 8.4,
+    release_date: "2009-12-25",
+    overview: "Two friends are searching for their long lost companion. They revisit their college days and recall the memories of their friend who inspired them to think differently, even as the rest of the world called them idiots.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 18, name: "Drama" }],
+    runtime: 170,
+    tagline: "All is Well.",
+    budget: 11000000,
+    revenue: 90000000,
+    poster_path: "/3_idiots_poster.jpg",
+    backdrop_path: "/3_idiots_backdrop.jpg"
+  },
+  82: {
+    id: 82,
+    title: "Dangal",
+    vote_average: 8.4,
+    release_date: "2016-12-23",
+    overview: "Mahavir Singh Phogat, a former wrestler, decides to fulfill his dream of winning a gold medal for his country by training his daughters for the Commonwealth Games.",
+    genres: [{ id: 28, name: "Action" }, { id: 18, name: "Drama" }, { id: 10751, name: "Family" }],
+    runtime: 161,
+    tagline: "Are my girls any less than boys?",
+    budget: 10000000,
+    revenue: 340000000,
+    poster_path: "/dangal_poster.jpg",
+    backdrop_path: "/dangal_backdrop.jpg"
+  },
+  83: {
+    id: 83,
+    title: "Sholay",
+    vote_average: 8.2,
+    release_date: "1975-08-15",
+    overview: "After his family is murdered by a notorious and ruthless bandit, a retired police officer enlists the help of two outlaws to capture him.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
+    runtime: 204,
+    tagline: "The greatest story ever told.",
+    budget: 4000000,
+    revenue: 50000000,
+    poster_path: "/sholay_poster.jpg",
+    backdrop_path: "/sholay_backdrop.jpg"
+  },
+  84: {
+    id: 84,
+    title: "Dilwale Dulhania Le Jayenge",
+    vote_average: 8.3,
+    release_date: "1995-10-20",
+    overview: "Raj and Simran meet during a trip to Europe and fall in love, but Raj must win over Simran's traditional father to marry her.",
+    genres: [{ id: 18, name: "Drama" }, { id: 10749, name: "Romance" }],
+    runtime: 189,
+    tagline: "Come fall in love.",
+    budget: 4000000,
+    revenue: 60000000,
+    poster_path: "/ddlj_poster.jpg",
+    backdrop_path: "/ddlj_backdrop.jpg"
+  },
+  85: {
+    id: 85,
+    title: "Gangs of Wasseypur",
+    vote_average: 8.2,
+    release_date: "2012-06-22",
+    overview: "A clash between Sultan and Shahid Khan leads to Shahid's expulsion from Wasseypur, igniting a deadly three-generation coal mafia feud.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
+    runtime: 321,
+    tagline: "The search for vengeance.",
+    budget: 3000000,
+    revenue: 10000000,
+    poster_path: "/wasseypur_poster.jpg",
+    backdrop_path: "/wasseypur_backdrop.jpg"
+  },
+  86: {
+    id: 86,
+    title: "Lagaan",
+    vote_average: 8.1,
+    release_date: "2001-06-15",
+    overview: "In Victorian India, a resilient group of villagers stake their future on a game of cricket against their ruthless British rulers.",
+    genres: [{ id: 18, name: "Drama" }, { id: 36, name: "History" }],
+    runtime: 224,
+    tagline: "Once upon a time in India.",
+    budget: 6000000,
+    revenue: 30000000,
+    poster_path: "/lagaan_poster.jpg",
+    backdrop_path: "/lagaan_backdrop.jpg"
+  },
+  87: {
+    id: 87,
+    title: "Zindagi Na Milegi Dobara",
+    vote_average: 8.1,
+    release_date: "2011-06-24",
+    overview: "Three friends decide to turn their fantasy bachelor road trip into a reality after one of them gets engaged.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 18, name: "Drama" }, { id: 10749, name: "Romance" }],
+    runtime: 155,
+    tagline: "You only live once.",
+    budget: 8000000,
+    revenue: 25000000,
+    poster_path: "/znmd_poster.jpg",
+    backdrop_path: "/znmd_backdrop.jpg"
+  },
+  88: {
+    id: 88,
+    title: "Andhadhun",
+    vote_average: 8.2,
+    release_date: "2018-10-05",
+    overview: "A series of mysterious events changes the life of a blind pianist, who now must report a crime that he should not have seen.",
+    genres: [{ id: 80, name: "Crime" }, { id: 35, name: "Comedy" }, { id: 53, name: "Thriller" }],
+    runtime: 139,
+    tagline: "What you can't see will hurt you.",
+    budget: 4000000,
+    revenue: 64000000,
+    poster_path: "/andhadhun_poster.jpg",
+    backdrop_path: "/andhadhun_backdrop.jpg"
+  },
+  89: {
+    id: 89,
+    title: "Baahubali: The Beginning",
+    vote_average: 8.0,
+    release_date: "2015-07-10",
+    overview: "In ancient India, an adventurous man helps his love rescue her former queen from a tyrannical ruler.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
+    runtime: 159,
+    tagline: "The beginning of a legend.",
+    budget: 18000000,
+    revenue: 100000000,
+    poster_path: "/baahubali_poster.jpg",
+    backdrop_path: "/baahubali_backdrop.jpg"
+  },
+  90: {
+    id: 90,
+    title: "Kahaani",
+    vote_average: 8.1,
+    release_date: "2012-03-09",
+    overview: "A pregnant woman's search for her missing husband takes her from London to Kolkata, but everyone she questions denies having ever met him.",
+    genres: [{ id: 9648, name: "Mystery" }, { id: 53, name: "Thriller" }, { id: 18, name: "Drama" }],
+    runtime: 122,
+    tagline: "A mother's quest.",
+    budget: 2000000,
+    revenue: 15000000,
+    poster_path: "/kahaani_poster.jpg",
+    backdrop_path: "/kahaani_backdrop.jpg"
+  }
+};
+
+const MOCK_TV_SHOWS_DB: Record<number, {
+  id: number;
+  name: string;
+  vote_average: number;
+  first_air_date: string;
+  overview: string;
+  genres: Array<{ id: number; name: string }>;
+  episode_run_time?: number[];
+  tagline?: string;
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}> = {
+  1: {
+    id: 1,
+    name: "Breaking Bad",
+    vote_average: 9.5,
+    first_air_date: "2008-01-20",
+    overview: "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.",
+    genres: [{ id: 80, name: "Crime" }, { id: 18, name: "Drama" }, { id: 53, name: "Thriller" }],
+    episode_run_time: [49],
+    tagline: "Remember my name.",
+    number_of_seasons: 5,
+    number_of_episodes: 62,
+    poster_path: "/breaking_bad_poster.jpg",
+    backdrop_path: "/breaking_bad_backdrop.jpg"
+  },
+  2: {
+    id: 2,
+    name: "Stranger Things",
+    vote_average: 8.7,
+    first_air_date: "2016-07-15",
+    overview: "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.",
+    genres: [{ id: 18, name: "Drama" }, { id: 9648, name: "Mystery" }, { id: 878, name: "Sci-Fi" }],
+    episode_run_time: [50],
+    tagline: "One summer can change everything.",
+    number_of_seasons: 4,
+    number_of_episodes: 34,
+    poster_path: "/stranger_things_poster.jpg",
+    backdrop_path: "/stranger_things_backdrop.jpg"
+  },
+  3: {
+    id: 3,
+    name: "Game of Thrones",
+    vote_average: 9.2,
+    first_air_date: "2011-04-17",
+    overview: "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest North.",
+    genres: [{ id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }, { id: 28, name: "Action" }],
+    episode_run_time: [60],
+    tagline: "Winter is coming.",
+    number_of_seasons: 8,
+    number_of_episodes: 73,
+    poster_path: "/game_of_thrones_poster.jpg",
+    backdrop_path: "/game_of_thrones_backdrop.jpg"
+  },
+  4: {
+    id: 4,
+    name: "Dark",
+    vote_average: 8.8,
+    first_air_date: "2017-12-01",
+    overview: "A missing child sets four families on a frantic hunt for answers as they unearth a mind-bending mystery that spans three generations.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 9648, name: "Mystery" }, { id: 53, name: "Thriller" }],
+    episode_run_time: [60],
+    tagline: "Everything is connected.",
+    number_of_seasons: 3,
+    number_of_episodes: 26,
+    poster_path: "/dark_tv_poster.jpg",
+    backdrop_path: "/dark_tv_backdrop.jpg"
+  },
+  5: {
+    id: 5,
+    name: "Friends",
+    vote_average: 8.9,
+    first_air_date: "1994-09-22",
+    overview: "Follows the personal and professional lives of six twenty to thirty-something-year-old friends living in Manhattan.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 10749, name: "Romance" }],
+    episode_run_time: [22],
+    tagline: "I'll be there for you.",
+    number_of_seasons: 10,
+    number_of_episodes: 236,
+    poster_path: "/friends_poster.jpg",
+    backdrop_path: "/friends_backdrop.jpg"
+  },
+  6: {
+    id: 6,
+    name: "The Office",
+    vote_average: 9.0,
+    first_air_date: "2005-03-24",
+    overview: "A mockumentary on a group of typical office workers, where the workday consists of ego clashes, inappropriate behavior, and tedium.",
+    genres: [{ id: 35, name: "Comedy" }],
+    episode_run_time: [22],
+    tagline: "Our office is a family.",
+    number_of_seasons: 9,
+    number_of_episodes: 201,
+    poster_path: "/the_office_poster.jpg",
+    backdrop_path: "/the_office_backdrop.jpg"
+  },
+  7: {
+    id: 7,
+    name: "The Mandalorian",
+    vote_average: 8.7,
+    first_air_date: "2019-11-12",
+    overview: "The travels of a lone bounty hunter in the outer reaches of the galaxy, far from the authority of the New Republic.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 878, name: "Sci-Fi" }],
+    episode_run_time: [40],
+    tagline: "This is the Way.",
+    number_of_seasons: 3,
+    number_of_episodes: 24,
+    poster_path: "/mandalorian_poster.jpg",
+    backdrop_path: "/mandalorian_backdrop.jpg"
+  },
+  8: {
+    id: 8,
+    name: "The Crown",
+    vote_average: 8.6,
+    first_air_date: "2016-11-04",
+    overview: "Follows the political rivalries and romance of Queen Elizabeth II's reign and the events that shaped the second half of the twentieth century.",
+    genres: [{ id: 18, name: "Drama" }, { id: 36, name: "History" }],
+    episode_run_time: [58],
+    tagline: "Times change. Duty remains.",
+    number_of_seasons: 6,
+    number_of_episodes: 60,
+    poster_path: "/the_crown_poster.jpg",
+    backdrop_path: "/the_crown_backdrop.jpg"
+  },
+  9: {
+    id: 9,
+    name: "Black Mirror",
+    vote_average: 8.8,
+    first_air_date: "2011-12-04",
+    overview: "An anthology series exploring a twisted, high-tech multiverse where humanity's greatest innovations and darkest instincts collide.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 18, name: "Drama" }, { id: 53, name: "Thriller" }],
+    episode_run_time: [60],
+    tagline: "The future is bright.",
+    number_of_seasons: 6,
+    number_of_episodes: 28,
+    poster_path: "/black_mirror_poster.jpg",
+    backdrop_path: "/black_mirror_backdrop.jpg"
+  },
+  10: {
+    id: 10,
+    name: "Mirzapur",
+    vote_average: 8.5,
+    first_air_date: "2018-11-16",
+    overview: "A shocking incident at a wedding procession ignites a series of events, entangling the lives of two families in the lawless city of Mirzapur.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
+    episode_run_time: [50],
+    tagline: "Bhaukal machne wala hai.",
+    number_of_seasons: 3,
+    number_of_episodes: 29,
+    poster_path: "/mirzapur_poster.jpg",
+    backdrop_path: "/mirzapur_backdrop.jpg"
+  },
+  11: {
+    id: 11,
+    name: "Sacred Games",
+    vote_average: 8.6,
+    first_air_date: "2018-07-06",
+    overview: "A link in their pasts leads an honest cop to a fugitive gang boss, whose cryptic warning spurs the officer on a quest to save Mumbai from cataclysm.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 18, name: "Drama" }, { id: 53, name: "Thriller" }],
+    episode_run_time: [50],
+    tagline: "Apun hi bhagwan hai.",
+    number_of_seasons: 2,
+    number_of_episodes: 16,
+    poster_path: "/sacred_games_poster.jpg",
+    backdrop_path: "/sacred_games_backdrop.jpg"
+  },
+  12: {
+    id: 12,
+    name: "Succession",
+    vote_average: 8.8,
+    first_air_date: "2018-06-03",
+    overview: "The Roy family is known for controlling the biggest media and entertainment company in the world. However, their world changes when their father steps down.",
+    genres: [{ id: 18, name: "Drama" }],
+    episode_run_time: [60],
+    tagline: "Control the narrative.",
+    number_of_seasons: 4,
+    number_of_episodes: 39,
+    poster_path: "/succession_poster.jpg",
+    backdrop_path: "/succession_backdrop.jpg"
+  },
+  13: {
+    id: 13,
+    name: "The Last of Us",
+    vote_average: 8.8,
+    first_air_date: "2023-01-15",
+    overview: "After a global pandemic destroys civilization, a hardened survivor takes charge of a 14-year-old girl who may be humanity's last hope.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
+    episode_run_time: [50],
+    tagline: "When you're lost in the darkness, look for the light.",
+    number_of_seasons: 1,
+    number_of_episodes: 9,
+    poster_path: "/last_of_us_poster.jpg",
+    backdrop_path: "/last_of_us_backdrop.jpg"
+  },
+  14: {
+    id: 14,
+    name: "Narcos",
+    vote_average: 8.8,
+    first_air_date: "2015-08-28",
+    overview: "A chronicled look at the criminal exploits of Colombian drug lord Pablo Escobar, as well as the many other drug kingpins who plagued the country through the years.",
+    genres: [{ id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
+    episode_run_time: [49],
+    tagline: "There's no business like blow business.",
+    number_of_seasons: 3,
+    number_of_episodes: 30,
+    poster_path: "/narcos_poster.jpg",
+    backdrop_path: "/narcos_backdrop.jpg"
+  },
+  15: {
+    id: 15,
+    name: "Attack on Titan",
+    vote_average: 9.0,
+    first_air_date: "2013-04-07",
+    overview: "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
+    genres: [{ id: 16, name: "Animation" }, { id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
+    episode_run_time: [24],
+    tagline: "If you don't fight, you can't win.",
+    number_of_seasons: 4,
+    number_of_episodes: 87,
+    poster_path: "/attack_on_titan_poster.jpg",
+    backdrop_path: "/attack_on_titan_backdrop.jpg"
+  },
+  16: {
+    id: 16,
+    name: "Death Note",
+    vote_average: 9.0,
+    first_air_date: "2006-10-04",
+    overview: "An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook capable of killing anyone whose name is written in it.",
+    genres: [{ id: 16, name: "Animation" }, { id: 80, name: "Crime" }, { id: 9648, name: "Mystery" }],
+    episode_run_time: [23],
+    tagline: "Justice will prevail.",
+    number_of_seasons: 1,
+    number_of_episodes: 37,
+    poster_path: "/death_note_poster.jpg",
+    backdrop_path: "/death_note_backdrop.jpg"
+  },
+  17: {
+    id: 17,
+    name: "The Witcher",
+    vote_average: 8.0,
+    first_air_date: "2019-12-20",
+    overview: "Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
+    episode_run_time: [60],
+    tagline: "The worst monsters are the ones we create.",
+    number_of_seasons: 3,
+    number_of_episodes: 24,
+    poster_path: "/witcher_poster.jpg",
+    backdrop_path: "/witcher_backdrop.jpg"
+  },
+  18: {
+    id: 18,
+    name: "True Detective",
+    vote_average: 8.9,
+    first_air_date: "2014-01-12",
+    overview: "Seasonal anthology series in which police investigations unearth the personal and professional secrets of those involved, both within and outside the law.",
+    genres: [{ id: 80, name: "Crime" }, { id: 18, name: "Drama" }, { id: 9648, name: "Mystery" }],
+    episode_run_time: [55],
+    tagline: "Touch darkness and darkness touches you.",
+    number_of_seasons: 4,
+    number_of_episodes: 30,
+    poster_path: "/true_detective_poster.jpg",
+    backdrop_path: "/true_detective_backdrop.jpg"
+  },
+  19: {
+    id: 19,
+    name: "Fargo",
+    vote_average: 8.9,
+    first_air_date: "2014-04-15",
+    overview: "Various chronicles of deception, intrigue and murder in and around frozen Minnesota. Yet all of these tales mysteriously lead back one way or another to Fargo, North Dakota.",
+    genres: [{ id: 80, name: "Crime" }, { id: 18, name: "Drama" }, { id: 35, name: "Comedy" }],
+    episode_run_time: [53],
+    tagline: "A true crime story.",
+    number_of_seasons: 5,
+    number_of_episodes: 51,
+    poster_path: "/fargo_tv_poster.jpg",
+    backdrop_path: "/fargo_tv_backdrop.jpg"
+  },
+  20: {
+    id: 20,
+    name: "Wednesday",
+    vote_average: 8.1,
+    first_air_date: "2022-11-23",
+    overview: "Wednesday Addams' misadventures as a student at Nevermore Academy, a very unique boarding school for outcasts.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 14, name: "Fantasy" }, { id: 9648, name: "Mystery" }],
+    episode_run_time: [45],
+    tagline: "Being an outcast has never been so chic.",
+    number_of_seasons: 1,
+    number_of_episodes: 8,
+    poster_path: "/wednesday_poster.jpg",
+    backdrop_path: "/wednesday_backdrop.jpg"
+  },
+  21: {
+    id: 21,
+    name: "The Boys",
+    vote_average: 8.7,
+    first_air_date: "2019-07-26",
+    overview: "A group of vigilantes set out to take down corrupt superheroes who abuse their superpowers.",
+    genres: [{ id: 28, name: "Action" }, { id: 35, name: "Comedy" }, { id: 878, name: "Sci-Fi" }],
+    episode_run_time: [60],
+    tagline: "Never meet your heroes.",
+    number_of_seasons: 4,
+    number_of_episodes: 32,
+    poster_path: "/the_boys_poster.jpg",
+    backdrop_path: "/the_boys_backdrop.jpg"
+  },
+  22: {
+    id: 22,
+    name: "Severance",
+    vote_average: 8.7,
+    first_air_date: "2022-02-18",
+    overview: "Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 9648, name: "Mystery" }, { id: 53, name: "Thriller" }],
+    episode_run_time: [48],
+    tagline: "Please consent to a severance procedure.",
+    number_of_seasons: 1,
+    number_of_episodes: 9,
+    poster_path: "/severance_poster.jpg",
+    backdrop_path: "/severance_backdrop.jpg"
+  },
+  23: {
+    id: 23,
+    name: "Rick and Morty",
+    vote_average: 9.1,
+    first_air_date: "2013-12-02",
+    overview: "An animated series that follows the exploits of a super scientist and his inherently timid grandson.",
+    genres: [{ id: 16, name: "Animation" }, { id: 35, name: "Comedy" }, { id: 878, name: "Sci-Fi" }],
+    episode_run_time: [22],
+    tagline: "Science is more art than science.",
+    number_of_seasons: 7,
+    number_of_episodes: 74,
+    poster_path: "/rick_morty_poster.jpg",
+    backdrop_path: "/rick_morty_backdrop.jpg"
+  },
+  24: {
+    id: 24,
+    name: "Money Heist",
+    vote_average: 8.2,
+    first_air_date: "2017-05-02",
+    overview: "To carry out the biggest heist in history, a mysterious man called The Professor recruits a band of eight robbers who have a single characteristic: none of them has anything to lose.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
+    episode_run_time: [50],
+    tagline: "Bella Ciao.",
+    number_of_seasons: 5,
+    number_of_episodes: 41,
+    poster_path: "/money_heist_poster.jpg",
+    backdrop_path: "/money_heist_backdrop.jpg"
+  },
+  25: {
+    id: 25,
+    name: "Chernobyl",
+    vote_average: 9.4,
+    first_air_date: "2019-05-06",
+    overview: "The dramatization of the true story of one of the worst man-made catastrophes in history, the Chernobyl nuclear disaster.",
+    genres: [{ id: 18, name: "Drama" }, { id: 36, name: "History" }],
+    episode_run_time: [60],
+    tagline: "What is the cost of lies?",
+    number_of_seasons: 1,
+    number_of_episodes: 5,
+    poster_path: "/chernobyl_poster.jpg",
+    backdrop_path: "/chernobyl_backdrop.jpg"
   }
 };
 
@@ -1911,12 +2456,55 @@ export async function getTVGenres(): Promise<{
 // ============================================
 
 /** Build full image URL from TMDB path */
+const POSTER_PRESETS = [
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop", // sci-fi
+  "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop", // cyberpunk
+  "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop", // cosmic fantasy
+  "https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=500&auto=format&fit=crop", // horror
+  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop", // comedy/popcorn
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop", // drama/theater
+  "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=500&auto=format&fit=crop", // action/fire
+  "https://images.unsplash.com/photo-1505664194779-8bebcb95c02e?w=500&auto=format&fit=crop", // mystery/detective
+  "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&auto=format&fit=crop", // romance
+  "https://images.unsplash.com/photo-1519074002996-a69e7ac46a42?w=500&auto=format&fit=crop", // fantasy/sword
+];
+
+const BACKDROP_PRESETS = [
+  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop", // cosmic
+  "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200&auto=format&fit=crop", // neon street
+  "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=1200&auto=format&fit=crop", // fantasy castle
+  "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop", // misty woods
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop", // cinema seats
+];
+
+function getDeterministicImage(path: string, type: 'poster' | 'backdrop'): string {
+  let hash = 0;
+  for (let i = 0; i < path.length; i++) {
+    hash = path.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash);
+  if (type === 'poster') {
+    return POSTER_PRESETS[index % POSTER_PRESETS.length];
+  } else {
+    return BACKDROP_PRESETS[index % BACKDROP_PRESETS.length];
+  }
+}
+
+/** Build full image URL from TMDB path */
 export function getImageUrl(
   path: string | null | undefined,
   type: keyof typeof IMAGE_SIZES = 'poster',
   size: 'sm' | 'md' | 'lg' | 'xl' | 'original' = 'md'
 ): string | null {
   if (!path) return null;
+  if (path.startsWith("http")) return path;
+  
+  // Detect if this is a local mock path (does not start with a real TMDB alphanumeric slash pattern)
+  const isMockPath = path.includes('_poster') || path.includes('_backdrop') || !/^\/[a-zA-Z0-9]{15,}/.test(path);
+  if (isMockPath) {
+    return getDeterministicImage(path, type === 'backdrop' ? 'backdrop' : 'poster');
+  }
+
   const sizeMap = IMAGE_SIZES[type] as Record<string, string>;
   const baseUrl = sizeMap[size] || sizeMap['md'];
   return `${baseUrl}${path}`;

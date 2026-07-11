@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { getWatchlist as localGetWatchlist, removeFromWatchlist as localRemoveFromWatchlist } from "@/lib/storage";
@@ -124,20 +124,14 @@ export default function WatchlistPage() {
                 className="group relative flex flex-col bg-[var(--bg-surface)] border border-[var(--border-primary)] rounded-2xl overflow-hidden shadow-[var(--shadow-card)] hover:border-[var(--border-secondary)] transition-all duration-300"
               >
                 <Link href={detailUrl} className="block relative aspect-[2/3] w-full bg-[#121824] overflow-hidden">
-                  {posterUrl ? (
-                    <Image
-                      src={posterUrl}
-                      alt={item.title || "Poster"}
-                      fill
-                      sizes="(max-width: 640px) 150px, (max-width: 1024px) 240px, 300px"
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full gap-2 text-[var(--text-muted)] bg-[var(--bg-surface)]">
-                      <Film className="w-10 h-10 stroke-[1.5]" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider">No Image</span>
-                    </div>
-                  )}
+                  <SafeImage
+                    src={posterUrl}
+                    alt={item.title || "Poster"}
+                    fallbackType="poster"
+                    fill
+                    sizes="(max-width: 640px) 150px, (max-width: 1024px) 240px, 300px"
+                    className="group-hover:scale-[1.03] transition-transform duration-500"
+                  />
 
                   {/* Badges */}
                   <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">

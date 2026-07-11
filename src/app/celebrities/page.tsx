@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import { getPopularPeople, getImageUrl } from "@/lib/tmdb";
 import SectionHeader from "@/components/shared/SectionHeader";
@@ -63,20 +63,14 @@ export default async function CelebritiesPage({ searchParams }: CelebritiesPageP
               >
                 {/* Photo container */}
                 <div className="aspect-[3/4] relative w-full bg-[#121824] overflow-hidden">
-                  {profileUrl ? (
-                    <Image
-                      src={profileUrl}
-                      alt={person.name || "Celebrity"}
-                      fill
-                      sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 300px"
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full gap-2 text-[var(--text-muted)] bg-[var(--bg-tertiary)]">
-                      <User className="w-12 h-12 stroke-[1.5]" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider">No Photo</span>
-                    </div>
-                  )}
+                  <SafeImage
+                    src={profileUrl}
+                    alt={person.name || "Celebrity"}
+                    fallbackType="profile"
+                    fill
+                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 300px"
+                    className="group-hover:scale-[1.03] transition-transform duration-500"
+                  />
                 </div>
 
                 {/* Details */}

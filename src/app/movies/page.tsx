@@ -1,63 +1,128 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { discoverMovies, getMovieGenres } from "@/lib/tmdb";
 import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
 import FilterToolbar from "@/components/movie/FilterToolbar";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
-interface MoviesPageProps {
-  searchParams: Promise<{
-    genre?: string;
-    sortBy?: string;
-    year?: string;
-    page?: string;
-  }>;
+export default function MoviesExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--brand-primary)]" />
+      </div>
+    }>
+      <MoviesExploreContent />
+    </Suspense>
+  );
 }
 
-export const metadata: Metadata = {
-  title: "Explore Movies | MovieVerse",
-  description: "Browse and filter through thousands of movies by genre, rating, release date, and streaming availability.",
-};
+function MoviesExploreContent() {
+  const searchParams = useSearchParams();
 
-export const dynamic = "force-static";
+  const genre = searchParams.get("genre") || "";
+  const sortBy = searchParams.get("sortBy") || "popularity.desc";
+  const year = searchParams.get("year") || "";
+  const page = parseInt(searchParams.get("page") || "1");
 
-export default async function MoviesExplorePage({ searchParams }: MoviesPageProps) {
-  const resolvedParams = await searchParams;
-  const genre = resolvedParams.genre || "";
-  const sortBy = resolvedParams.sortBy || "popularity.desc";
-  const year = resolvedParams.year || "";
-  const page = parseInt(resolvedParams.page || "1");
+  const [genres, setGenres] = useState<any[]>([]);
+  const [movies, setMovies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch genres and discover movies
-  const [{ genres }, response] = await Promise.all([
-    getMovieGenres(),
-    discoverMovies({
-      page,
-      sortBy,
-      withGenres: genre,
-      primaryReleaseDateGte: year ? `${year}-01-01` : undefined,
-      primaryReleaseDateLte: year ? `${year}-12-31` : undefined,
-    }),
-  ]);
+  useEffect(() => {
+    document.title = "Explore Movies | MovieVerse";
+  }, []);
 
-  const results = response?.results || [];
-  const totalPages = response?.total_pages || 1;
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        const pageSize = 8;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = page * pageSize;
 
-  // Normalize results for the UI
-  const normalizedMovies = results.map((m) => ({
-    id: m.id,
-    title: m.title || m.name || "Untitled",
-    poster_path: m.poster_path || null,
-    backdrop_path: m.backdrop_path || null,
-    vote_average: m.vote_average || 0,
-    release_date: m.release_date || m.first_air_date || "",
-    genre_ids: m.genre_ids || [],
-    overview: m.overview || "",
-    media_type: "movie",
-  }));
+        const tmdbPageStart = Math.floor(startIndex / 20) + 1;
+        const tmdbPageEnd = Math.floor((endIndex - 1) / 20) + 1;
 
-  // Build Pagination Links
+        let genresRes;
+        let results: any[] = [];
+        let totalResults = 0;
+
+        if (tmdbPageStart === tmdbPageEnd) {
+          const [gRes, movieRes] = await Promise.all([
+            getMovieGenres(),
+            discoverMovies({
+              page: tmdbPageStart,
+              sortBy,
+              withGenres: genre,
+              primaryReleaseDateGte: year ? `${year}-01-01` : undefined,
+              primaryReleaseDateLte: year ? `${year}-12-31` : undefined,
+            }),
+          ]);
+          genresRes = gRes;
+          const tmdbResults = movieRes?.results || [];
+          totalResults = movieRes?.total_results || 0;
+          
+          const sliceStart = startIndex % 20;
+          results = tmdbResults.slice(sliceStart, sliceStart + pageSize);
+        } else {
+          const [gRes, movieRes1, movieRes2] = await Promise.all([
+            getMovieGenres(),
+            discoverMovies({
+              page: tmdbPageStart,
+              sortBy,
+              withGenres: genre,
+              primaryReleaseDateGte: year ? `${year}-01-01` : undefined,
+              primaryReleaseDateLte: year ? `${year}-12-31` : undefined,
+            }),
+            discoverMovies({
+              page: tmdbPageEnd,
+              sortBy,
+              withGenres: genre,
+              primaryReleaseDateGte: year ? `${year}-01-01` : undefined,
+              primaryReleaseDateLte: year ? `${year}-12-31` : undefined,
+            }),
+          ]);
+          genresRes = gRes;
+          const tmdbResults1 = movieRes1?.results || [];
+          const tmdbResults2 = movieRes2?.results || [];
+          totalResults = movieRes1?.total_results || 0;
+
+          const combined = [...tmdbResults1, ...tmdbResults2];
+          const sliceStart = startIndex % 20;
+          results = combined.slice(sliceStart, sliceStart + pageSize);
+        }
+
+        setGenres(genresRes?.genres || []);
+        setTotalPages(Math.ceil(totalResults / pageSize));
+
+        const normalizedMovies = results.map((m) => ({
+          id: m.id,
+          title: m.title || m.name || "Untitled",
+          poster_path: m.poster_path || null,
+          backdrop_path: m.backdrop_path || null,
+          vote_average: m.vote_average || 0,
+          release_date: m.release_date || m.first_air_date || "",
+          genre_ids: m.genre_ids || [],
+          overview: m.overview || "",
+          media_type: "movie",
+        }));
+        setMovies(normalizedMovies);
+      } catch (error) {
+        console.error("Failed to load movies:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [genre, sortBy, year, page]);
+
   const buildPageUrl = (pageNumber: number) => {
     const params = new URLSearchParams();
     if (genre) params.set("genre", genre);
@@ -76,7 +141,6 @@ export default async function MoviesExplorePage({ searchParams }: MoviesPageProp
         />
       </div>
 
-      {/* Filter Toolbar */}
       <FilterToolbar
         genres={genres}
         selectedGenre={genre}
@@ -85,9 +149,12 @@ export default async function MoviesExplorePage({ searchParams }: MoviesPageProp
         baseUrl="/movies"
       />
 
-      {/* Movie Grid */}
-      {normalizedMovies.length > 0 ? (
-        <MovieGrid movies={normalizedMovies} />
+      {loading ? (
+        <div className="flex items-center justify-center py-40">
+          <Loader2 className="w-10 h-10 animate-spin text-[var(--brand-primary)]" />
+        </div>
+      ) : movies.length > 0 ? (
+        <MovieGrid movies={movies} />
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="text-5xl">🤷‍♂️</div>
@@ -98,48 +165,64 @@ export default async function MoviesExplorePage({ searchParams }: MoviesPageProp
         </div>
       )}
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-8">
-          {page > 1 ? (
-            <Link
-              href={buildPageUrl(page - 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)]/50 border border-[var(--border-primary)]/50 text-[var(--text-muted)] cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </button>
-          )}
+      {!loading && totalPages > 1 && (
+        <div className="flex flex-col items-center gap-4 pt-10 border-t border-[var(--border-primary)]/40 mt-10">
+          <div className="flex items-center justify-center gap-4">
+            {page > 1 ? (
+              <Link
+                href={buildPageUrl(page - 1)}
+                className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:border-[var(--brand-primary)]/50 hover:bg-[var(--bg-elevated)] transition-all duration-300"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous Page
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--bg-surface)]/30 border border-[var(--border-primary)]/30 text-[var(--text-muted)] cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous Page
+              </button>
+            )}
 
-          <span className="text-xs font-medium text-[var(--text-secondary)]">
-            Page {page} of {Math.min(totalPages, 500)} {/* TMDB limits page queries to 500 */}
-          </span>
+            <div className="flex flex-col items-center text-center px-4">
+              <span className="text-xs font-bold text-white">
+                Page {page} of {Math.min(totalPages, 1250)}
+              </span>
+              {page < totalPages && page < 1250 && (
+                <span className="text-[10px] text-[var(--text-muted)] font-semibold mt-0.5 uppercase tracking-wide">
+                  Next: Page {page + 1}
+                </span>
+              )}
+            </div>
 
-          {page < totalPages && page < 500 ? (
-            <Link
-              href={buildPageUrl(page + 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)]/50 border border-[var(--border-primary)]/50 text-[var(--text-muted)] cursor-not-allowed"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
+            {page < totalPages && page < 1250 ? (
+              <Link
+                href={buildPageUrl(page + 1)}
+                className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:border-[var(--brand-primary)]/50 hover:bg-[var(--bg-elevated)] transition-all duration-300"
+              >
+                Next Page
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--bg-surface)]/30 border border-[var(--border-primary)]/30 text-[var(--text-muted)] cursor-not-allowed"
+              >
+                Next Page
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] px-4 py-1.5 rounded-lg border border-[var(--border-primary)]/50">
+            <span>CURRENT: {page}</span>
+            <span className="text-[var(--border-primary)]">•</span>
+            <span>NEXT: {page < totalPages && page < 1250 ? page + 1 : 'N/A'}</span>
+            <span className="text-[var(--border-primary)]">•</span>
+            <span>TOTAL PAGES: {Math.min(totalPages, 1250)}</span>
+          </div>
         </div>
       )}
     </div>

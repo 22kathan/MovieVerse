@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Clock, Calendar, Film, Play, Plus, ArrowLeft } from "lucide-react";
+import SafeImage from "@/components/shared/SafeImage";
 import {
   getMovieDetails,
   getMovieCredits,
@@ -23,7 +24,7 @@ interface MoviePageProps {
 }
 
 export async function generateStaticParams() {
-  return Array.from({ length: 80 }, (_, i) => ({ id: (i + 1).toString() }));
+  return Array.from({ length: 90 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
 export const dynamicParams = false;
@@ -112,18 +113,15 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
       />
       {/* Backdrop Section */}
       <section className="relative w-full h-[40vh] md:h-[50vh] min-h-[300px] max-h-[500px] overflow-hidden bg-[#0a0e17]">
-        {backdropUrl ? (
-          <Image
-            src={backdropUrl}
-            alt={movie.title || "Backdrop"}
-            fill
-            priority
-            className="object-cover object-top opacity-55 animate-fade-in"
-            sizes="100vw"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a2238] via-[#0a0e17] to-[#2d122e]" />
-        )}
+        <SafeImage
+          src={backdropUrl}
+          alt={movie.title || "Backdrop"}
+          fallbackType="backdrop"
+          fill
+          priority
+          className="object-top opacity-55 animate-fade-in"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/40 to-transparent" />
         
         {/* Floating Back Button */}
@@ -142,20 +140,13 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Left: Poster */}
           <div className="w-48 sm:w-60 md:w-72 shrink-0 aspect-[2/3] relative rounded-2xl overflow-hidden shadow-[var(--shadow-card)] border border-white/5 bg-[#121824]">
-            {posterUrl ? (
-              <Image
-                src={posterUrl}
-                alt={movie.title || "Poster"}
-                fill
-                sizes="(max-width: 768px) 240px, 300px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <Film className="w-12 h-12 text-[var(--text-muted)]" />
-                <span className="text-xs text-[var(--text-secondary)] px-4 text-center">No Poster Available</span>
-              </div>
-            )}
+            <SafeImage
+              src={posterUrl}
+              alt={movie.title || "Poster"}
+              fallbackType="poster"
+              fill
+              sizes="(max-width: 768px) 240px, 300px"
+            />
           </div>
 
           {/* Right: Info */}
@@ -316,17 +307,14 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
                 return (
                   <Link href={`/celebrities/${actor.id}`} key={actor.id} className="bg-[var(--bg-surface)] border border-[var(--border-primary)] rounded-xl overflow-hidden group hover:border-[var(--border-secondary)] transition-all block">
                     <div className="aspect-square relative bg-[#121824]">
-                      {actorImgUrl ? (
-                        <Image
-                          src={actorImgUrl}
-                          alt={actor.name}
-                          fill
-                          sizes="(max-width: 640px) 150px, 200px"
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-5xl opacity-40">👤</div>
-                      )}
+                      <SafeImage
+                        src={actorImgUrl}
+                        alt={actor.name}
+                        fallbackType="profile"
+                        fill
+                        sizes="(max-width: 640px) 150px, 200px"
+                        className="group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                     <div className="p-3">
                       <h4 className="font-bold text-white text-sm truncate group-hover:text-[var(--brand-primary-light)] transition-colors">{actor.name}</h4>

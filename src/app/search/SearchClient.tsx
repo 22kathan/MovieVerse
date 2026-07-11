@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
@@ -152,17 +152,14 @@ export default function SearchClient() {
                   className="bg-[var(--bg-surface)] border border-[var(--border-primary)] rounded-xl overflow-hidden group hover:border-[var(--border-secondary)] transition-all flex flex-col"
                 >
                   <div className="aspect-square relative bg-[#121824] shrink-0">
-                    {profileUrl ? (
-                      <Image
-                        src={profileUrl}
-                        alt={person.name}
-                        fill
-                        sizes="(max-width: 640px) 120px, 180px"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-5xl opacity-40">👤</div>
-                    )}
+                    <SafeImage
+                      src={profileUrl}
+                      alt={person.name}
+                      fallbackType="profile"
+                      fill
+                      sizes="(max-width: 640px) 120px, 180px"
+                      className="group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
                   <div className="p-3 flex-1 flex flex-col justify-between">
                     <h4 className="font-bold text-white text-xs sm:text-sm truncate group-hover:text-[var(--brand-primary-light)] transition-colors">{person.name}</h4>
@@ -205,11 +202,14 @@ export default function SearchClient() {
                     
                     {/* Poster */}
                     <Link href={`/${path}/${movie.id}`} className="w-14 sm:w-16 shrink-0 aspect-[2/3] relative rounded-lg overflow-hidden border border-white/5 bg-black/25">
-                      {posterUrl ? (
-                        <Image src={posterUrl} alt={movie.title} fill className="object-cover group-hover:scale-105 transition-transform" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-[var(--text-muted)] font-bold">No Image</div>
-                      )}
+                      <SafeImage
+                        src={posterUrl}
+                        alt={movie.title}
+                        fallbackType="poster"
+                        fill
+                        className="group-hover:scale-105 transition-transform"
+                        sizes="100px"
+                      />
                     </Link>
                     
                     {/* Info */}

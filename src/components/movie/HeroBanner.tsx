@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Play, Plus, Star, Clock, Info } from "lucide-react";
+import { getImageUrl } from "@/lib/tmdb";
+import SafeImage from "@/components/shared/SafeImage";
 
 interface HeroMovie {
   id: number;
@@ -56,24 +58,21 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
     .map((id) => GENRE_MAP[id])
     .filter(Boolean);
   const mediaType = current.media_type === "tv" ? "tv" : "movies";
+  const backdropUrl = getImageUrl(current.backdrop_path, "backdrop", "original");
 
   return (
     <section className="relative w-full h-[70vh] min-h-[500px] max-h-[700px] overflow-hidden bg-[#0d1321]">
       {/* Background Image with CSS transition */}
       <div className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
-        {current.backdrop_path ? (
-          <Image
-            src={`${TMDB_IMAGE}/original${current.backdrop_path}`}
-            alt={title}
-            fill
-            className="object-cover object-top"
-            priority
-            sizes="100vw"
-          />
-        ) : (
-          /* Placeholder backdrop with beautiful dark gradient mesh */
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a2238] via-[#0a0e17] to-[#2d122e]" />
-        )}
+        <SafeImage
+          src={backdropUrl}
+          alt={title}
+          fallbackType="backdrop"
+          fill
+          className="object-top"
+          priority
+          sizes="100vw"
+        />
       </div>
 
       {/* Overlays */}

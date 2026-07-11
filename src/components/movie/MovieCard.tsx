@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, Plus, Play, Film } from "lucide-react";
+import { getImageUrl } from "@/lib/tmdb";
+import SafeImage from "@/components/shared/SafeImage";
 
 interface MovieCardData {
   id: number;
@@ -43,9 +45,7 @@ export default function MovieCard({
   index?: number;
 }) {
   console.log("MovieCard prop:", movie);
-  const posterUrl = movie?.poster_path
-    ? `${TMDB_IMAGE}/w500${movie.poster_path}`
-    : null;
+  const posterUrl = getImageUrl(movie.poster_path, "poster", "lg");
   const year = movie.release_date
     ? new Date(movie.release_date).getFullYear()
     : "";
@@ -77,24 +77,14 @@ export default function MovieCard({
           }}
         >
           {/* Poster Image or Placeholder */}
-          {posterUrl ? (
-            <Image
-              src={posterUrl}
-              alt={movie.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-3"
-              style={{ backgroundColor: "#1a2235" }}>
-              <Film className="w-10 h-10" style={{ color: "#475569" }} />
-              <span className="text-xs font-medium text-center px-3 leading-tight"
-                style={{ color: "#64748b" }}>
-                {movie.title}
-              </span>
-            </div>
-          )}
+          <SafeImage
+            src={posterUrl}
+            alt={movie.title}
+            fallbackType="poster"
+            fill
+            className="transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
+          />
 
           {/* Gradient overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

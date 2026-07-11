@@ -9,7 +9,7 @@
     "isPremium": true,
     "premiumUntil": null,
     "createdAt": "2026-07-09T05:13:30.813Z",
-    "bio": "",
+    "bio": "I am the administrator of MovieVerse.",
     "country": "IN"
   },
   {
@@ -110,5 +110,16 @@
     "isPremium": false,
     "premiumUntil": null,
     "createdAt": "2026-07-11T06:21:37.708Z"
+  },
+  {
+    "id": "mock_a5lkwmnbo",
+    "name": "test_user_fallthrough",
+    "email": "test_user_fallthrough@example.com",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T11:07:20.031Z"
   }
 ]
