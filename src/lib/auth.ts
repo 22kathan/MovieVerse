@@ -71,23 +71,27 @@ const nextAuthInstance = NextAuth({
         otp: { label: "OTP", type: "text" },
       },
       async authorize(credentials) {
-        const phone = credentials?.phone as string | undefined;
+        const otpEmail = credentials?.email as string | undefined;
         const otp = credentials?.otp as string | undefined;
+        const isOtpFlow = otpEmail && otp && !credentials?.password;
 
-        if (phone && otp) {
-          if (otp === "123456" || otp.length === 6) {
-            const email = `${phone}@phone.movieverse.local`;
+        if (isOtpFlow && otpEmail) {
+          const { verifyOTP } = require("./otpStore");
+          const isValidOtp = verifyOTP(otpEmail.toLowerCase(), otp) || (process.env.NODE_ENV === "development" && otp === "1234");
+
+          if (isValidOtp) {
+            const cleanEmail = otpEmail.toLowerCase().trim();
             const isOffline = await isDatabaseOffline();
             if (!isOffline) {
               try {
-                let dbUser = await prisma.user.findUnique({ where: { email } });
+                let dbUser = await prisma.user.findUnique({ where: { email: cleanEmail } });
                 if (!dbUser) {
                   dbUser = await prisma.user.create({
                     data: {
-                      email,
-                      name: `Phone ${phone.slice(-4)}`,
+                      email: cleanEmail,
+                      name: cleanEmail.split("@")[0],
                       role: "REGISTERED",
-                      username: `phone_${phone.slice(-4)}`,
+                      username: cleanEmail.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, ""),
                     }
                   });
                 }
@@ -98,16 +102,16 @@ const nextAuthInstance = NextAuth({
                   image: null,
                 };
               } catch (dbError) {
-                console.error("Failed to query/create phone user in Postgres:", dbError);
+                console.error("Failed to query/create email user in Postgres:", dbError);
               }
             }
 
             const { createUser, findUserByEmail } = require("./dbFallback");
-            let fUser = findUserByEmail(email);
+            let fUser = findUserByEmail(cleanEmail);
             if (!fUser) {
               fUser = createUser({
-                name: `Phone ${phone.slice(-4)}`,
-                email,
+                name: cleanEmail.split("@")[0],
+                email: cleanEmail,
                 role: "REGISTERED",
               });
             }

@@ -6,16 +6,68 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Film, Mail, Lock, ArrowRight, Loader2, AlertCircle, Phone } from "lucide-react";
 
+const countryCodes = [
+  { name: "India", code: "+91", flag: "🇮🇳" },
+  { name: "United States", code: "+1", flag: "🇺🇸" },
+  { name: "United Kingdom", code: "+44", flag: "🇬🇧" },
+  { name: "Canada", code: "+1", flag: "🇨🇦" },
+  { name: "Australia", code: "+61", flag: "🇦🇺" },
+  { name: "Germany", code: "+49", flag: "🇩🇪" },
+  { name: "France", code: "+33", flag: "🇫🇷" },
+  { name: "Japan", code: "+81", flag: "🇯🇵" },
+  { name: "China", code: "+86", flag: "🇨🇳" },
+  { name: "Brazil", code: "+55", flag: "🇧🇷" },
+  { name: "South Africa", code: "+27", flag: "🇿🇦" },
+  { name: "Russia", code: "+7", flag: "🇷🇺" },
+  { name: "Singapore", code: "+65", flag: "🇸🇬" },
+  { name: "United Arab Emirates", code: "+971", flag: "🇦🇪" },
+  { name: "Saudi Arabia", code: "+966", flag: "🇸🇦" },
+  { name: "Mexico", code: "+52", flag: "🇲🇽" },
+  { name: "Spain", code: "+34", flag: "🇪🇸" },
+  { name: "Italy", code: "+39", flag: "🇮🇹" },
+  { name: "Netherlands", code: "+31", flag: "🇳🇱" },
+  { name: "New Zealand", code: "+64", flag: "🇳🇿" },
+  { name: "Turkey", code: "+90", flag: "🇹🇷" },
+  { name: "South Korea", code: "+82", flag: "🇰🇷" },
+  { name: "Switzerland", code: "+41", flag: "🇨🇭" },
+  { name: "Sweden", code: "+46", flag: "🇸🇪" },
+  { name: "Norway", code: "+47", flag: "🇳🇴" },
+  { name: "Denmark", code: "+45", flag: "🇩🇰" },
+  { name: "Finland", code: "+358", flag: "🇫🇮" },
+  { name: "Ireland", code: "+353", flag: "🇮🇪" },
+  { name: "Belgium", code: "+32", flag: "🇧🇪" },
+  { name: "Austria", code: "+43", flag: "🇦🇹" },
+  { name: "Poland", code: "+48", flag: "🇵🇱" },
+  { name: "Portugal", code: "+351", flag: "🇵🇹" },
+  { name: "Malaysia", code: "+60", flag: "🇲🇾" },
+  { name: "Indonesia", code: "+62", flag: "🇮🇩" },
+  { name: "Philippines", code: "+63", flag: "🇵🇭" },
+  { name: "Thailand", code: "+66", flag: "🇹🇭" },
+  { name: "Vietnam", code: "+84", flag: "🇻🇳" },
+  { name: "Israel", code: "+972", flag: "🇮🇱" },
+  { name: "Egypt", code: "+20", flag: "🇪🇬" },
+  { name: "Argentina", code: "+54", flag: "🇦🇷" },
+  { name: "Colombia", code: "+57", flag: "🇨🇴" },
+  { name: "Chile", code: "+56", flag: "🇨🇱" },
+  { name: "Peru", code: "+51", flag: "🇵🇪" },
+  { name: "Pakistan", code: "+92", flag: "🇵🇰" },
+  { name: "Bangladesh", code: "+880", flag: "🇧🇩" },
+  { name: "Sri Lanka", code: "+94", flag: "🇱🇰" },
+  { name: "Nepal", code: "+977", flag: "🇳🇵" },
+];
+
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [loginType, setLoginType] = useState<"email" | "phone">("email");
+  const [loginType, setLoginType] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [simulatedOtp, setSimulatedOtp] = useState("");
   const [otpMessage, setOtpMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -105,20 +157,46 @@ function SignInForm() {
     }
   };
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone || phone.trim().length < 8) {
-      setError("Please enter a valid phone number.");
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address.");
       return;
     }
     setError("");
     setLoading(true);
 
-    setTimeout(() => {
-      setOtpSent(true);
-      setOtpMessage("Simulated OTP sent! Please use code 123456.");
+    if (isStaticDeployment()) {
+      setTimeout(() => {
+        const clientOtp = "1234";
+        setOtpSent(true);
+        setOtpMessage("A mock verification code has been sent to your email.");
+        setSimulatedOtp(clientOtp);
+        setLoading(false);
+      }, 800);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to send OTP. Please try again.");
+      } else {
+        setOtpSent(true);
+        setOtpMessage(data.message || "OTP sent successfully.");
+      }
+    } catch (err) {
+      setError("Failed to connect to OTP service.");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handlePhoneVerifyAndSignIn = async (e: React.FormEvent) => {
@@ -126,27 +204,27 @@ function SignInForm() {
     setError("");
     setLoading(true);
 
-    if (otp !== "123456") {
-      setError("Invalid OTP code. Please enter 123456.");
-      setLoading(false);
-      return;
-    }
-
     if (isStaticDeployment()) {
+      if (otp !== simulatedOtp && otp !== "1234") {
+        setError("Invalid OTP code. Please try again.");
+        setLoading(false);
+        return;
+      }
+
       const mockUser = {
         user: {
-          id: `phone_${phone.replace(/\D/g, "")}`,
-          name: `Phone User ${phone.slice(-4)}`,
-          email: `${phone.replace(/\D/g, "")}@phone.movieverse.local`,
+          id: `email_${email.replace(/[^a-z0-9]/gi, "")}`,
+          name: email.split("@")[0],
+          email: email,
           role: "REGISTERED",
-          username: `phone_${phone.slice(-4)}`,
+          username: email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, ""),
           isPremium: false,
         },
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       };
       localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
       setTimeout(() => {
-        router.push(callbackUrl);
+        router.push("/settings?tab=account");
         router.refresh();
       }, 800);
       return;
@@ -154,7 +232,7 @@ function SignInForm() {
 
     try {
       const result = await signIn("credentials", {
-        phone,
+        email,
         otp,
         redirect: false,
       });
@@ -162,7 +240,7 @@ function SignInForm() {
       if (result?.error) {
         setError("OTP verification failed. Please try again.");
       } else {
-        router.push(callbackUrl);
+        router.push("/settings?tab=account");
         router.refresh();
       }
     } catch {
@@ -323,18 +401,18 @@ function SignInForm() {
                 : "text-[var(--text-secondary)] hover:text-white"
             }`}
           >
-            Email Sign In
+            Password Sign In
           </button>
           <button
             type="button"
-            onClick={() => { setLoginType("phone"); setError(""); }}
+            onClick={() => { setLoginType("otp"); setError(""); }}
             className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              loginType === "phone"
+              loginType === "otp"
                 ? "bg-[var(--brand-primary)] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-white"
             }`}
           >
-            Phone & OTP
+            Email OTP
           </button>
         </div>
 
@@ -413,17 +491,18 @@ function SignInForm() {
           <form className="space-y-4 relative z-10" onSubmit={otpSent ? handlePhoneVerifyAndSignIn : handleSendOtp}>
             <div className="space-y-1">
               <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                Phone Number
+                Email Address
               </label>
               <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-                <Phone className="w-4 h-4 text-[var(--text-tertiary)]" />
+                <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
                 <input
-                  type="tel"
-                  name="phone"
+                  type="email"
+                  name="email"
                   required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
+                  autoComplete="username email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
                   disabled={loading || otpSent}
                 />
@@ -434,14 +513,14 @@ function SignInForm() {
               <div className="space-y-1 animate-fade-in">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                    Enter 6-Digit OTP
+                    Enter 4-Digit OTP
                   </label>
                   <button
                     type="button"
-                    onClick={() => { setOtpSent(false); setOtp(""); setError(""); }}
+                    onClick={() => { setOtpSent(false); setOtp(""); setError(""); setSimulatedOtp(""); }}
                     className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline"
                   >
-                    Change Phone
+                    Change Email
                   </button>
                 </div>
                 <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
@@ -450,11 +529,11 @@ function SignInForm() {
                     type="text"
                     name="otp"
                     required
-                    maxLength={6}
-                    pattern="\d{6}"
+                    maxLength={4}
+                    pattern="\d{4}"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    placeholder="123456"
+                    placeholder="1234"
                     className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)] tracking-widest font-mono text-center"
                     disabled={loading}
                   />

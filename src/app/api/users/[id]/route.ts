@@ -78,7 +78,7 @@ export async function PUT(
     if (session.user.id !== id) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
 
     const body = await request.json();
-    const allowedFields = ["name", "username", "bio", "country", "language", "darkMode"];
+    const allowedFields = ["name", "username", "email", "bio", "country", "language", "darkMode"];
     const updateData: any = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) updateData[field] = body[field];
@@ -94,6 +94,13 @@ export async function PUT(
           (u: any) => u.username?.toLowerCase() === updateData.username.toLowerCase() && u.id !== id
         );
         if (usernameTaken) return NextResponse.json({ error: "Username taken" }, { status: 409 });
+      }
+      if (updateData.email) {
+        const allUsers = require("@/lib/dbFallback").getUsers();
+        const emailTaken = allUsers.some(
+          (u: any) => u.email.toLowerCase() === updateData.email.toLowerCase() && u.id !== id
+        );
+        if (emailTaken) return NextResponse.json({ error: "Email already in use" }, { status: 409 });
       }
 
       const fallbackUser = updateUser(id, updateData);
@@ -118,6 +125,12 @@ export async function PUT(
           });
           if (existing) return NextResponse.json({ error: "Username taken" }, { status: 409 });
         }
+        if (updateData.email) {
+          const existing = await prisma.user.findFirst({
+            where: { email: updateData.email.toLowerCase(), NOT: { id } },
+          });
+          if (existing) return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+        }
 
         user = await prisma.user.update({
           where: { id },
@@ -133,6 +146,13 @@ export async function PUT(
             (u: any) => u.username?.toLowerCase() === updateData.username.toLowerCase() && u.id !== id
           );
           if (usernameTaken) return NextResponse.json({ error: "Username taken" }, { status: 409 });
+        }
+        if (updateData.email) {
+          const allUsers = require("@/lib/dbFallback").getUsers();
+          const emailTaken = allUsers.some(
+            (u: any) => u.email.toLowerCase() === updateData.email.toLowerCase() && u.id !== id
+          );
+          if (emailTaken) return NextResponse.json({ error: "Email already in use" }, { status: 409 });
         }
 
         const fallbackUser = updateUser(id, updateData);

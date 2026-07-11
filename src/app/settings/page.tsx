@@ -17,12 +17,21 @@ export default function SettingsPage() {
   // Account settings
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [country, setCountry] = useState("US");
   const [error, setError] = useState("");
-
+ 
   // Load initial settings
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      if (tab === "account" || tab === "general") {
+        setActiveTab(tab as any);
+      }
+    }
+
     // Load local settings
     const getCookie = (name: string) => {
       if (typeof document === "undefined") return "";
@@ -33,7 +42,7 @@ export default function SettingsPage() {
     };
     const storedKey = localStorage.getItem("NEXT_PUBLIC_TMDB_API_KEY") || getCookie("NEXT_PUBLIC_TMDB_API_KEY") || "";
     setApiKey(storedKey);
-
+ 
     if (isAuthenticated && session?.user?.id) {
       fetch(`/api/users/${session.user.id}`)
         .then((res) => res.json())
@@ -41,6 +50,7 @@ export default function SettingsPage() {
           if (data.user) {
             setName(data.user.name || "");
             setUsername(data.user.username || "");
+            setEmail(data.user.email || "");
             setBio(data.user.bio || "");
             setCountry(data.user.country || "US");
           }
@@ -65,10 +75,10 @@ export default function SettingsPage() {
   const handleAccountSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated || !session?.user?.id) return;
-
+ 
     setError("");
     setLoading(true);
-
+ 
     try {
       const res = await fetch(`/api/users/${session.user.id}`, {
         method: "PUT",
@@ -76,11 +86,12 @@ export default function SettingsPage() {
         body: JSON.stringify({
           name: name.trim(),
           username: username.trim() || undefined,
+          email: email.trim(),
           bio: bio.trim(),
           country,
         }),
       });
-
+ 
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to update profile");
@@ -240,6 +251,22 @@ export default function SettingsPage() {
                     disabled={loading}
                   />
                 </div>
+              </div>
+
+              {/* Email Address */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-xs text-[var(--text-primary)] rounded-xl px-4 py-3 outline-none focus:border-[var(--brand-primary)] transition-all"
+                  disabled={loading}
+                />
               </div>
 
               {/* Bio */}

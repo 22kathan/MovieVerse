@@ -55,5 +55,60 @@
     "isPremium": true,
     "premiumUntil": "2026-08-09T06:17:56.498Z",
     "createdAt": "2026-07-10T06:13:46.312Z"
+  },
+  {
+    "id": "mock_mbhvpu6wf",
+    "name": "Phone 6655",
+    "email": "+919988776655@phone.movieverse.local",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T05:52:29.483Z"
+  },
+  {
+    "id": "mock_xmdc7pjo9",
+    "name": "Phone 3210",
+    "email": "+919876543210@phone.movieverse.local",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T05:57:59.711Z"
+  },
+  {
+    "id": "mock_l1jz0a5d6",
+    "name": "Phone 1051",
+    "email": "+916353801051@phone.movieverse.local",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T05:59:59.682Z"
+  },
+  {
+    "id": "mock_7hnhlp2b1",
+    "name": "kathan",
+    "email": "kathan@example.com",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T06:11:23.317Z"
+  },
+  {
+    "id": "mock_medpkcix5",
+    "name": "gadhiyakathan10",
+    "email": "gadhiyakathan10@gmail.com",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-11T06:21:37.708Z"
   }
 ]
