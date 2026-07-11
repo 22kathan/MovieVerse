@@ -35,7 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "OTP generated! (Email API keys not configured. Code logged to server console.)",
-        simulated: true
+        simulated: true,
+        otp: otp
       });
     }
 

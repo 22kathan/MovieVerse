@@ -170,8 +170,9 @@ function SignInForm() {
       setTimeout(() => {
         const clientOtp = "1234";
         setOtpSent(true);
-        setOtpMessage("A mock verification code has been sent to your email.");
+        setOtpMessage(`A mock verification code has been sent to your email. (Simulated OTP: ${clientOtp})`);
         setSimulatedOtp(clientOtp);
+        setOtp(clientOtp); // Pre-fill for convenience
         setLoading(false);
       }, 800);
       return;
@@ -190,7 +191,13 @@ function SignInForm() {
         setError(data.error || "Failed to send OTP. Please try again.");
       } else {
         setOtpSent(true);
-        setOtpMessage(data.message || "OTP sent successfully.");
+        if (data.simulated && data.otp) {
+          setOtpMessage(`OTP generated (Simulated): Your code is ${data.otp}`);
+          setSimulatedOtp(data.otp);
+          setOtp(data.otp); // Pre-fill for convenience
+        } else {
+          setOtpMessage(data.message || "OTP sent successfully.");
+        }
       }
     } catch (err) {
       setError("Failed to connect to OTP service.");

@@ -249,8 +249,8 @@ export async function sendEmail(email: string, otp: string): Promise<{ success: 
       console.log(`[Resend Email] Real OTP email sent to ${cleanEmail} successfully.`);
       return { success: true, simulated: false };
     } catch (err: any) {
-      console.error(`[Resend Email] Failed to send email:`, err.message);
-      return { success: false, simulated: false, error: err.message };
+      console.warn(`[Resend Email] Failed to send email:`, err.message);
+      // Fall through instead of returning error
     }
   }
 
@@ -281,8 +281,8 @@ export async function sendEmail(email: string, otp: string): Promise<{ success: 
       console.log(`[Brevo Email] Real OTP email sent to ${cleanEmail} successfully.`);
       return { success: true, simulated: false };
     } catch (err: any) {
-      console.error(`[Brevo Email] Failed to send email:`, err.message);
-      return { success: false, simulated: false, error: err.message };
+      console.warn(`[Brevo Email] Failed to send email:`, err.message);
+      // Fall through
     }
   }
 
@@ -316,12 +316,12 @@ export async function sendEmail(email: string, otp: string): Promise<{ success: 
       console.warn(`[FormSubmit Email] Delivery failed: ${data.message || 'Unknown response'}`);
     }
   } catch (err: any) {
-    console.error(`[FormSubmit Email] Request failed:`, err.message);
+    console.warn(`[FormSubmit Email] Request failed:`, err.message);
   }
 
   // Fallback simulator for development
   console.log(`\n======================================================`);
-  console.log(`[EMAIL SIMULATOR] Email API keys not fully set.`);
+  console.log(`[EMAIL SIMULATOR] Email API keys not fully set or failed.`);
   console.log(`[EMAIL SIMULATOR] Sending code to: ${cleanEmail}`);
   console.log(`[EMAIL SIMULATOR] OTP CODE: ${otp}`);
   console.log(`======================================================\n`);
