@@ -286,37 +286,39 @@ export async function sendEmail(email: string, otp: string): Promise<{ success: 
     }
   }
 
-  // 3. FormSubmit Free Fallback (No keys required, sends real emails to any recipient address)
-  console.log(`[FormSubmit Email] Attempting free email delivery to ${cleanEmail}...`);
-  try {
-    const url = `https://formsubmit.co/ajax/${cleanEmail}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Referer": "https://movieverse.com",
-        "Origin": "https://movieverse.com"
-      },
-      body: JSON.stringify({
-        _subject: "Your MovieVerse Verification Code",
-        message: `Your MovieVerse sign-in OTP is ${otp}. Valid for 5 minutes.`,
-        _honey: "", // Honeypot spam filter field
-      }),
-    });
+  // 3. SMTP (Nodemailer) Option
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  if (smtpHost && smtpPort && smtpUser && smtpPass) {
+    try {
+      const nodemailer = require("nodemailer");
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        secure: smtpPort === "465", // true for 465, false for other ports
+        auth: {
+          user: smtpUser,
+          password: smtpPass,
+        },
+      });
 
-    const data = await response.json();
-    const isSuccess = data.success === "true" || data.success === true;
-    const isActivation = data.message && (data.message.includes("Activation") || data.message.includes("active") || data.message.includes("actived"));
+      const fromAddress = process.env.SMTP_FROM || `MovieVerse <${smtpUser}>`;
 
-    if (response.ok && (isSuccess || isActivation)) {
-      console.log(`[FormSubmit Email] Real OTP/Activation email sent successfully to ${cleanEmail}.`);
+      await transporter.sendMail({
+        from: fromAddress,
+        to: cleanEmail,
+        subject: "Your MovieVerse Verification Code",
+        html: `<p>Your MovieVerse sign-in OTP is <strong>${otp}</strong>. Valid for 5 minutes.</p>`,
+      });
+
+      console.log(`[SMTP Email] Real OTP email sent to ${cleanEmail} successfully.`);
       return { success: true, simulated: false };
-    } else {
-      console.warn(`[FormSubmit Email] Delivery failed: ${data.message || 'Unknown response'}`);
+    } catch (err: any) {
+      console.warn(`[SMTP Email] Failed to send email:`, err.message);
+      // Fall through
     }
-  } catch (err: any) {
-    console.warn(`[FormSubmit Email] Request failed:`, err.message);
   }
 
   // Fallback simulator for development
