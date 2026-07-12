@@ -5,6 +5,15 @@ import { useSession } from "next-auth/react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { Settings, User, Bell, Shield, Save, Check, Loader2 } from "lucide-react";
 
+const isStaticDeployment = () => {
+  if (typeof window === "undefined") return false;
+  return (
+    window.location.hostname.includes("github.io") ||
+    window.location.port === "8000" ||
+    process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
+  );
+};
+
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
@@ -43,6 +52,25 @@ export default function SettingsPage() {
     const storedKey = localStorage.getItem("NEXT_PUBLIC_TMDB_API_KEY") || getCookie("NEXT_PUBLIC_TMDB_API_KEY") || "";
     setApiKey(storedKey);
  
+    if (isStaticDeployment()) {
+      const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+      if (mockSessionStr) {
+        try {
+          const mockSession = JSON.parse(mockSessionStr);
+          if (mockSession.user) {
+            setName(mockSession.user.name || "");
+            setUsername(mockSession.user.username || "");
+            setEmail(mockSession.user.email || "");
+            setBio(mockSession.user.bio || "");
+            setCountry(mockSession.user.country || "US");
+          }
+        } catch (e) {
+          console.error("Failed to parse mock session:", e);
+        }
+      }
+      return;
+    }
+
     if (isAuthenticated && session?.user?.id) {
       fetch(`/api/users/${session.user.id}`)
         .then((res) => res.json())
@@ -79,6 +107,35 @@ export default function SettingsPage() {
     setError("");
     setLoading(true);
  
+    if (isStaticDeployment()) {
+      try {
+        const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+        if (mockSessionStr) {
+          const mockSession = JSON.parse(mockSessionStr);
+          if (mockSession.user) {
+            mockSession.user.name = name.trim();
+            mockSession.user.username = username.trim() || undefined;
+            mockSession.user.email = email.trim();
+            mockSession.user.bio = bio.trim();
+            mockSession.user.country = country;
+            localStorage.setItem("movieverse_mock_session", JSON.stringify(mockSession));
+          }
+        }
+        setSaved(true);
+        setTimeout(() => {
+          const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+            ? "/portfolio/movieverse" 
+            : "";
+          window.location.href = `${basePath}/`;
+        }, 1200);
+      } catch (err) {
+        setError("Failed to save profile changes.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`/api/users/${session.user.id}`, {
         method: "PUT",

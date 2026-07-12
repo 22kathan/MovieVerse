@@ -105,8 +105,10 @@ function SignInForm() {
         };
         localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
         setTimeout(() => {
-          router.push(callbackUrl);
-          router.refresh();
+          const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+            ? "/portfolio/movieverse" 
+            : "";
+          window.location.href = `${basePath}${callbackUrl}`;
         }, 800);
         return;
       }
@@ -127,8 +129,10 @@ function SignInForm() {
         };
         localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
         setTimeout(() => {
-          router.push(callbackUrl);
-          router.refresh();
+          const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+            ? "/portfolio/movieverse" 
+            : "";
+          window.location.href = `${basePath}${callbackUrl}`;
         }, 800);
       } else {
         setError("Invalid email or password");
@@ -257,8 +261,10 @@ function SignInForm() {
       };
       localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
       setTimeout(() => {
-        router.push("/settings?tab=account");
-        router.refresh();
+        const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+          ? "/portfolio/movieverse" 
+          : "";
+        window.location.href = `${basePath}/settings?tab=account`;
       }, 800);
       return;
     }
@@ -337,8 +343,12 @@ function SignInForm() {
                   };
                   
                   localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
-                  router.push(callbackUrl);
-                  router.refresh();
+                  setTimeout(() => {
+                    const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+                      ? "/portfolio/movieverse" 
+                      : "";
+                    window.location.href = `${basePath}${callbackUrl}`;
+                  }, 800);
                 } else {
                   // Live deployment: Log in via NextAuth using credentials provider with bypass password
                   const result = await signIn("credentials", {
@@ -395,8 +405,10 @@ function SignInForm() {
       };
       localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
       setTimeout(() => {
-        router.push(callbackUrl);
-        router.refresh();
+        const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+          ? "/portfolio/movieverse" 
+          : "";
+        window.location.href = `${basePath}${callbackUrl}`;
       }, 800);
       return;
     }
