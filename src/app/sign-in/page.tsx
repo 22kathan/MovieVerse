@@ -194,34 +194,14 @@ function SignInForm() {
             setOtpMessage(data.message || "OTP sent successfully.");
           }
         } else {
-          // Try sending directly via Resend with CORS proxy
-          const resendKey = process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_JVgtvEKa_HAyxdoFjGvm6fqWcorYWXbXY";
-          const response = await fetch("https://corsproxy.io/?https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${resendKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              from: "MovieVerse <onboarding@resend.dev>",
-              to: email.trim().toLowerCase(),
-              subject: "Your MovieVerse Verification Code",
-              html: `<p>Your MovieVerse sign-in OTP is <strong>${clientOtp}</strong>. Valid for 5 minutes.</p>`,
-            }),
-          });
-
-          if (response.ok) {
-            setOtpSent(true);
-            setSimulatedOtp(clientOtp);
-            setOtpMessage("OTP sent successfully! Please check your inbox.");
-          } else {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.message || "Failed to send OTP directly.");
-          }
+          // Fallback to simulation since no client key or backend is configured
+          setOtpSent(true);
+          setSimulatedOtp(clientOtp);
+          setOtpMessage(`OTP sent successfully! (Simulated Mode: Code is ${clientOtp})`);
         }
       } catch (err: any) {
         console.warn("Direct email delivery failed:", err.message);
-        // Fallback to simulation if Resend/API fails
+        // Fallback to simulation if backend API fails
         const clientOtp = Math.floor(1000 + Math.random() * 9000).toString();
         setOtpSent(true);
         setSimulatedOtp(clientOtp);
