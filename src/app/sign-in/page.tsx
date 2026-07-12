@@ -464,32 +464,6 @@ function SignInForm() {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-primary)] relative z-10">
-          <button
-            type="button"
-            onClick={() => { setLoginType("email"); setError(""); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              loginType === "email"
-                ? "bg-[var(--brand-primary)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-white"
-            }`}
-          >
-            Password Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setLoginType("otp"); setError(""); }}
-            className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              loginType === "otp"
-                ? "bg-[var(--brand-primary)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-white"
-            }`}
-          >
-            Email OTP
-          </button>
-        </div>
-
         {/* Error message */}
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs relative z-10 animate-fade-in">
@@ -498,144 +472,68 @@ function SignInForm() {
           </div>
         )}
 
-        {/* Form Selector */}
-        {loginType === "email" ? (
-          <form className="space-y-4 relative z-10" onSubmit={handleCredentialsSignIn}>
-            <div className="space-y-1">
+        {/* Credentials Form */}
+        <form className="space-y-4 relative z-10" onSubmit={handleCredentialsSignIn}>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
+              Email Address
+            </label>
+            <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
+              <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
+              <input
+                type="email"
+                name="email"
+                required
+                autoComplete="username email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
               <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                Email Address
+                Password
               </label>
-              <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-                <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autoComplete="username email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
-                  disabled={loading}
-                />
-              </div>
+              <button type="button" className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline">
+                Forgot password?
+              </button>
             </div>
-
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                  Password
-                </label>
-                <button type="button" className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline">
-                  Forgot password?
-                </button>
-              </div>
-              <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-                <Lock className="w-4 h-4 text-[var(--text-tertiary)]" />
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
-                  disabled={loading}
-                />
-              </div>
+            <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
+              <Lock className="w-4 h-4 text-[var(--text-tertiary)]" />
+              <input
+                type="password"
+                name="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
+                disabled={loading}
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        ) : (
-          <form className="space-y-4 relative z-10" onSubmit={otpSent ? handlePhoneVerifyAndSignIn : handleSendOtp}>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                Email Address
-              </label>
-              <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-                <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autoComplete="username email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
-                  disabled={loading || otpSent}
-                />
-              </div>
-            </div>
-
-            {otpSent && (
-              <div className="space-y-1 animate-fade-in">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                    Enter 4-Digit OTP
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setOtpSent(false); setOtp(""); setError(""); setSimulatedOtp(""); }}
-                    className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline"
-                  >
-                    Change Email
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-                  <Lock className="w-4 h-4 text-[var(--text-tertiary)]" />
-                  <input
-                    type="text"
-                    name="otp"
-                    required
-                    maxLength={4}
-                    pattern="\d{4}"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="1234"
-                    className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)] tracking-widest font-mono text-center"
-                    disabled={loading}
-                  />
-                </div>
-                {otpMessage && (
-                  <p className="text-[10px] font-bold text-emerald-400 mt-1">
-                    ✅ {otpMessage}
-                  </p>
-                )}
-              </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
             )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <span>{otpSent ? "Verify & Sign In" : "Send OTP"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
+          </button>
+        </form>
 
         {/* Separator */}
         <div className="relative flex py-2 items-center justify-center z-10">
