@@ -445,7 +445,7 @@ function SignInForm() {
           <button
             type="button"
             onClick={() => { setLoginType("otp"); setError(""); }}
-            className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               loginType === "otp"
                 ? "bg-[var(--brand-primary)] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-white"
