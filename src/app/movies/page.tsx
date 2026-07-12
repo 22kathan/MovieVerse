@@ -42,7 +42,7 @@ function MoviesExploreContent() {
     async function loadData() {
       setLoading(true);
       try {
-        const pageSize = 8;
+        const pageSize = 12;
         const startIndex = (page - 1) * pageSize;
         const endIndex = page * pageSize;
 
@@ -216,13 +216,7 @@ function MoviesExploreContent() {
             )}
           </div>
           
-          <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] px-4 py-1.5 rounded-lg border border-[var(--border-primary)]/50">
-            <span>CURRENT: {page}</span>
-            <span className="text-[var(--border-primary)]">•</span>
-            <span>NEXT: {page < totalPages && page < 1250 ? page + 1 : 'N/A'}</span>
-            <span className="text-[var(--border-primary)]">•</span>
-            <span>TOTAL PAGES: {Math.min(totalPages, 1250)}</span>
-          </div>
+
         </div>
       )}
     </div>
