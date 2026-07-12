@@ -21,6 +21,17 @@ import {
   Loader2,
   Shield,
   Crown,
+  List,
+  Home,
+  Film,
+  Tv,
+  Users,
+  TrendingUp,
+  Sparkles,
+  Newspaper,
+  Trophy,
+  Heart,
+  Activity,
 } from "lucide-react";
 import NotificationBell from "@/components/shared/NotificationBell";
 
@@ -426,6 +437,188 @@ export default function Header() {
           )}
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] md:hidden"
+            />
+
+            {/* Sidebar drawer container */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-[280px] bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg-primary)] border-r border-[var(--bg-glass-border)] z-[100] flex flex-col md:hidden overflow-y-auto"
+            >
+              {/* Logo / Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-primary)]/40">
+                <Link
+                  href="/"
+                  className="flex items-center gap-3"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-secondary)] flex items-center justify-center shadow-lg">
+                    <Film className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <h1 className="text-base font-bold font-[var(--font-display)] tracking-tight">
+                    <span className="bg-gradient-to-r from-[var(--brand-primary-light)] via-[var(--brand-secondary)] to-[var(--brand-accent)] bg-clip-text text-transparent">
+                      MovieVerse
+                    </span>
+                  </h1>
+                </Link>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
+                >
+                  <X className="w-5 h-5 text-[var(--text-secondary)]" />
+                </button>
+              </div>
+
+              {/* User profile section if logged in */}
+              {status === "authenticated" && session?.user && (
+                <div className="p-4 border-b border-[var(--border-primary)]/40 bg-[var(--bg-surface)]/30">
+                  <div className="flex items-center gap-3">
+                    {session.user.image ? (
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || "User"}
+                        width={36}
+                        height={36}
+                        className="rounded-lg object-cover border border-[var(--border-primary)]/50"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-secondary)] flex items-center justify-center text-white font-bold">
+                        {(session.user.name || "U")[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate flex items-center gap-1">
+                        {session.user.name}
+                        {isPremium && (
+                          <span className="text-[8px] font-extrabold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30">
+                            VIP
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-[var(--text-tertiary)] truncate">{session.user.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Links */}
+              <nav className="flex-1 px-4 py-6 space-y-6">
+                <div className="space-y-1.5">
+                  <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    Menu
+                  </p>
+                  <MobileNavItem href="/" label="Home" icon={Home} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/movies" label="Movies" icon={Film} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/tv" label="TV Shows" icon={Tv} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/celebrities" label="Celebrities" icon={Users} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/trending" label="Trending" icon={TrendingUp} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    Discover
+                  </p>
+                  <MobileNavItem href="/top-rated" label="Top Rated" icon={Star} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/upcoming" label="Upcoming" icon={Activity} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/ai-search" label="AI Search" icon={Sparkles} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/news" label="News & Trailers" icon={Newspaper} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileNavItem href="/awards" label="Awards" icon={Trophy} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                </div>
+
+                {status === "authenticated" && (
+                  <div className="space-y-1.5">
+                    <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                      Personal
+                    </p>
+                    <MobileNavItem href="/watchlist" label="My Watchlist" icon={Bookmark} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                    <MobileNavItem href="/lists" label="My Lists" icon={List} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                    <MobileNavItem href="/reviews" label="My Reviews" icon={Heart} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                  </div>
+                )}
+              </nav>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-[var(--border-primary)]/40 space-y-2">
+                {status === "authenticated" ? (
+                  <>
+                    <MobileNavItem href="/settings" label="Settings" icon={Settings} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} />
+                    {!isPremium && !isAdmin && (
+                      <MobileNavItem href="/premium" label="Go Premium VIP" icon={Crown} pathname={pathname} setMobileMenuOpen={setMobileMenuOpen} highlight />
+                    )}
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] text-white text-xs font-semibold hover:opacity-95 transition-opacity"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
+  );
+}
+
+interface MobileNavItemProps {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  pathname: string;
+  setMobileMenuOpen: (open: boolean) => void;
+  highlight?: boolean;
+}
+
+function MobileNavItem({
+  href,
+  label,
+  icon: Icon,
+  pathname,
+  setMobileMenuOpen,
+  highlight = false,
+}: MobileNavItemProps) {
+  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  return (
+    <Link href={href} onClick={() => setMobileMenuOpen(false)}>
+      <div
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+          active
+            ? "text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] shadow-md"
+            : highlight
+            ? "text-amber-400 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20"
+            : "text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)]"
+        }`}
+      >
+        <Icon className="w-4 h-4 shrink-0" />
+        <span>{label}</span>
+      </div>
+    </Link>
   );
 }
