@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Film, Mail, Lock, ArrowRight, Loader2, AlertCircle, Phone, User } from "lucide-react";
+import { Film, Mail, Lock, ArrowRight, Loader2, AlertCircle, User } from "lucide-react";
 
 const countryCodes = [
   { name: "India", code: "+91", flag: "🇮🇳" },
@@ -60,15 +60,13 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [loginType, setLoginType] = useState<"email" | "otp">("email");
+  const [loginType, setLoginType] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  const [otpEmail, setOtpEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [simulatedOtp, setSimulatedOtp] = useState("");
-  const [otpMessage, setOtpMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -79,6 +77,104 @@ function SignInForm() {
       window.location.port === "8000" ||
       process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
     );
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpEmail || !otpEmail.includes("@")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    if (isStaticDeployment()) {
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      setSimulatedOtp(code);
+      setOtpSent(true);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmail }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send code.");
+      }
+
+      setOtpSent(true);
+      if (data.simulated && data.otp) {
+        setSimulatedOtp(data.otp);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to send verification code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 4) {
+      setError("Please enter the 4-digit code.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    if (isStaticDeployment()) {
+      if (otp === simulatedOtp || otp === "1234") {
+        const mockUser = {
+          user: {
+            id: `otp_${Math.random().toString(36).substr(2, 9)}`,
+            name: otpEmail.split("@")[0].charAt(0).toUpperCase() + otpEmail.split("@")[0].slice(1),
+            email: otpEmail,
+            role: "REGISTERED",
+            username: otpEmail.split("@")[0],
+            isPremium: false,
+          },
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+        document.cookie = "next-auth.session-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        setTimeout(() => {
+          const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+            ? "/portfolio/movieverse" 
+            : "";
+          window.location.href = `${basePath}${callbackUrl}`;
+        }, 800);
+      } else {
+        setError("Invalid verification code.");
+        setLoading(false);
+      }
+      return;
+    }
+
+    try {
+      const result = await signIn("credentials", {
+        email: otpEmail,
+        otp: otp,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid verification code.");
+      } else {
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch {
+      setError("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
@@ -152,137 +248,6 @@ function SignInForm() {
         setError("Invalid email or password");
       } else {
         router.push(callbackUrl);
-        router.refresh();
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-
-    if (isStaticDeployment()) {
-      try {
-        const clientOtp = Math.floor(1000 + Math.random() * 9000).toString();
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-        if (apiUrl) {
-          // Call backend API if configured
-          const response = await fetch(`${apiUrl}/api/auth/otp/send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: email.trim().toLowerCase() }),
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.error || "Failed to send OTP via backend.");
-          }
-          setOtpSent(true);
-          if (data.simulated && data.otp) {
-            setOtpMessage(`OTP sent successfully! (Simulated Mode: Code is ${data.otp})`);
-            setSimulatedOtp(data.otp);
-          } else {
-            setOtpMessage(data.message || "OTP sent successfully.");
-          }
-        } else {
-          // Fallback to simulation since no client key or backend is configured
-          setOtpSent(true);
-          setSimulatedOtp(clientOtp);
-          setOtpMessage(`OTP sent successfully! (Simulated Mode: Code is ${clientOtp})`);
-        }
-      } catch (err: any) {
-        console.warn("Direct email delivery failed:", err.message);
-        // Fallback to simulation if backend API fails
-        const clientOtp = Math.floor(1000 + Math.random() * 9000).toString();
-        setOtpSent(true);
-        setSimulatedOtp(clientOtp);
-        setOtpMessage(`OTP sent successfully! (Simulated Mode: Code is ${clientOtp})`);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/auth/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Failed to send OTP. Please try again.");
-      } else {
-        setOtpSent(true);
-        if (data.simulated && data.otp) {
-          setOtpMessage("OTP generated! (Email API keys not configured. Code logged to server console.)");
-          setSimulatedOtp(data.otp);
-        } else {
-          setOtpMessage(data.message || "OTP sent successfully.");
-        }
-      }
-    } catch (err) {
-      setError("Failed to connect to OTP service.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePhoneVerifyAndSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    if (isStaticDeployment()) {
-      if (otp !== simulatedOtp && otp !== "1234") {
-        setError("Invalid OTP code. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      const mockUser = {
-        user: {
-          id: `email_${email.replace(/[^a-z0-9]/gi, "")}`,
-          name: email.split("@")[0],
-          email: email,
-          role: "REGISTERED",
-          username: email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, ""),
-          isPremium: false,
-        },
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      };
-      localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
-      setTimeout(() => {
-        const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
-          ? "/portfolio/movieverse" 
-          : "";
-        window.location.href = `${basePath}/settings?tab=account`;
-      }, 800);
-      return;
-    }
-
-    try {
-      const result = await signIn("credentials", {
-        email,
-        otp,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("OTP verification failed. Please try again.");
-      } else {
-        router.push("/settings?tab=account");
         router.refresh();
       }
     } catch {
@@ -464,6 +429,32 @@ function SignInForm() {
           </p>
         </div>
 
+        {/* Tab Switcher */}
+        <div className="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-primary)] relative z-10">
+          <button
+            type="button"
+            onClick={() => { setLoginType("password"); setError(""); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              loginType === "password"
+                ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-white"
+            }`}
+          >
+            Password Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => { setLoginType("otp"); setError(""); }}
+            className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              loginType === "otp"
+                ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-white"
+            }`}
+          >
+            Email OTP
+          </button>
+        </div>
+
         {/* Error message */}
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs relative z-10 animate-fade-in">
@@ -472,68 +463,163 @@ function SignInForm() {
           </div>
         )}
 
-        {/* Credentials Form */}
-        <form className="space-y-4 relative z-10" onSubmit={handleCredentialsSignIn}>
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-              Email Address
-            </label>
-            <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-              <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
-              <input
-                type="email"
-                name="email"
-                required
-                autoComplete="username email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
+        {/* Conditional forms based on loginType */}
+        {loginType === "password" ? (
+          /* Credentials Form */
+          <form className="space-y-4 relative z-10" onSubmit={handleCredentialsSignIn}>
+            <div className="space-y-1">
               <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
-                Password
+                Email Address
               </label>
-              <button type="button" className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline">
-                Forgot password?
-              </button>
+              <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
+                <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autoComplete="username email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
+                  disabled={loading}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
-              <Lock className="w-4 h-4 text-[var(--text-tertiary)]" />
-              <input
-                type="password"
-                name="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
-                disabled={loading}
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
+                  Password
+                </label>
+                <button type="button" className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline">
+                  Forgot password?
+                </button>
+              </div>
+              <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
+                <Lock className="w-4 h-4 text-[var(--text-tertiary)]" />
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        ) : (
+          /* OTP Form */
+          <form className="space-y-4 relative z-10" onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}>
+            {!otpSent ? (
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block">
+                  Email Address
+                </label>
+                <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus-within:border-[var(--brand-primary)] transition-all">
+                  <Mail className="w-4 h-4 text-[var(--text-tertiary)]" />
+                  <input
+                    type="email"
+                    required
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)]"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
             ) : (
-              <>
-                <span>Sign In</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
+              <div className="space-y-3">
+                <div className="text-center space-y-1">
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    We sent a verification code to
+                  </p>
+                  <p className="text-xs font-bold text-white">
+                    {otpEmail}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-[var(--text-secondary)] tracking-wider block text-center">
+                    4-Digit Verification Code
+                  </label>
+                  <div className="flex justify-center">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      placeholder="••••"
+                      className="w-32 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-3 focus:border-[var(--brand-primary)] text-center text-lg font-bold outline-none text-white tracking-widest"
+                      disabled={loading}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                {simulatedOtp && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center space-y-1">
+                    <p className="text-[10px] font-bold text-emerald-400">
+                      ✨ [SIMULATION MODE] Verification Code Sent:
+                    </p>
+                    <p className="text-xl font-extrabold text-white tracking-widest">
+                      {simulatedOtp}
+                    </p>
+                    <p className="text-[9px] text-[var(--text-tertiary)]">
+                      Enter this code above to complete your sign-in.
+                    </p>
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => { setOtpSent(false); setOtp(""); setSimulatedOtp(""); }}
+                    className="text-[10px] font-bold text-[var(--brand-primary-light)] hover:underline cursor-pointer"
+                  >
+                    Change Email Address
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
-        </form>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <span>{otpSent ? "Verify & Sign In" : "Send Verification Code"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        )}
 
         {/* Separator */}
         <div className="relative flex py-2 items-center justify-center z-10">
@@ -567,7 +653,6 @@ function SignInForm() {
             <span>Guest Access</span>
           </button>
         </div>
-
 
         {/* Footer */}
         <div className="text-center text-xs text-[var(--text-secondary)] pt-2 relative z-10">

@@ -222,7 +222,52 @@ export async function sendSMS(phone: string, otp: string): Promise<{ success: bo
 export async function sendEmail(email: string, otp: string): Promise<{ success: boolean; simulated: boolean; error?: string }> {
   const cleanEmail = email.trim().toLowerCase();
 
-  // 1. Resend Option
+  // 1. SendGrid Option
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (sendgridKey) {
+    try {
+      const fromEmail = process.env.SENDGRID_FROM || "onboarding@resend.dev";
+      const url = "https://api.sendgrid.com/v3/mail/send";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${sendgridKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          personalizations: [
+            {
+              to: [{ email: cleanEmail }],
+            },
+          ],
+          from: {
+            email: fromEmail,
+            name: "MovieVerse",
+          },
+          subject: "Your MovieVerse Verification Code",
+          content: [
+            {
+              type: "text/html",
+              value: `<p>Your MovieVerse sign-in OTP is <strong>${otp}</strong>. Valid for 5 minutes.</p>`,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `HTTP error ${response.status}`);
+      }
+
+      console.log(`[SendGrid Email] Real OTP email sent to ${cleanEmail} successfully.`);
+      return { success: true, simulated: false };
+    } catch (err: any) {
+      console.warn(`[SendGrid Email] Failed to send email:`, err.message);
+      // Fall through
+    }
+  }
+
+  // 2. Resend Option
   const resendKey = process.env.RESEND_API_KEY;
   if (resendKey) {
     try {
