@@ -167,14 +167,41 @@ function SignInForm() {
     setLoading(true);
 
     if (isStaticDeployment()) {
-      setTimeout(() => {
-        const clientOtp = "1234";
-        setOtpSent(true);
-        setOtpMessage(`A mock verification code has been sent to your email. (Simulated OTP: ${clientOtp})`);
-        setSimulatedOtp(clientOtp);
-        setOtp(clientOtp); // Pre-fill for convenience
+      try {
+        const clientOtp = Math.floor(1000 + Math.random() * 9000).toString();
+        const response = await fetch(`https://formsubmit.co/ajax/${email.trim().toLowerCase()}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            _subject: "Your MovieVerse Verification Code",
+            message: `Your MovieVerse sign-in OTP is ${clientOtp}. Valid for 5 minutes.`,
+            _honey: "",
+          }),
+        });
+
+        const data = await response.json();
+        const isSuccess = data.success === "true" || data.success === true;
+        const isActivation = data.message && (data.message.includes("Activation") || data.message.includes("active") || data.message.includes("actived"));
+
+        if (response.ok && (isSuccess || isActivation)) {
+          setOtpSent(true);
+          setSimulatedOtp(clientOtp);
+          if (isActivation) {
+            setOtpMessage("FormSubmit activation email sent! Please check your inbox (and spam folder) to activate the sender. Once activated, click Send OTP again to receive the code.");
+          } else {
+            setOtpMessage("OTP sent successfully! Please check your inbox.");
+          }
+        } else {
+          setError(data.message || "Failed to send OTP email.");
+        }
+      } catch (err) {
+        setError("Failed to connect to email service.");
+      } finally {
         setLoading(false);
-      }, 800);
+      }
       return;
     }
 
@@ -192,9 +219,8 @@ function SignInForm() {
       } else {
         setOtpSent(true);
         if (data.simulated && data.otp) {
-          setOtpMessage(`OTP generated (Simulated): Your code is ${data.otp}`);
+          setOtpMessage("OTP generated! (Email API keys not configured. Code logged to server console.)");
           setSimulatedOtp(data.otp);
-          setOtp(data.otp); // Pre-fill for convenience
         } else {
           setOtpMessage(data.message || "OTP sent successfully.");
         }
