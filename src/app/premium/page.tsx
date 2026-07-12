@@ -6,6 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/shared/Toast";
 import { Sparkles, CheckCircle2, Loader2, QrCode, CreditCard, Printer, X, ShieldCheck, Copy, Check } from "lucide-react";
 
+const isStaticDeployment = () => {
+  if (typeof window === "undefined") return false;
+  return (
+    window.location.hostname.includes("github.io") ||
+    window.location.port === "8000" ||
+    process.env.NEXT_PUBLIC_STATIC_EXPORT === "true"
+  );
+};
+
 function PremiumContent() {
   const { data: session, update } = useSession();
   const router = useRouter();
@@ -31,6 +40,28 @@ function PremiumContent() {
     if (status === 'success') {
       const activatePremium = async () => {
         setIsRedirecting(true);
+
+        if (isStaticDeployment()) {
+          const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+          if (mockSessionStr) {
+            const mockSession = JSON.parse(mockSessionStr);
+            if (mockSession.user) {
+              mockSession.user.isPremium = true;
+              localStorage.setItem("movieverse_mock_session", JSON.stringify(mockSession));
+            }
+          }
+          await update();
+          showToast({
+            type: "success",
+            title: "VIP Account Activated!",
+            message: "Your premium VIP membership is active now. Thank you!",
+          });
+          triggerConfetti();
+          setIsRedirecting(false);
+          router.replace("/premium");
+          return;
+        }
+
         try {
           const response = await fetch("/api/premium/subscribe", {
             method: "POST",
@@ -97,6 +128,13 @@ function PremiumContent() {
     if (!selectedTier) return;
     setIsRedirecting(true);
 
+    if (isStaticDeployment()) {
+      setTimeout(() => {
+        router.push("/premium?status=success");
+      }, 1000);
+      return;
+    }
+
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -133,6 +171,29 @@ function PremiumContent() {
     }
 
     setIsRedirecting(true);
+
+    if (isStaticDeployment()) {
+      setTimeout(async () => {
+        const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+        if (mockSessionStr) {
+          const mockSession = JSON.parse(mockSessionStr);
+          if (mockSession.user) {
+            mockSession.user.isPremium = true;
+            localStorage.setItem("movieverse_mock_session", JSON.stringify(mockSession));
+          }
+        }
+        await update();
+        showToast({
+          type: "success",
+          title: "VIP Account Activated!",
+          message: "Your premium VIP membership is active now. Thank you!",
+        });
+        triggerConfetti();
+        setShowPaymentModal(false);
+        setIsRedirecting(false);
+      }, 1500);
+      return;
+    }
 
     // Generate a secure mock transaction token matching /^tok_mv_[a-zA-Z0-9]{24}$/
     const generateToken = () => {
