@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Film, Mail, Lock, ArrowRight, Loader2, AlertCircle, Phone } from "lucide-react";
+import { Film, Mail, Lock, ArrowRight, Loader2, AlertCircle, Phone, User } from "lucide-react";
 
 const countryCodes = [
   { name: "India", code: "+91", flag: "🇮🇳" },
@@ -420,6 +420,32 @@ function SignInForm() {
     signIn(provider, { callbackUrl });
   };
 
+  const handleGuestSignIn = () => {
+    setLoading(true);
+    const mockUser = {
+      user: {
+        id: `guest_${Math.random().toString(36).substr(2, 9)}`,
+        name: "Guest Explorer",
+        email: "guest@movieverse.com",
+        role: "REGISTERED",
+        username: "guest",
+        isPremium: false,
+      },
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
+    
+    // Clear next-auth cookie to avoid conflicts
+    document.cookie = "next-auth.session-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    
+    setTimeout(() => {
+      const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
+        ? "/portfolio/movieverse" 
+        : "";
+      window.location.href = `${basePath}${callbackUrl}`;
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
       <div className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-primary)] rounded-3xl p-8 space-y-6 shadow-2xl relative overflow-hidden">
@@ -620,11 +646,11 @@ function SignInForm() {
           <div className="flex-grow border-t border-[var(--border-primary)]" />
         </div>
 
-        {/* Social Logins */}
-        <div className="relative z-10">
+        {/* Social & Guest Logins */}
+        <div className="relative z-10 grid grid-cols-2 gap-3">
           <button
             onClick={() => handleOAuthSignIn("google")}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] hover:border-[var(--border-secondary)] transition-all text-xs font-semibold text-white cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] hover:border-[var(--border-secondary)] transition-all text-xs font-semibold text-white cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -634,7 +660,16 @@ function SignInForm() {
             </svg>
             <span>Google</span>
           </button>
+
+          <button
+            onClick={handleGuestSignIn}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-secondary)]/10 border border-[var(--brand-primary)]/30 hover:border-[var(--brand-primary)]/60 transition-all text-xs font-semibold text-white cursor-pointer"
+          >
+            <User className="w-4 h-4 text-[var(--brand-primary-light)]" />
+            <span>Guest Access</span>
+          </button>
         </div>
+
 
         {/* Footer */}
         <div className="text-center text-xs text-[var(--text-secondary)] pt-2 relative z-10">
