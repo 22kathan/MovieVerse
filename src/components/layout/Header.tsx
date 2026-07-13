@@ -55,10 +55,50 @@ export default function Header() {
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { data: nextAuthSession, status: nextAuthStatus } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [status, setStatus] = useState<string>("loading");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const router = useRouter();
+
+  useEffect(() => {
+    const isStatic = window.location.hostname.includes("github.io") ||
+                     window.location.port === "8000" ||
+                     process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+    if (isStatic) {
+      const loadMockSession = () => {
+        const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+        if (mockSessionStr) {
+          try {
+            const mockSession = JSON.parse(mockSessionStr);
+            setSession(mockSession);
+            setStatus("authenticated");
+          } catch {
+            setSession(null);
+            setStatus("unauthenticated");
+          }
+        } else {
+          setSession(null);
+          setStatus("unauthenticated");
+        }
+      };
+
+      loadMockSession();
+
+      // Listen for session and storage changes
+      window.addEventListener("storage", loadMockSession);
+      window.addEventListener("movieverse_session_change", loadMockSession);
+      return () => {
+        window.removeEventListener("storage", loadMockSession);
+        window.removeEventListener("movieverse_session_change", loadMockSession);
+      };
+    } else {
+      setSession(nextAuthSession);
+      setStatus(nextAuthStatus);
+    }
+  }, [nextAuthSession, nextAuthStatus]);
 
   const isPremium = session?.user && ((session.user as any).isPremium || (session.user as any).role === "PREMIUM" || (session.user as any).role === "ADMIN");
   const isAdmin = session?.user && (session.user as any).role === "ADMIN";

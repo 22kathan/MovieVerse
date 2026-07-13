@@ -63,7 +63,7 @@ export default function SignUpPage() {
       localStorage.setItem("movieverse_mock_session", JSON.stringify(mockUser));
 
       setTimeout(() => {
-        router.push("/");
+        router.push("/settings?tab=account");
         router.refresh();
       }, 800);
       return;
@@ -95,7 +95,7 @@ export default function SignUpPage() {
         setError("Account created! Please sign in.");
         router.push("/sign-in");
       } else {
-        router.push("/");
+        router.push("/settings?tab=account");
         router.refresh();
       }
     } catch {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ import {
   Activity,
   Sparkles,
 } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 const mainNav = [
   { href: "/", label: "Home", icon: Home },
@@ -46,6 +48,46 @@ const personalNav = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: nextAuthSession, status: nextAuthStatus } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [status, setStatus] = useState<string>("loading");
+
+  useEffect(() => {
+    const isStatic = window.location.hostname.includes("github.io") ||
+                     window.location.port === "8000" ||
+                     process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+    if (isStatic) {
+      const loadMockSession = () => {
+        const mockSessionStr = localStorage.getItem("movieverse_mock_session");
+        if (mockSessionStr) {
+          try {
+            const mockSession = JSON.parse(mockSessionStr);
+            setSession(mockSession);
+            setStatus("authenticated");
+          } catch {
+            setSession(null);
+            setStatus("unauthenticated");
+          }
+        } else {
+          setSession(null);
+          setStatus("unauthenticated");
+        }
+      };
+
+      loadMockSession();
+
+      window.addEventListener("storage", loadMockSession);
+      window.addEventListener("movieverse_session_change", loadMockSession);
+      return () => {
+        window.removeEventListener("storage", loadMockSession);
+        window.removeEventListener("movieverse_session_change", loadMockSession);
+      };
+    } else {
+      setSession(nextAuthSession);
+      setStatus(nextAuthStatus);
+    }
+  }, [nextAuthSession, nextAuthStatus]);
 
   return (
     <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-[260px] flex-col z-[var(--z-fixed)]">
@@ -93,10 +135,15 @@ export default function Sidebar() {
             icon={Settings}
             active={pathname === "/settings"}
           />
-          <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-[var(--text-tertiary)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-all duration-200">
-            <LogOut className="w-[18px] h-[18px]" />
-            <span>Logout</span>
-          </button>
+          {status === "authenticated" && (
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-[var(--text-tertiary)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-all duration-200 cursor-pointer"
+            >
+              <LogOut className="w-[18px] h-[18px]" />
+              <span>Logout</span>
+            </button>
+          )}
         </div>
       </div>
     </aside>

@@ -132,5 +132,38 @@
     "isPremium": false,
     "premiumUntil": null,
     "createdAt": "2026-07-12T10:41:50.972Z"
+  },
+  {
+    "id": "mock_sprwtojqy",
+    "name": "Local Test",
+    "email": "localuser_test_13072026_1048@example.com",
+    "hashedPassword": "$2b$12$VQF6xnYdAe6rIpppkoqIEO6tomCByVr8fCfDhsnf9sSV6Vc8LXD3e",
+    "username": "localusertest130720261048",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-13T05:18:53.716Z"
+  },
+  {
+    "id": "mock_ubeoivncc",
+    "name": "otptestuser123",
+    "email": "otptestuser123@example.com",
+    "hashedPassword": null,
+    "username": null,
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-13T05:20:02.526Z"
+  },
+  {
+    "id": "mock_tl4aryp43",
+    "name": "Glitch Fix Test",
+    "email": "glitchtest_200@example.com",
+    "hashedPassword": "$2b$12$N2XfaDN9/FhsDeYVJ3lQ.epP3ejFpLty.9w.ZwpXANKmjcKtcJnL.",
+    "username": "glitchtest200",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-13T05:29:59.952Z"
   }
 ]

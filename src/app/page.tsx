@@ -93,7 +93,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Banner (uses top trending items) */}
-      <HeroBanner movies={trendingList.slice(0, 5)} />
+      <HeroBanner movies={trendingList} />
 
       {/* Content Sections */}
       <div className="px-6 py-8 space-y-12 mx-auto" style={{ maxWidth: "var(--container-max)" }}>
@@ -122,7 +122,7 @@ export default async function HomePage() {
               title={recommendationSourceTitle}
               subtitle="Tailored to your viewing preferences"
             />
-            <MovieGrid movies={normalize(personalRecommendations)} />
+            <MovieGrid movies={normalize(personalRecommendations)} shuffle limit={6} />
           </section>
         )}
 
@@ -132,7 +132,7 @@ export default async function HomePage() {
             subtitle="What everyone is watching this week"
             viewAllHref="/trending"
           />
-          <MovieGrid movies={normalize(trendingList).slice(0, 12)} />
+          <MovieGrid movies={normalize(trendingList)} shuffle limit={12} />
         </section>
 
         <section>
@@ -141,7 +141,7 @@ export default async function HomePage() {
             subtitle="Top movies people are watching right now"
             viewAllHref="/movies"
           />
-          <MovieGrid movies={normalize(popularList).slice(0, 6)} />
+          <MovieGrid movies={normalize(popularList)} shuffle limit={6} />
         </section>
 
         <section>
@@ -150,7 +150,7 @@ export default async function HomePage() {
             subtitle="The highest-rated movies of all time"
             viewAllHref="/top-rated"
           />
-          <MovieGrid movies={normalize(topRatedList).slice(0, 6)} />
+          <MovieGrid movies={normalize(topRatedList)} shuffle limit={6} />
         </section>
 
         <section>
@@ -159,7 +159,7 @@ export default async function HomePage() {
             subtitle="Currently in theaters"
             viewAllHref="/movies?filter=now_playing"
           />
-          <MovieGrid movies={normalize(nowPlayingList).slice(0, 6)} />
+          <MovieGrid movies={normalize(nowPlayingList)} shuffle limit={6} />
         </section>
 
         <section>
@@ -168,7 +168,7 @@ export default async function HomePage() {
             subtitle="Upcoming movies to add to your watchlist"
             viewAllHref="/upcoming"
           />
-          <MovieGrid movies={normalize(upcomingList).slice(0, 6)} />
+          <MovieGrid movies={normalize(upcomingList)} shuffle limit={6} />
         </section>
       </div>
     </div>

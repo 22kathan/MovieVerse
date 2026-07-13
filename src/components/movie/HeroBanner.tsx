@@ -34,10 +34,20 @@ const GENRE_MAP: Record<number, string> = {
 export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const featured = movies.slice(0, 5);
+  const [featured, setFeatured] = useState<HeroMovie[]>(() => movies.slice(0, 5));
   const current = featured[currentIndex];
 
   useEffect(() => {
+    const arr = [...movies];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    setFeatured(arr.slice(0, 5));
+  }, [movies]);
+
+  useEffect(() => {
+    if (featured.length === 0) return;
     const timer = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {

@@ -148,7 +148,7 @@ function SignInForm() {
           const basePath = window.location.pathname.startsWith("/portfolio/movieverse") 
             ? "/portfolio/movieverse" 
             : "";
-          window.location.href = `${basePath}${callbackUrl}`;
+          window.location.href = `${basePath}/settings?tab=account`;
         }, 800);
       } else {
         setError("Invalid verification code.");
@@ -167,7 +167,7 @@ function SignInForm() {
       if (result?.error) {
         setError("Invalid verification code.");
       } else {
-        router.push(callbackUrl);
+        router.push("/settings?tab=account");
         router.refresh();
       }
     } catch {
