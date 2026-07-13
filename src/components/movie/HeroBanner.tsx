@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Play, Plus, Star, Clock, Info } from "lucide-react";
+import { Play, Plus, Star, Clock, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import SafeImage from "@/components/shared/SafeImage";
 
@@ -44,11 +44,29 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
         setCurrentIndex((prev) => (prev + 1) % featured.length);
         setIsTransitioning(false);
       }, 500); // Wait for fade out, change index, then fade back in
-    }, 8000);
+    }, 3500); // Auto-slide in 3.5 seconds when not changed manually
     return () => clearInterval(timer);
-  }, [featured.length]);
+  }, [currentIndex, featured.length]);
 
   if (!current) return null;
+
+  const handlePrev = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + featured.length) % featured.length);
+      setIsTransitioning(false);
+    }, 500);
+  };
+
+  const handleNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % featured.length);
+      setIsTransitioning(false);
+    }, 500);
+  };
 
   const title = current.title || current.name || "";
   const date = current.release_date || current.first_air_date;
@@ -61,7 +79,7 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
   const backdropUrl = getImageUrl(current.backdrop_path, "backdrop", "original");
 
   return (
-    <section className="relative w-full h-[70vh] min-h-[500px] max-h-[700px] overflow-hidden bg-[#0d1321]">
+    <section className="relative w-full h-[70vh] min-h-[500px] max-h-[700px] overflow-hidden bg-[#0d1321] group">
       {/* Background Image with CSS transition */}
       <div className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
         <SafeImage
@@ -149,26 +167,45 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
         </div>
       </div>
 
-      {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        {featured.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setIsTransitioning(true);
-              setTimeout(() => {
-                setCurrentIndex(i);
-                setIsTransitioning(false);
-              }, 300);
-            }}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === currentIndex
-                ? "w-8 bg-[var(--brand-primary)]"
-                : "w-2 bg-white/30 hover:bg-white/50"
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
+      {/* Slide Indicators & Navigation Controls */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg z-10">
+        <button
+          onClick={handlePrev}
+          className="flex items-center justify-center p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 active:scale-90 transition-all duration-200 cursor-pointer"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-2">
+          {featured.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                if (isTransitioning || i === currentIndex) return;
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  setCurrentIndex(i);
+                  setIsTransitioning(false);
+                }, 500);
+              }}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === currentIndex
+                  ? "w-8 bg-[var(--brand-primary)]"
+                  : "w-2 bg-white/30 hover:bg-white/50"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={handleNext}
+          className="flex items-center justify-center p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 active:scale-90 transition-all duration-200 cursor-pointer"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
     </section>
   );

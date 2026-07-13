@@ -1,36 +1,53 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import { getPopularPeople, getImageUrl } from "@/lib/tmdb";
 import SectionHeader from "@/components/shared/SectionHeader";
-import { ChevronLeft, ChevronRight, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
-interface CelebritiesPageProps {
-  searchParams: Promise<{
-    page?: string;
-  }>;
+export default function CelebritiesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--brand-primary)]" />
+      </div>
+    }>
+      <CelebritiesContent />
+    </Suspense>
+  );
 }
 
-export const metadata: Metadata = {
-  title: "Celebrities | MovieVerse",
-  description: "Discover the most popular actors, directors, and creators in the entertainment industry.",
-};
+function CelebritiesContent() {
+  const searchParams = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1");
 
-export const dynamic = "force-static";
+  const [people, setPeople] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
 
-export default async function CelebritiesPage({ searchParams }: CelebritiesPageProps) {
-  const resolvedParams = await searchParams;
-  const page = parseInt(resolvedParams.page || "1");
+  useEffect(() => {
+    document.title = "Celebrities | MovieVerse";
+  }, []);
 
-  let response;
-  try {
-    response = await getPopularPeople(page);
-  } catch (error) {
-    console.error("Error fetching popular people:", error);
-  }
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        const response = await getPopularPeople(page);
+        setPeople(response?.results || []);
+        setTotalPages(response?.total_pages || 1);
+      } catch (error) {
+        console.error("Error fetching popular people:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const people = response?.results || [];
-  const totalPages = response?.total_pages || 1;
+    loadData();
+  }, [page]);
 
   const buildPageUrl = (pageNumber: number) => {
     return `/celebrities?page=${pageNumber}`;
@@ -45,13 +62,17 @@ export default async function CelebritiesPage({ searchParams }: CelebritiesPageP
         />
       </div>
 
-      {people.length > 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-40">
+          <Loader2 className="w-10 h-10 animate-spin text-[var(--brand-primary)]" />
+        </div>
+      ) : people.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {people.map((person) => {
             const profileUrl = getImageUrl(person.profile_path, "profile", "md");
             const knownForTitles = person.known_for
               ?.slice(0, 2)
-              .map((item) => item.title || item.name || "")
+              .map((item: any) => item.title || item.name || "")
               .filter(Boolean)
               .join(", ");
 
@@ -104,7 +125,7 @@ export default async function CelebritiesPage({ searchParams }: CelebritiesPageP
       )}
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {!loading && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-8">
           {page > 1 ? (
             <Link
