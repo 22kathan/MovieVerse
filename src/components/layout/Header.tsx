@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { searchWithElastic } from "@/lib/elasticsearch";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -114,29 +115,50 @@ export default function Header() {
 
   // Debounce search query to fetch suggestions
   useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      const timer = setTimeout(() => {
-        setSuggestions([]);
-      }, 0);
-      return () => clearTimeout(timer);
+    if (searchQuery.trim().length < 1) {
+      setSuggestions([]);
+      return;
     }
 
     const delayDebounce = setTimeout(async () => {
       setLoadingSuggestions(true);
       try {
-        const res = await fetch(
-          `/api/search/suggestions?q=${encodeURIComponent(searchQuery.trim())}`
-        );
-        const data = await res.json();
-        if (data.suggestions) {
-          setSuggestions(data.suggestions);
+        const isStatic = window.location.hostname.includes("github.io") ||
+                         window.location.port === "8000" ||
+                         process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+        if (isStatic) {
+          const response = await searchWithElastic(searchQuery.trim(), "all", 1);
+          const mappedSuggestions = (response.results || [])
+            .slice(0, 6)
+            .map((item: any) => {
+              return {
+                id: item.id,
+                title: item.title,
+                highlightedTitle: item.highlightedTitle || item.title,
+                media_type: item.media_type,
+                release_year: item.release_year || null,
+                image_path: item.poster_path || null,
+                rating: item.rating || null,
+                score: item.score
+              };
+            });
+          setSuggestions(mappedSuggestions);
+        } else {
+          const res = await fetch(
+            `/api/search/suggestions?q=${encodeURIComponent(searchQuery.trim())}`
+          );
+          const data = await res.json();
+          if (data.suggestions) {
+            setSuggestions(data.suggestions);
+          }
         }
       } catch (err) {
         console.error("Error fetching suggestions", err);
       } finally {
         setLoadingSuggestions(false);
       }
-    }, 250);
+    }, 150);
 
     return () => {
       clearTimeout(delayDebounce);
@@ -265,7 +287,7 @@ export default function Header() {
 
           {/* Search Suggestions Dropdown */}
           <AnimatePresence>
-            {searchFocused && searchQuery.trim().length >= 2 && (
+            {searchFocused && searchQuery.trim().length >= 1 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}

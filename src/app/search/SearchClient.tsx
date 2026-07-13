@@ -7,6 +7,7 @@ import Link from "next/link";
 import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { searchMulti, getImageUrl } from "@/lib/tmdb";
+import { searchWithElastic } from "@/lib/elasticsearch";
 
 export default function SearchClient() {
   const searchParams = useSearchParams();
@@ -28,11 +29,34 @@ export default function SearchClient() {
       setLoading(true);
       setErrorMsg("");
       try {
-        const res = await fetch(`/api/search?query=${encodeURIComponent(query.trim())}`);
-        if (!res.ok) throw new Error("Failed to fetch search results.");
-        const data = await res.json();
-        if (active) {
-          setResults(data?.results || []);
+        const isStatic = window.location.hostname.includes("github.io") ||
+                         window.location.port === "8000" ||
+                         process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+        if (isStatic) {
+          const searchData = await searchWithElastic(query.trim());
+          const normalized = (searchData.results || []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            media_type: item.media_type,
+            poster_path: item.poster_path || null,
+            vote_average: item.rating || 0,
+            release_date: item.release_date || '',
+            overview: item.overview || '',
+            score: item.score,
+            highlightedTitle: item.highlightedTitle,
+            highlightedOverview: item.highlightedOverview
+          }));
+          if (active) {
+            setResults(normalized);
+          }
+        } else {
+          const res = await fetch(`/api/search?query=${encodeURIComponent(query.trim())}`);
+          if (!res.ok) throw new Error("Failed to fetch search results.");
+          const data = await res.json();
+          if (active) {
+            setResults(data?.results || []);
+          }
         }
       } catch (e: any) {
         if (active) {

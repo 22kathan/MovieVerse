@@ -8,6 +8,7 @@ import { Search as SearchIcon, Film, Tv, User } from 'lucide-react';
 
 // Using the TMDB types from your types file for the search results
 import { TMDBMovie, TMDBPerson } from '@/types';
+import { searchWithElastic } from '@/lib/elasticsearch';
 
 type SearchResultItem = (TMDBMovie | TMDBPerson) & { media_type: 'movie' | 'tv' | 'person' };
 
@@ -23,20 +24,44 @@ export default function SearchBar() {
     const controller = new AbortController();
     const { signal } = controller;
 
-    if (query.length > 2) {
+    if (query.length > 0) {
       const timer = setTimeout(async () => {
         try {
-          const response = await fetch(`/api/search?query=${query}`, { signal });
-          if (!response.ok) return;
-          const data = await response.json();
-          setResults(data.results || []);
-          setIsOpen(true);
+          const isStatic = window.location.hostname.includes("github.io") ||
+                           window.location.port === "8000" ||
+                           process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+          if (isStatic) {
+            const searchData = await searchWithElastic(query.trim());
+            const normalized = (searchData.results || []).map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              name: item.title,
+              media_type: item.media_type,
+              poster_path: item.poster_path || null,
+              profile_path: item.poster_path || null,
+              vote_average: item.rating || 0,
+              release_date: item.release_date || '',
+              overview: item.overview || '',
+              score: item.score,
+              highlightedTitle: item.highlightedTitle,
+              highlightedOverview: item.highlightedOverview
+            })) as unknown as SearchResultItem[];
+            setResults(normalized);
+            setIsOpen(true);
+          } else {
+            const response = await fetch(`/api/search?query=${query}`, { signal });
+            if (!response.ok) return;
+            const data = await response.json();
+            setResults(data.results || []);
+            setIsOpen(true);
+          }
         } catch (error) {
           if ((error as Error).name !== 'AbortError') {
             console.error('Search failed:', error);
           }
         }
-      }, 300); // 300ms debounce delay
+      }, 150); // 150ms debounce delay
 
       return () => {
         clearTimeout(timer);
@@ -93,7 +118,7 @@ export default function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => query.length > 2 && setIsOpen(true)}
+          onFocus={() => query.length > 0 && setIsOpen(true)}
           placeholder="Search for movies, TV shows, people..."
           className="w-full pl-10 pr-4 py-2 rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
