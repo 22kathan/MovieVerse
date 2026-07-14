@@ -27,6 +27,8 @@ interface MovieCardData {
   genre_ids?: number[];
   overview?: string;
   media_type?: string;
+  countdownText?: string;
+  justReleased?: boolean;
 }
 
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
@@ -199,18 +201,29 @@ export default function MovieCard({
           {/* Gradient overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Rating Badge */}
-          <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold"
-            style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
-            <Star
-              className="w-3 h-3"
-              style={{ color: getRatingColor(movie.vote_average) }}
-              fill="currentColor"
-            />
-            <span style={{ color: getRatingColor(movie.vote_average) }}>
-              {rating}
-            </span>
-          </div>
+          {/* Rating / Release Status Badges */}
+          {movie.countdownText ? (
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600/90 text-white animate-pulse border border-indigo-400/30 backdrop-blur-md shadow-lg shadow-indigo-500/20 z-10">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+              <span>{movie.countdownText}</span>
+            </div>
+          ) : movie.justReleased ? (
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-400/30 backdrop-blur-md shadow-lg shadow-emerald-500/30 z-10 animate-bounce">
+              <span>🎉 JUST RELEASED</span>
+            </div>
+          ) : (
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold"
+              style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+              <Star
+                className="w-3 h-3"
+                style={{ color: getRatingColor(movie.vote_average) }}
+                fill="currentColor"
+              />
+              <span style={{ color: getRatingColor(movie.vote_average) }}>
+                {rating}
+              </span>
+            </div>
+          )}
 
           {/* Hover Actions */}
           <div 

@@ -31,7 +31,7 @@ function getFallbackImage(title: string, type: "poster" | "backdrop" | "profile"
     "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=500&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505664194779-8bebcb95c02e?w=500&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1519074002996-a69e7ac46a42?w=500&auto=format&fit=crop",
   ] : [

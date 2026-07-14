@@ -1,6 +1,7 @@
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
+import LiveMoviesSection from "@/components/movie/LiveMoviesSection";
 import {
   getTrending,
   getPopularMovies,
@@ -153,23 +154,11 @@ export default async function HomePage() {
           <MovieGrid movies={normalize(topRatedList)} shuffle limit={6} />
         </section>
 
-        <section>
-          <SectionHeader
-            title="🎬 Now Playing"
-            subtitle="Currently in theaters"
-            viewAllHref="/movies?filter=now_playing"
-          />
-          <MovieGrid movies={normalize(nowPlayingList)} shuffle limit={6} />
-        </section>
-
-        <section>
-          <SectionHeader
-            title="📅 Coming Soon"
-            subtitle="Upcoming movies to add to your watchlist"
-            viewAllHref="/upcoming"
-          />
-          <MovieGrid movies={normalize(upcomingList)} shuffle limit={6} />
-        </section>
+        {/* Real-time synchronization section for Now Playing & Coming Soon */}
+        <LiveMoviesSection
+          initialNowPlaying={normalize(nowPlayingList)}
+          initialUpcoming={normalize(upcomingList)}
+        />
       </div>
     </div>
   );

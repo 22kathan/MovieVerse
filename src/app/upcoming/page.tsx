@@ -40,17 +40,37 @@ function UpcomingContent() {
         const results = response?.results || [];
         setTotalPages(response?.total_pages || 1);
 
-        const normalized = results.map((item: any) => ({
-          id: item.id,
-          title: item.title || item.name || "Untitled",
-          poster_path: item.poster_path || null,
-          backdrop_path: item.backdrop_path || null,
-          vote_average: item.vote_average || 0,
-          release_date: item.release_date || item.first_air_date || "",
-          genre_ids: item.genre_ids || [],
-          overview: item.overview || "",
-          media_type: "movie",
-        }));
+        const now = new Date();
+        const normalized = results.map((item: any) => {
+          let countdownText = "";
+          if (item.release_date) {
+            const relDate = new Date(item.release_date);
+            if (relDate > now) {
+              const diff = relDate.getTime() - now.getTime();
+              const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+              if (days > 3) {
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const m = months[relDate.getMonth()];
+                const d = relDate.getDate();
+                const y = relDate.getFullYear();
+                countdownText = `${m} ${d}, ${y}`;
+              }
+            }
+          }
+
+          return {
+            id: item.id,
+            title: item.title || item.name || "Untitled",
+            poster_path: item.poster_path || null,
+            backdrop_path: item.backdrop_path || null,
+            vote_average: item.vote_average || 0,
+            release_date: item.release_date || item.first_air_date || "",
+            genre_ids: item.genre_ids || [],
+            overview: item.overview || "",
+            media_type: "movie",
+            countdownText,
+          };
+        });
         setMovies(normalized);
       } catch (error) {
         console.error("Error fetching upcoming movies:", error);
@@ -61,6 +81,60 @@ function UpcomingContent() {
 
     loadData();
   }, [page]);
+
+  useEffect(() => {
+    if (movies.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      let changed = false;
+      const updatedMovies = movies.map((movie) => {
+        if (!movie.release_date) return movie;
+        const relDate = new Date(movie.release_date);
+        const releaseTime = relDate.getTime();
+        const diff = releaseTime - now;
+
+        let countdownText = "";
+        if (diff <= 0) {
+          countdownText = ""; // Already released
+        } else {
+          const seconds = Math.floor(diff / 1000);
+          const minutes = Math.floor(seconds / 60);
+          const hours = Math.floor(minutes / 60);
+          const days = Math.floor(hours / 24);
+
+          if (days > 3) {
+            // Keep formatting static
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const m = months[relDate.getMonth()];
+            const d = relDate.getDate();
+            const y = relDate.getFullYear();
+            countdownText = `${m} ${d}, ${y}`;
+          } else if (days > 0) {
+            countdownText = `${days}d ${hours % 24}h`;
+          } else if (hours > 0) {
+            countdownText = `${hours}h ${minutes % 60}m`;
+          } else if (minutes > 0) {
+            countdownText = `${minutes}m ${seconds % 60}s`;
+          } else {
+            countdownText = `${seconds}s`;
+          }
+        }
+
+        if (movie.countdownText !== countdownText) {
+          changed = true;
+          return { ...movie, countdownText };
+        }
+        return movie;
+      });
+
+      if (changed) {
+        setMovies(updatedMovies);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [movies]);
 
   const buildPageUrl = (pageNumber: number) => {
     return `/upcoming?page=${pageNumber}`;

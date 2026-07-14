@@ -149,8 +149,12 @@ async function fetchDirectTMDB<T>(
 function getMockDataForEndpoint(endpoint: string): unknown {
   const cleanEndpoint = endpoint.split('?')[0];
   
+  // Movie list endpoints that should NOT be treated as movie details
+  const movieListEndpoints = ['/movie/upcoming', '/movie/now_playing', '/movie/popular', '/movie/top_rated', '/movie/latest'];
+  const isMovieListEndpoint = movieListEndpoints.some(e => cleanEndpoint === e || cleanEndpoint.endsWith(e));
+
   // Movie details
-  if (cleanEndpoint.startsWith('/movie/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
+  if (cleanEndpoint.startsWith('/movie/') && !isMovieListEndpoint && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
     const id = parseInt(cleanEndpoint.split('/')[2]) || 1;
     const mockMovie = MOCK_MOVIES_DB[id] || MOCK_MOVIES_DB[1];
     return {
@@ -197,19 +201,122 @@ function getMockDataForEndpoint(endpoint: string): unknown {
 
   // Credits (Cast & Crew)
   if (cleanEndpoint.endsWith('/credits')) {
+    const parts = cleanEndpoint.split('/');
+    const isTv = parts[1] === 'tv';
+    const id = parseInt(parts[2]) || 1;
+
+    let cast: any[] = [
+      { id: 101, name: "Leonardo DiCaprio", character: "Dom Cobb", profile_path: "/wo2hJv0ktj4B5oWoT39c42AdRYS.jpg", order: 0 },
+      { id: 102, name: "Joseph Gordon-Levitt", character: "Arthur", profile_path: "/dhV9227Z772L4t9c576yB44R3s.jpg", order: 1 },
+      { id: 104, name: "Tom Hardy", character: "Eames", profile_path: "/4zbVvA64Wo242sD7z75yB44R3s.jpg", order: 2 },
+      { id: 105, name: "Ken Watanabe", character: "Saito", profile_path: "/w51a4aZi4ghIY31w276Je4eHES.jpg", order: 3 },
+      { id: 106, name: "Cillian Murphy", character: "Robert Fischer", profile_path: "/w61a4aZi4ghIY31w276Je4eHES.jpg", order: 4 },
+    ];
+    let crew: any[] = [
+      { id: 201, name: "Christopher Nolan", department: "Directing", job: "Director", profile_path: "/3zbVvA64Wo242sD7z75yB44R3s.jpg" },
+      { id: 202, name: "Emma Thomas", department: "Production", job: "Producer", profile_path: null },
+    ];
+
+    if (!isTv) {
+      if (id === 12) { // Parasite
+        cast = [
+          { id: 1201, name: "Song Kang-ho", character: "Kim Ki-taek", profile_path: "/71BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", order: 0 },
+          { id: 1202, name: "Lee Sun-kyun", character: "Mr. Park", profile_path: "/71BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", order: 1 },
+          { id: 1203, name: "Cho Yeo-jeong", character: "Mrs. Park", profile_path: "/71BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", order: 2 },
+        ];
+        crew = [
+          { id: 1211, name: "Bong Joon-ho", department: "Directing", job: "Director", profile_path: "/71BsvGVjwPZbL91PzL7x9tG1G2c6.jpg" }
+        ];
+      } else if (id === 15) { // Joker
+        cast = [
+          { id: 1501, name: "Joaquin Phoenix", character: "Arthur Fleck / Joker", profile_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg", order: 0 },
+          { id: 1502, name: "Robert De Niro", character: "Murray Franklin", profile_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg", order: 1 },
+        ];
+        crew = [
+          { id: 1511, name: "Todd Phillips", department: "Directing", job: "Director", profile_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg" }
+        ];
+      } else if (id === 53) { // Spider-Man: Across the Spider-Verse
+        cast = [
+          { id: 5301, name: "Shameik Moore", character: "Miles Morales", profile_path: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg", order: 0 },
+          { id: 5302, name: "Hailee Steinfeld", character: "Gwen Stacy", profile_path: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg", order: 1 },
+        ];
+        crew = [
+          { id: 5311, name: "Joaquim Dos Santos", department: "Directing", job: "Director", profile_path: null },
+          { id: 5312, name: "Kemp Powers", department: "Directing", job: "Director", profile_path: null },
+          { id: 5313, name: "Justin K. Thompson", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 91) { // Moana (Live-Action)
+        cast = [
+          { id: 9101, name: "Catherine Laga'aia", character: "Moana", profile_path: null, order: 0 },
+          { id: 9102, name: "Dwayne Johnson", character: "Maui", profile_path: "/cgoy7t5Ve075naBPcewZrc08qGw.jpg", order: 1 },
+        ];
+        crew = [
+          { id: 9111, name: "Thomas Kail", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 93) { // Alpha
+        cast = [
+          { id: 9301, name: "Alia Bhatt", character: "Alpha", profile_path: null, order: 0 },
+          { id: 9302, name: "Sharvari", character: "Agent Zara", profile_path: null, order: 1 },
+        ];
+        crew = [
+          { id: 9311, name: "Shiv Rawail", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 95) { // Toy Story 5
+        cast = [
+          { id: 9501, name: "Tom Hanks", character: "Woody (voice)", profile_path: "/xndWFsBlClOJFRdhSt4NBwiPq2o.jpg", order: 0 },
+          { id: 9502, name: "Tim Allen", character: "Buzz Lightyear (voice)", profile_path: null, order: 1 },
+        ];
+        crew = [
+          { id: 9511, name: "Andrew Stanton", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 97) { // The Mandalorian & Grogu
+        cast = [
+          { id: 9701, name: "Pedro Pascal", character: "Din Djarin / The Mandalorian", profile_path: "/9VYK7oxcqhjd5LAH6ZFJ3HbkPhQ.jpg", order: 0 },
+        ];
+        crew = [
+          { id: 9711, name: "Jon Favreau", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 101) { // Project Hail Mary
+        cast = [
+          { id: 10101, name: "Ryan Gosling", character: "Ryland Grace", profile_path: "/lyUyVARDRMc0bB0aFkFvOQqSQil.jpg", order: 0 },
+        ];
+        crew = [
+          { id: 10111, name: "Phil Lord", department: "Directing", job: "Director", profile_path: null },
+          { id: 10112, name: "Christopher Miller", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 102) { // The Odyssey
+        cast = [
+          { id: 10201, name: "Matt Damon", character: "Odysseus", profile_path: "/elSlNgV8xVifsbHpFsqrPGxJToZ.jpg", order: 0 },
+          { id: 10202, name: "Tom Holland", character: "Telemachus", profile_path: "/bBRlrpJm9XkNSg0YT5LCax5cjBj.jpg", order: 1 },
+          { id: 10203, name: "Anne Hathaway", character: "Penelope", profile_path: "/tLelKoPNiyJCSEtQTz1FGv4XCup.jpg", order: 2 },
+          { id: 10204, name: "Zendaya", character: "Athena", profile_path: "/3WiZUODly3TC94qNaON0gbUqVjK.jpg", order: 3 },
+        ];
+        crew = [
+          { id: 10211, name: "Christopher Nolan", department: "Directing", job: "Director", profile_path: "/3zbVvA64Wo242sD7z75yB44R3s.jpg" }
+        ];
+      } else if (id === 103) { // Spider-Man: Brand New Day
+        cast = [
+          { id: 10301, name: "Tom Holland", character: "Peter Parker / Spider-Man", profile_path: "/bBRlrpJm9XkNSg0YT5LCax5cjBj.jpg", order: 0 },
+          { id: 10302, name: "Zendaya", character: "MJ", profile_path: "/3WiZUODly3TC94qNaON0gbUqVjK.jpg", order: 1 },
+        ];
+        crew = [
+          { id: 10311, name: "Destin Daniel Cretton", department: "Directing", job: "Director", profile_path: null }
+        ];
+      } else if (id === 108) { // Avengers: Doomsday
+        cast = [
+          { id: 10801, name: "Robert Downey Jr.", character: "Victor von Doom", profile_path: "/5qHNjhtjMD4YWH3UP0rm4tKwxCL.jpg", order: 0 },
+        ];
+        crew = [
+          { id: 10811, name: "Joe Russo", department: "Directing", job: "Director", profile_path: null },
+          { id: 10812, name: "Anthony Russo", department: "Directing", job: "Director", profile_path: null }
+        ];
+      }
+    }
+
     return {
-      id: 1,
-      cast: [
-        { id: 101, name: "Leonardo DiCaprio", character: "Dom Cobb", profile_path: "/wo2hJv0ktj4B5oWoT39c42AdRYS.jpg", order: 0 },
-        { id: 102, name: "Joseph Gordon-Levitt", character: "Arthur", profile_path: "/dhV9227Z772L4t9c576yB44R3s.jpg", order: 1 },
-        { id: 104, name: "Tom Hardy", character: "Eames", profile_path: "/4zbVvA64Wo242sD7z75yB44R3s.jpg", order: 2 },
-        { id: 105, name: "Ken Watanabe", character: "Saito", profile_path: "/w51a4aZi4ghIY31w276Je4eHES.jpg", order: 3 },
-        { id: 106, name: "Cillian Murphy", character: "Robert Fischer", profile_path: "/w61a4aZi4ghIY31w276Je4eHES.jpg", order: 4 },
-      ],
-      crew: [
-        { id: 201, name: "Christopher Nolan", department: "Directing", job: "Director", profile_path: "/3zbVvA64Wo242sD7z75yB44R3s.jpg" },
-        { id: 202, name: "Emma Thomas", department: "Production", job: "Producer", profile_path: null },
-      ]
+      id,
+      cast,
+      crew
     };
   }
 
@@ -343,7 +450,7 @@ function getMockDataForEndpoint(endpoint: string): unknown {
 
   // Default List Responses (Trending, Search, etc.)
   const isMulti = cleanEndpoint.includes('/multi');
-  const isTv = cleanEndpoint.includes('/tv/') || cleanEndpoint.includes('/tv') || cleanEndpoint.includes('tv');
+  const isTv = cleanEndpoint.includes('/tv/') || cleanEndpoint.endsWith('/tv');
   
   let defaultResults: any[];
   if (isMulti) {
@@ -377,7 +484,30 @@ function getMockDataForEndpoint(endpoint: string): unknown {
     defaultResults = [...movies, ...tvShows];
   } else {
     const database = isTv ? MOCK_TV_SHOWS_DB : MOCK_MOVIES_DB;
-    defaultResults = Object.values(database).map((m: any) => ({
+    let items = Object.values(database);
+
+    // Apply endpoint specific filtering and sorting for cleaner mock data
+    if (!isTv && cleanEndpoint.endsWith('/movie/upcoming')) {
+      const now = Date.now();
+      items = items.filter((m: any) => m.release_date && new Date(m.release_date).getTime() > now);
+      items.sort((a: any, b: any) => {
+        const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
+        const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
+        return dateA - dateB;
+      });
+    } else if (!isTv && cleanEndpoint.endsWith('/movie/now_playing')) {
+      const now = Date.now();
+      items = items.filter((m: any) => m.release_date && new Date(m.release_date).getTime() <= now);
+      items.sort((a: any, b: any) => {
+        const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
+        const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
+        return dateB - dateA;
+      });
+    } else if (!isTv && (cleanEndpoint.endsWith('/movie/popular') || cleanEndpoint.endsWith('/movie/top_rated'))) {
+      items.sort((a: any, b: any) => b.vote_average - a.vote_average);
+    }
+
+    defaultResults = items.map((m: any) => ({
       id: m.id,
       title: m.title || m.name || "",
       name: m.name || m.title || "",
@@ -532,7 +662,7 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "Fear can hold you prisoner. Hope can set you free.",
     budget: 25000000,
     revenue: 28817291,
-    poster_path: "/9cqOm0w7876rG0J56qrlznqd5p5.jpg",
+    poster_path: "/9cqNxx0GIM0bflTVxOTQuY7pZ2p.jpg",
     backdrop_path: "/kXfq73Arxtsn4r6PbYwHzpfK07H.jpg"
   },
   5: {
@@ -546,7 +676,7 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "Just because you are a character doesn't mean that you have character.",
     budget: 8000000,
     revenue: 213928762,
-    poster_path: "/d5iIlvFJ20jPNgd96SDg5j6zIhc.jpg",
+    poster_path: "/d5iVF7j37452d3j9W8pQW7d7y3K.jpg",
     backdrop_path: "/sua5wJZi4fC645k3q6j9g2n86qc.jpg"
   },
   6: {
@@ -560,7 +690,7 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "Believe the unbelievable.",
     budget: 63000000,
     revenue: 463517383,
-    poster_path: "/f89U3wLpqHYocmZk910GaFcxdmA.jpg",
+    poster_path: "/oMsxZEvz9a708d49b6UdZK1KAo5.jpg",
     backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg"
   },
   7: {
@@ -644,7 +774,7 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "Act like you own the place.",
     budget: 11400000,
     revenue: 263138861,
-    poster_path: "/71t2wNt2rJ7f8C7A5Q5Z4y8n0A.jpg",
+    poster_path: "/7BsvGVjwPZbL91PzL7x9tG1G2c6.jpg",
     backdrop_path: "/z8267z87f5A6xZ9g5W3y4t85A.jpg"
   },
   13: {
@@ -686,7 +816,7 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "Put on a happy face.",
     budget: 55000000,
     revenue: 1074000000,
-    poster_path: "/udDclsv6zg103HBceygriHjKq.jpg",
+    poster_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg",
     backdrop_path: "/joker_backdrop.jpg"
   },
   16: {
@@ -1738,6 +1868,224 @@ const MOCK_MOVIES_DB: Record<number, {
     revenue: 15000000,
     poster_path: "/kahaani_poster.jpg",
     backdrop_path: "/kahaani_backdrop.jpg"
+  },
+  // ===== 2026 NOW PLAYING (Released movies — newest first) =====
+  91: {
+    id: 91,
+    title: "Moana",
+    vote_average: 7.4,
+    release_date: "2026-07-10",
+    overview: "In this live-action reimagining, Moana, a spirited teenager from a Polynesian village, sets sail on a daring mission to save her people, discovering the one thing she always sought: her own identity.",
+    genres: [{ id: 12, name: "Adventure" }, { id: 10751, name: "Family" }, { id: 14, name: "Fantasy" }],
+    runtime: 120,
+    tagline: "The ocean is calling.",
+    poster_path: "/zKVgiv5qHCvCLT4A2ymJi5QeXDH.jpg",
+    backdrop_path: "/c6U1Te0p0FK0BOB43hiwGlBKiVY.jpg"
+  },
+  92: {
+    id: 92,
+    title: "Evil Dead Burn",
+    vote_average: 7.1,
+    release_date: "2026-07-09",
+    overview: "A group of friends discover the Necronomicon in a remote cabin, unleashing an ancient evil that possesses them one by one in this terrifying new installment of the Evil Dead franchise.",
+    genres: [{ id: 27, name: "Horror" }, { id: 53, name: "Thriller" }],
+    runtime: 98,
+    tagline: "Evil never dies. It burns.",
+    poster_path: "/ztadKzIIR0ERYqpHteaPFtk7inP.jpg",
+    backdrop_path: "/A5Tz6ogGt4VV8NESG9oWVct5bo1.jpg"
+  },
+  93: {
+    id: 93,
+    title: "Alpha",
+    vote_average: 7.6,
+    release_date: "2026-07-03",
+    overview: "A super-spy faces her most dangerous mission yet when a rogue agent from her own agency threatens global security in this action-packed entry from the YRF Spy Universe.",
+    genres: [{ id: 28, name: "Action" }, { id: 53, name: "Thriller" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 145,
+    tagline: "Fear meets its match.",
+    poster_path: "/bPtRt3ajQ0EkyeQ1O6iJwAIi9Py.jpg",
+    backdrop_path: "/b4WXm5ahmtubYXy3wqHUG2nUKoM.jpg"
+  },
+  94: {
+    id: 94,
+    title: "Minions & Monsters",
+    vote_average: 7.3,
+    release_date: "2026-07-01",
+    overview: "The Minions embark on their wildest adventure yet, accidentally awakening ancient creatures and racing to save the world from a monstrous threat — with plenty of banana-fueled chaos along the way.",
+    genres: [{ id: 16, name: "Animation" }, { id: 35, name: "Comedy" }, { id: 10751, name: "Family" }],
+    runtime: 94,
+    tagline: "Banana-powered chaos!",
+    poster_path: "/vrTlRYPhnf107vbTiDf6DRrdV3r.jpg",
+    backdrop_path: "/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg"
+  },
+  95: {
+    id: 95,
+    title: "Toy Story 5",
+    vote_average: 8.0,
+    release_date: "2026-06-19",
+    overview: "When a tech-savvy new toy arrives and threatens to make the old toys obsolete, Woody, Buzz, and the gang must prove that classic toys will always have a place in a child's heart.",
+    genres: [{ id: 16, name: "Animation" }, { id: 12, name: "Adventure" }, { id: 35, name: "Comedy" }, { id: 10751, name: "Family" }],
+    runtime: 105,
+    tagline: "Some things never go out of play.",
+    poster_path: "/sfQtVlIHljToOwYjhe21KPGzZWK.jpg",
+    backdrop_path: "/qjTqY5coNiz6sVtPng40IzltsoN.jpg"
+  },
+  96: {
+    id: 96,
+    title: "Backrooms",
+    vote_average: 7.5,
+    release_date: "2026-05-27",
+    overview: "A group of strangers find themselves trapped in an endless labyrinth of empty rooms and fluorescent lights, where reality bends and something lurks behind the walls.",
+    genres: [{ id: 27, name: "Horror" }, { id: 53, name: "Thriller" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 110,
+    tagline: "If you're not careful, you'll end up here.",
+    poster_path: "/rhGx6E3qRNMgj3i5su2oukNHwIQ.jpg",
+    backdrop_path: "/mCpwRayjXMFzKHbjbzc5JRKfq1O.jpg"
+  },
+  97: {
+    id: 97,
+    title: "The Mandalorian & Grogu",
+    vote_average: 7.8,
+    release_date: "2026-05-22",
+    overview: "Din Djarin and Grogu face their greatest challenge yet as an ancient Mandalorian threat emerges, forcing them to unite old allies and confront their shared destiny.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 28, name: "Action" }, { id: 12, name: "Adventure" }],
+    runtime: 135,
+    tagline: "This is the way.",
+    poster_path: "/5Vi8dSauVwH1HOsiZceDMbRr1Ca.jpg",
+    backdrop_path: "/6zg7A9ICOthNR2TSXlT51KvXrsA.jpg"
+  },
+  98: {
+    id: 98,
+    title: "Drishyam 3",
+    vote_average: 8.1,
+    release_date: "2026-05-21",
+    overview: "Vijay Salgaonkar's carefully constructed web of lies is tested once more when a new investigation reopens old wounds and threatens to shatter everything he built to protect his family.",
+    genres: [{ id: 53, name: "Thriller" }, { id: 80, name: "Crime" }, { id: 18, name: "Drama" }],
+    runtime: 148,
+    tagline: "The final chapter of deception.",
+    poster_path: "/456FlpiU1iOBnaOxSd783QhZKWw.jpg",
+    backdrop_path: "/enwc2Acl38mvX33QffmTzDSV89D.jpg"
+  },
+  99: {
+    id: 99,
+    title: "The Devil Wears Prada 2",
+    vote_average: 7.2,
+    release_date: "2026-05-01",
+    overview: "Andy Sachs is now a successful journalist, but when she crosses paths with Miranda Priestly again, she is pulled back into the high-stakes world of fashion and power.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 18, name: "Drama" }],
+    runtime: 115,
+    tagline: "Fashion never sleeps.",
+    poster_path: "/fCAURTUx3YfsJ8k9I0UamjSILiR.jpg",
+    backdrop_path: "/Af907x5h9W1wVis8XrSd7ynTWuy.jpg"
+  },
+  100: {
+    id: 100,
+    title: "Michael",
+    vote_average: 7.6,
+    release_date: "2026-04-22",
+    overview: "The authorized biopic chronicles the extraordinary life and career of Michael Jackson, from his childhood in Gary, Indiana to becoming the undisputed King of Pop.",
+    genres: [{ id: 18, name: "Drama" }, { id: 10402, name: "Music" }, { id: 36, name: "History" }],
+    runtime: 155,
+    tagline: "Before the legend, there was a boy with a dream.",
+    poster_path: "/zm0KAbOjlt9eR5y7vDiL2dEOwMl.jpg",
+    backdrop_path: "/xBT0oNq6rsTFv4SxG5uGRIEOrq6.jpg"
+  },
+  101: {
+    id: 101,
+    title: "Project Hail Mary",
+    vote_average: 8.3,
+    release_date: "2026-03-20",
+    overview: "A lone astronaut wakes up on a spaceship with no memory, only to discover he's humanity's last hope to solve an extinction-level threat to Earth — with the help of an unlikely alien friend.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
+    runtime: 142,
+    tagline: "Save the world. Remember how.",
+    poster_path: "/yihdXomYb5kTeSivtFndMy5iDmf.jpg",
+    backdrop_path: "/8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg"
+  },
+  // ===== 2026 COMING SOON (Upcoming releases) =====
+  102: {
+    id: 102,
+    title: "The Odyssey",
+    vote_average: 8.5,
+    release_date: "2026-07-17",
+    overview: "Christopher Nolan's mythic action epic brings Homer's Odyssey to IMAX screens, following Odysseus on his harrowing decade-long journey home from the Trojan War, battling gods, monsters, and fate itself.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
+    runtime: 170,
+    tagline: "The journey home is the greatest battle.",
+    poster_path: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
+    backdrop_path: "/m3Pom6pbD51bBv3syz8NMHda3fz.jpg"
+  },
+  103: {
+    id: 103,
+    title: "Spider-Man: Brand New Day",
+    vote_average: 8.4,
+    release_date: "2026-07-31",
+    overview: "Peter Parker balances college life with his duties as Spider-Man when a mysterious new villain threatens New York City, forcing him to confront the consequences of his secret identity.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 138,
+    tagline: "Every hero needs a fresh start.",
+    poster_path: "/yyB2VJEW3an2xCdcYCPQhn9QERR.jpg",
+    backdrop_path: "/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
+  },
+  104: {
+    id: 104,
+    title: "Mirzapur: The Movie",
+    vote_average: 7.9,
+    release_date: "2026-09-03",
+    overview: "The battle for Mirzapur's throne reaches its explosive climax as Guddu Pandit and Kaleen Bhaiya face off in a no-holds-barred war for power, revenge, and survival.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 53, name: "Thriller" }],
+    runtime: 155,
+    tagline: "The final war for the throne.",
+    poster_path: "/jbmZPjSfCdIHo269QZK203WZSm.jpg",
+    backdrop_path: "/fjaR5w0LoRb20LN6DaYxmolWE4p.jpg"
+  },
+  105: {
+    id: 105,
+    title: "Resident Evil",
+    vote_average: 7.5,
+    release_date: "2026-09-18",
+    overview: "A faithful reboot of the survival horror classic. When a deadly virus is unleashed in Raccoon City, a group of survivors must navigate zombie-infested streets and uncover the truth behind the Umbrella Corporation.",
+    genres: [{ id: 27, name: "Horror" }, { id: 28, name: "Action" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 120,
+    tagline: "Welcome to the nightmare.",
+    poster_path: "/zP83bIkBViw5b1s9bDemYJ3AAgX.jpg",
+    backdrop_path: "/ddfXMkaPViSrg0P5aoYGFMc58x2.jpg"
+  },
+  106: {
+    id: 106,
+    title: "Digger",
+    vote_average: 8.0,
+    release_date: "2026-10-02",
+    overview: "From visionary director Alejandro G. Iñárritu, Tom Cruise stars as a man haunted by the past who unearths a discovery that could change the course of human history.",
+    genres: [{ id: 18, name: "Drama" }, { id: 53, name: "Thriller" }, { id: 12, name: "Adventure" }],
+    runtime: 148,
+    tagline: "Some truths should stay buried.",
+    poster_path: "/1ATXKrIPJyKNwnJ6lcG088Sa6zi.jpg",
+    backdrop_path: "/hG1tXuommFDedfdrzaEHfMY1Q3W.jpg"
+  },
+  107: {
+    id: 107,
+    title: "Ramayana: Part 1",
+    vote_average: 8.2,
+    release_date: "2026-11-08",
+    overview: "An epic retelling of the ancient Indian saga of Lord Rama, following his journey from prince to divine warrior as he battles the demon king Ravana to rescue his beloved Sita.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
+    runtime: 175,
+    tagline: "The legend begins.",
+    poster_path: "/f3yZZw7zIsWo6m9xJStfjDauIZX.jpg",
+    backdrop_path: "/yHVZncPRZr63mezRX20IyKLrSkv.jpg"
+  },
+  108: {
+    id: 108,
+    title: "Avengers: Doomsday",
+    vote_average: 8.6,
+    release_date: "2026-12-18",
+    overview: "Earth's mightiest heroes assemble for a battle unlike any before when Doctor Doom threatens to unravel the multiverse, forcing new and returning Avengers to unite or face total annihilation.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 165,
+    tagline: "All roads lead to Doom.",
+    poster_path: "/8HkIe2i4ScpCkcX9SzZ9IPasqWV.jpg",
+    backdrop_path: "/3eOINbgRs8WiWfQfViXeuZ3enrs.jpg"
   }
 };
 
@@ -2145,7 +2493,58 @@ export async function getUpcomingMovies(
 export async function getNowPlayingMovies(
   page: number = 1
 ): Promise<TMDBResponse<TMDBMovie>> {
-  return tmdbFetch('/movie/now_playing', { page, language: 'en-US' });
+  try {
+    const [nowPlayingRes, bollywoodRes] = await Promise.all([
+      tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/now_playing', { page, language: 'en-US' }),
+      tmdbFetch<TMDBResponse<TMDBMovie>>('/discover/movie', {
+        page,
+        language: 'en-US',
+        with_original_language: 'hi',
+        sort_by: 'primary_release_date.desc',
+      }),
+    ]);
+
+    const nowPlayingResults = nowPlayingRes?.results || [];
+    const bollywoodResults = bollywoodRes?.results || [];
+
+    let finalBollywood = bollywoodResults;
+    let finalNowPlaying = nowPlayingResults;
+
+    // Check if we are in mock mode (detecting by mock movie IDs <= 110)
+    const isMock = nowPlayingResults.length > 0 && 
+                   nowPlayingResults.some((m) => m.id <= 110);
+
+    if (isMock) {
+      // Hindi/Indian movie IDs in the new mock database
+      const bollywoodIds = new Set([81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 93, 98]);
+      finalBollywood = nowPlayingResults.filter((m) => bollywoodIds.has(m.id));
+      finalNowPlaying = nowPlayingResults.filter((m) => !bollywoodIds.has(m.id));
+    }
+
+    // Interleave Bollywood movies into Now Playing movies (e.g. 1 Bollywood movie after every 2 Hollywood movies)
+    const combinedResults: TMDBMovie[] = [];
+    let bp = 0;
+    let np = 0;
+
+    while (np < finalNowPlaying.length || bp < finalBollywood.length) {
+      for (let i = 0; i < 2 && np < finalNowPlaying.length; i++) {
+        combinedResults.push(finalNowPlaying[np++]);
+      }
+      if (bp < finalBollywood.length) {
+        combinedResults.push(finalBollywood[bp++]);
+      }
+    }
+
+    return {
+      page: nowPlayingRes?.page || 1,
+      results: combinedResults,
+      total_pages: nowPlayingRes?.total_pages || 1,
+      total_results: (nowPlayingRes?.total_results || 0) + (bollywoodRes?.total_results || 0),
+    };
+  } catch (error) {
+    console.error("Error in getNowPlayingMovies combined fetch:", error);
+    return tmdbFetch('/movie/now_playing', { page, language: 'en-US' });
+  }
 }
 
 /** Get movie details by TMDB ID */
@@ -2464,7 +2863,7 @@ const POSTER_PRESETS = [
   "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop", // comedy/popcorn
   "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop", // drama/theater
   "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=500&auto=format&fit=crop", // action/fire
-  "https://images.unsplash.com/photo-1505664194779-8bebcb95c02e?w=500&auto=format&fit=crop", // mystery/detective
+  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop", // mystery/detective
   "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&auto=format&fit=crop", // romance
   "https://images.unsplash.com/photo-1519074002996-a69e7ac46a42?w=500&auto=format&fit=crop", // fantasy/sword
 ];
