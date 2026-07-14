@@ -84,7 +84,85 @@ export function removeFromWatchlist(id: number): void {
   window.dispatchEvent(new Event("watchlist-updated"));
 }
 
-export function inWatchlist(id: number): boolean {
+// Cache for authenticated watchlist tmdbIds
+let authWatchlistIds: Set<number> | null = null;
+let authWatchlistPromise: Promise<Set<number>> | null = null;
+let isDbOffline = false;
+
+export function isDatabaseOfflineCached(): boolean {
+  return isDbOffline;
+}
+
+export function setDatabaseOfflineCached(offline: boolean): void {
+  isDbOffline = offline;
+  window.dispatchEvent(new Event("watchlist-updated"));
+}
+
+export function getAuthWatchlistCache(): Set<number> | null {
+  if (typeof window === "undefined") return null;
+  return authWatchlistIds;
+}
+
+export function resetAuthWatchlist(): void {
+  authWatchlistIds = null;
+  authWatchlistPromise = null;
+  isDbOffline = false;
+}
+
+export function initAuthWatchlist(): Promise<Set<number>> {
+  if (typeof window === "undefined") return Promise.resolve(new Set());
+  if (authWatchlistPromise) return authWatchlistPromise;
+
+  authWatchlistPromise = fetch("/api/watchlist")
+    .then((res) => {
+      if (!res.ok) {
+        isDbOffline = true;
+        window.dispatchEvent(new Event("watchlist-updated"));
+        throw new Error("Database/API offline or unavailable");
+      }
+      isDbOffline = false;
+      return res.json();
+    })
+    .then((data) => {
+      const ids = new Set<number>((data?.items || []).map((item: any) => item.movie.tmdbId));
+      authWatchlistIds = ids;
+      window.dispatchEvent(new Event("watchlist-updated"));
+      return ids;
+    })
+    .catch((err) => {
+      console.error("Failed to load authenticated watchlist:", err);
+      isDbOffline = true;
+      window.dispatchEvent(new Event("watchlist-updated"));
+      return new Set<number>();
+    });
+
+  return authWatchlistPromise;
+}
+
+export function addAuthWatchlistId(id: number): void {
+  if (authWatchlistIds) {
+    authWatchlistIds.add(id);
+  } else {
+    authWatchlistIds = new Set([id]);
+  }
+  window.dispatchEvent(new Event("watchlist-updated"));
+}
+
+export function removeAuthWatchlistId(id: number): void {
+  if (authWatchlistIds) {
+    authWatchlistIds.delete(id);
+  }
+  window.dispatchEvent(new Event("watchlist-updated"));
+}
+
+export function inWatchlist(id: number, isAuthenticated?: boolean): boolean {
+  if (isAuthenticated && !isDbOffline) {
+    if (!authWatchlistIds) {
+      initAuthWatchlist();
+      return false;
+    }
+    return authWatchlistIds.has(id);
+  }
   const watchlist = getWatchlist();
   return watchlist.some((w) => w.id === id);
 }

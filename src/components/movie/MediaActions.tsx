@@ -9,6 +9,9 @@ import {
   inWatchlist as localInWatchlist,
   addRating as localAddRating,
   getMediaRating as localGetMediaRating,
+  addAuthWatchlistId,
+  removeAuthWatchlistId,
+  setDatabaseOfflineCached,
 } from "@/lib/storage";
 
 interface MediaActionsProps {
@@ -49,6 +52,13 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
           }
         })
         .catch(console.error);
+
+      const handleWatchlistChange = () => setIsSaved(localInWatchlist(media.id, isAuthenticated));
+      window.addEventListener("watchlist-updated", handleWatchlistChange);
+
+      return () => {
+        window.removeEventListener("watchlist-updated", handleWatchlistChange);
+      };
     } else {
       // LocalStorage fallback
       setIsSaved(localInWatchlist(media.id));
@@ -79,7 +89,14 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ tmdbId: media.id }),
           });
-          if (res.ok) setIsSaved(false);
+          if (res.ok) {
+            removeAuthWatchlistId(media.id);
+            setIsSaved(false);
+          } else {
+            setDatabaseOfflineCached(true);
+            localRemoveFromWatchlist(media.id);
+            setIsSaved(false);
+          }
         } else {
           const res = await fetch("/api/watchlist", {
             method: "POST",
@@ -93,10 +110,39 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
               voteAverage: media.vote_average,
             }),
           });
-          if (res.ok) setIsSaved(true);
+          if (res.ok) {
+            addAuthWatchlistId(media.id);
+            setIsSaved(true);
+          } else {
+            setDatabaseOfflineCached(true);
+            localAddToWatchlist({
+              id: media.id,
+              title: media.title,
+              poster_path: media.poster_path,
+              vote_average: media.vote_average,
+              release_date: media.release_date,
+              media_type: media.media_type,
+            });
+            setIsSaved(true);
+          }
         }
       } catch (err) {
         console.error("Watchlist API error:", err);
+        setDatabaseOfflineCached(true);
+        if (isSaved) {
+          localRemoveFromWatchlist(media.id);
+          setIsSaved(false);
+        } else {
+          localAddToWatchlist({
+            id: media.id,
+            title: media.title,
+            poster_path: media.poster_path,
+            vote_average: media.vote_average,
+            release_date: media.release_date,
+            media_type: media.media_type,
+          });
+          setIsSaved(true);
+        }
       } finally {
         setLoading(false);
       }

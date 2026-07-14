@@ -32,9 +32,12 @@ export default function WatchlistPage() {
           media_type: item.movie.mediaType === "TV_SHOW" ? "tv" : "movie",
         }));
         setWatchlist(items);
+      } else {
+        setWatchlist(localGetWatchlist());
       }
     } catch (err) {
       console.error("Error fetching watchlist:", err);
+      setWatchlist(localGetWatchlist());
     } finally {
       setLoading(false);
     }
@@ -72,9 +75,14 @@ export default function WatchlistPage() {
         });
         if (res.ok) {
           setWatchlist(watchlist.filter((item) => item.id !== id));
+        } else {
+          localRemoveFromWatchlist(id);
+          setWatchlist(watchlist.filter((item) => item.id !== id));
         }
       } catch (err) {
         console.error("Error removing from watchlist:", err);
+        localRemoveFromWatchlist(id);
+        setWatchlist(watchlist.filter((item) => item.id !== id));
       }
     } else {
       localRemoveFromWatchlist(id);

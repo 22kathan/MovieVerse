@@ -165,5 +165,16 @@
     "isPremium": false,
     "premiumUntil": null,
     "createdAt": "2026-07-13T05:29:59.952Z"
+  },
+  {
+    "id": "mock_9bgrszgq1",
+    "name": "Test User",
+    "email": "test_user_new@example.com",
+    "hashedPassword": "$2b$12$omuT6sVDrMJ4i2ApBsicguWMMq6iqf5Biy/qOVS8zkUQRGXPNgB72",
+    "username": "testusernew",
+    "role": "REGISTERED",
+    "isPremium": false,
+    "premiumUntil": null,
+    "createdAt": "2026-07-14T11:01:32.356Z"
   }
 ]

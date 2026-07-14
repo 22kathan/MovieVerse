@@ -3,7 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Play, Plus, Star, Clock, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Plus, Check, Loader2, Star, Clock, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { useSession } from "next-auth/react";
+import {
+  inWatchlist as checkInWatchlist,
+  addToWatchlist as localAddToWatchlist,
+  removeFromWatchlist as localRemoveFromWatchlist,
+  addAuthWatchlistId,
+  removeAuthWatchlistId,
+  setDatabaseOfflineCached,
+} from "@/lib/storage";
 import { getImageUrl } from "@/lib/tmdb";
 import SafeImage from "@/components/shared/SafeImage";
 
@@ -36,6 +45,107 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [featured, setFeatured] = useState<HeroMovie[]>(() => movies.slice(0, 5));
   const current = featured[currentIndex];
+
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!current) return;
+    setIsSaved(checkInWatchlist(current.id, isAuthenticated));
+
+    const handleWatchlistChange = () => {
+      setIsSaved(checkInWatchlist(current.id, isAuthenticated));
+    };
+
+    window.addEventListener("watchlist-updated", handleWatchlistChange);
+    return () => {
+      window.removeEventListener("watchlist-updated", handleWatchlistChange);
+    };
+  }, [current, isAuthenticated]);
+
+  const handleWatchlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!current || loading) return;
+
+    if (isAuthenticated) {
+      setLoading(true);
+      try {
+        if (isSaved) {
+          const res = await fetch("/api/watchlist", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tmdbId: current.id }),
+          });
+          if (res.ok) {
+            removeAuthWatchlistId(current.id);
+          } else {
+            setDatabaseOfflineCached(true);
+            localRemoveFromWatchlist(current.id);
+          }
+        } else {
+          const res = await fetch("/api/watchlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tmdbId: current.id,
+              movieTitle: current.title || current.name || "",
+              posterPath: current.poster_path,
+              mediaType: current.media_type === "tv" ? "TV_SHOW" : "MOVIE",
+              releaseDate: current.release_date || current.first_air_date,
+              voteAverage: current.vote_average,
+            }),
+          });
+          if (res.ok) {
+            addAuthWatchlistId(current.id);
+          } else {
+            setDatabaseOfflineCached(true);
+            localAddToWatchlist({
+              id: current.id,
+              title: current.title || current.name || "",
+              poster_path: current.poster_path,
+              vote_average: current.vote_average,
+              release_date: current.release_date || current.first_air_date || "",
+              media_type: current.media_type === "tv" ? "tv" : "movie",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Watchlist API error:", err);
+        setDatabaseOfflineCached(true);
+        if (isSaved) {
+          localRemoveFromWatchlist(current.id);
+        } else {
+          localAddToWatchlist({
+            id: current.id,
+            title: current.title || current.name || "",
+            poster_path: current.poster_path,
+            vote_average: current.vote_average,
+            release_date: current.release_date || current.first_air_date || "",
+            media_type: current.media_type === "tv" ? "tv" : "movie",
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (isSaved) {
+        localRemoveFromWatchlist(current.id);
+      } else {
+        localAddToWatchlist({
+          id: current.id,
+          title: current.title || current.name || "",
+          poster_path: current.poster_path,
+          vote_average: current.vote_average,
+          release_date: current.release_date || current.first_air_date || "",
+          media_type: current.media_type === "tv" ? "tv" : "movie",
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     const arr = [...movies];
@@ -161,9 +271,23 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
                 <Play className="w-5 h-5 fill-current" />
                 Play Trailer
               </button>
-              <button className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 backdrop-blur-sm text-white font-medium text-sm border border-white/20 hover:bg-white/20 transition-all duration-200">
-                <Plus className="w-5 h-5" />
-                Watchlist
+              <button
+                onClick={handleWatchlistToggle}
+                disabled={loading}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl backdrop-blur-sm font-medium text-sm border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 cursor-pointer ${
+                  isSaved
+                    ? "bg-[#6366f1] text-white border-[#6366f1] hover:bg-[#5356e2]"
+                    : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+                }`}
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isSaved ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Plus className="w-5 h-5" />
+                )}
+                {isSaved ? "In Watchlist" : "Watchlist"}
               </button>
               <Link
                 href={`/${mediaType}/${current.id}`}
