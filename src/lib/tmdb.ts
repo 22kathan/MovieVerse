@@ -301,32 +301,95 @@ function getMockDataForEndpoint(endpoint: string): unknown {
           { id: 10111, name: "Phil Lord", department: "Directing", job: "Director", profile_path: null },
           { id: 10112, name: "Christopher Miller", department: "Directing", job: "Director", profile_path: null }
         ];
-      } else if (id === 102) { // The Odyssey
-        cast = [
-          { id: 10201, name: "Matt Damon", character: "Odysseus", profile_path: "/elSlNgV8xVifsbHpFsqrPGxJToZ.jpg", order: 0 },
-          { id: 10202, name: "Tom Holland", character: "Telemachus", profile_path: "/bBRlrpJm9XkNSg0YT5LCax5cjBj.jpg", order: 1 },
-          { id: 10203, name: "Anne Hathaway", character: "Penelope", profile_path: "/tLelKoPNiyJCSEtQTz1FGv4XCup.jpg", order: 2 },
-          { id: 10204, name: "Zendaya", character: "Athena", profile_path: "/3WiZUODly3TC94qNaON0gbUqVjK.jpg", order: 3 },
-        ];
-        crew = [
-          { id: 10211, name: "Christopher Nolan", department: "Directing", job: "Director", profile_path: "/3zbVvA64Wo242sD7z75yB44R3s.jpg" }
-        ];
-      } else if (id === 103) { // Spider-Man: Brand New Day
-        cast = [
-          { id: 10301, name: "Tom Holland", character: "Peter Parker / Spider-Man", profile_path: "/bBRlrpJm9XkNSg0YT5LCax5cjBj.jpg", order: 0 },
-          { id: 10302, name: "Zendaya", character: "MJ", profile_path: "/3WiZUODly3TC94qNaON0gbUqVjK.jpg", order: 1 },
-        ];
-        crew = [
-          { id: 10311, name: "Destin Daniel Cretton", department: "Directing", job: "Director", profile_path: null }
-        ];
-      } else if (id === 108) { // Avengers: Doomsday
-        cast = [
-          { id: 10801, name: "Robert Downey Jr.", character: "Victor von Doom", profile_path: "/5qHNjhtjMD4YWH3UP0rm4tKwxCL.jpg", order: 0 },
-        ];
-        crew = [
-          { id: 10811, name: "Joe Russo", department: "Directing", job: "Director", profile_path: null },
-          { id: 10812, name: "Anthony Russo", department: "Directing", job: "Director", profile_path: null }
-        ];
+      } else if (id >= 102 && id <= 110) {
+        const upcomingCreditsMap: Record<number, { cast: any[], crew: any[] }> = {
+          102: {
+            cast: [
+              { id: 10201, name: "NTR Jr.", character: "Achyuta", profile_path: null, order: 0 },
+              { id: 10202, name: "Ram Charan", character: "Avataar", profile_path: null, order: 1 },
+              { id: 10203, name: "Pooja Hegde", character: "Mythili", profile_path: null, order: 2 },
+            ],
+            crew: [
+              { id: 10211, name: "Prashanth Neel", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          103: {
+            cast: [
+              { id: 10301, name: "Venkatesh", character: "Madhav", profile_path: null, order: 0 },
+              { id: 10302, name: "Nani", character: "Arjun", profile_path: null, order: 1 },
+              { id: 10303, name: "Sreeleela", character: "Divya", profile_path: null, order: 2 },
+            ],
+            crew: [
+              { id: 10311, name: "Trivikram Srinivas", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          104: {
+            cast: [
+              { id: 10401, name: "Ravi Teja", character: "Shankar", profile_path: null, order: 0 },
+              { id: 10402, name: "Malvika Sharma", character: "Priya", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10411, name: "Puri Jagannadh", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          105: {
+            cast: [
+              { id: 10501, name: "Sid Sriram", character: "Vivek", profile_path: null, order: 0 },
+              { id: 10502, name: "Rashmika Mandanna", character: "Sukumari", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10511, name: "Gautham Vasudev Menon", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          106: {
+            cast: [
+              { id: 10601, name: "Suriya", character: "Advocate Chandru", profile_path: null, order: 0 },
+              { id: 10602, name: "Keerthy Suresh", character: "Kavitha", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10611, name: "Vetrimaaran", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          107: {
+            cast: [
+              { id: 10701, name: "Fahadh Faasil", character: "Antappan", profile_path: null, order: 0 },
+              { id: 10702, name: "Joju George", character: "Mathai", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10711, name: "Lijo Jose Pellissery", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          108: {
+            cast: [
+              { id: 10801, name: "Kalyan Ram", character: "Shiva", profile_path: null, order: 0 },
+              { id: 10802, name: "Mehreen Pirzada", character: "Madhavi", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10811, name: "Parasuram", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          109: {
+            cast: [
+              { id: 10901, name: "Mohanlal", character: "Georgekutty", profile_path: null, order: 0 },
+              { id: 10902, name: "Meena", character: "Rani", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 10911, name: "Jeethu Joseph", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          110: {
+            cast: [
+              { id: 11001, name: "Vijay", character: "Vetri", profile_path: null, order: 0 },
+              { id: 11002, name: "Samantha Ruth Prabhu", character: "Mithra", profile_path: null, order: 1 },
+            ],
+            crew: [
+              { id: 11011, name: "Atlee", department: "Directing", job: "Director", profile_path: null }
+            ]
+          }
+        };
+        const creds = upcomingCreditsMap[id];
+        cast = creds.cast;
+        crew = creds.crew;
       }
     }
 
@@ -366,8 +429,16 @@ function getMockDataForEndpoint(endpoint: string): unknown {
 
   // Watch Providers (OTT)
   if (cleanEndpoint.endsWith('/watch/providers')) {
+    const parts = cleanEndpoint.split('/');
+    const id = parseInt(parts[2]) || 1;
+    if (id >= 102 && id <= 110) {
+      return {
+        id,
+        results: {}
+      };
+    }
     return {
-      id: 1,
+      id,
       results: {
         US: {
           link: "https://www.themoviedb.org",
@@ -462,6 +533,34 @@ function getMockDataForEndpoint(endpoint: string): unknown {
         character: "Self / Featured Role"
       })),
       crew: []
+    };
+  }
+
+  // Similar Media
+  const similarMatch = cleanEndpoint.match(/^\/(movie|tv)\/(\d+)\/similar/);
+  if (similarMatch) {
+    const currentId = parseInt(similarMatch[2]);
+    const isTv = similarMatch[1] === 'tv';
+    const database = isTv ? MOCK_TV_SHOWS_DB : MOCK_MOVIES_DB;
+    const items = Object.values(database).filter((m: any) => m.id !== currentId);
+    const mapped = items.map((m: any) => ({
+      id: m.id,
+      title: m.title || m.name || "",
+      name: m.name || m.title || "",
+      overview: m.overview,
+      poster_path: m.poster_path,
+      backdrop_path: m.backdrop_path,
+      vote_average: m.vote_average,
+      release_date: m.release_date || m.first_air_date || "",
+      first_air_date: m.first_air_date || m.release_date || "",
+      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+      media_type: isTv ? "tv" : "movie",
+    }));
+    return {
+      page: 1,
+      results: mapped,
+      total_pages: 1,
+      total_results: mapped.length
     };
   }
 
@@ -749,8 +848,8 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "One Ring to rule them all.",
     budget: 93000000,
     revenue: 897690072,
-    poster_path: "/6oom5QDNv2877fhA7scA7Pbgv8g.jpg",
-    backdrop_path: "/53NS9w3TLgYLImsG29d2wW1Gu2z.jpg"
+    poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+    backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg"
   },
   10: {
     id: 10,
@@ -1057,8 +1156,8 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "The Eye of the Enemy is moving.",
     budget: 94000000,
     revenue: 1146030912,
-    poster_path: "/rC54V1avSdh7laycrD6SCX1euFb.jpg",
-    backdrop_path: "/lX59f65551ba3ca98c2d829.jpg"
+    poster_path: "/rCzpDGLb0zkC2f1F69n56J5D16j.jpg",
+    backdrop_path: "/r9fS5l34P57p4Z522vY1o7g1S2J.jpg"
   },
   32: {
     id: 32,
@@ -1113,8 +1212,8 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "A New Evil Awakens.",
     budget: 94000000,
     revenue: 947897272,
-    poster_path: "/two_towers_poster.jpg",
-    backdrop_path: "/two_towers_backdrop.jpg"
+    poster_path: "/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg",
+    backdrop_path: "/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg"
   },
   36: {
     id: 36,
@@ -2125,7 +2224,7 @@ const MOCK_MOVIES_DB: Record<number, {
     genres: [{ id: 28, name: "Action" }, { id: 18, name: "Drama" }],
     runtime: 152,
     tagline: "The voice of the people.",
-    poster_path: "/jt8pfSIdi47YpFMMWVRr8w5u2S0.jpg",
+    poster_path: "/p6140P43S8lM4RzE61W1h27jFwM.jpg",
     backdrop_path: "/v3lNH2gCojWYXVuXcT9FZLBxcSq.jpg"
   }
 };
@@ -2984,7 +3083,7 @@ export function getYouTubeEmbedUrl(key: string): string {
 
 /** Get YouTube thumbnail URL from video key */
 export function getYouTubeThumbnail(key: string): string {
-  return `https://img.youtube.com/vi/${key}/maxresdefault.jpg`;
+  return `https://img.youtube.com/vi/${key}/hqdefault.jpg`;
 }
 
 /** Format runtime to "2h 28m" */

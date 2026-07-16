@@ -485,10 +485,24 @@ Your output MUST be a valid JSON object matching this schema:
       "Genre-defining Structural Tropes"
     ];
     const theme = themes[idx % themes.length];
+    
+    let reason = "";
+    if (theme.includes("Visual")) {
+      reason = `Both films share breathtaking visual cinematography and a powerful auditory landscape that enhances the immersive narrative atmosphere.`;
+    } else if (theme.includes("Psychology")) {
+      reason = `Explores complex psychological depths and internal struggles similar to ${movieTitle}, keeping audiences invested in character choices.`;
+    } else if (theme.includes("Director")) {
+      reason = `Showcases a matching artistic style and director signature, focusing on atmospheric tension and high-stakes narrative arcs.`;
+    } else if (theme.includes("Depth")) {
+      reason = `Features intricate plotting, multi-layered twists, and intellectual depth that will resonate deeply with fans of ${movieTitle}.`;
+    } else {
+      reason = `A perfect thematic match that mirrors the storytelling pace, emotional core, and stylistic nuances that made ${movieTitle} a standout experience.`;
+    }
+
     return {
       title: simTitle,
       theme,
-      reason: `Shares a high-quality stylistic flow with ${movieTitle}. Fans of ${movieTitle} will enjoy the narrative depth, character motives, and similar pacing.`
+      reason
     };
   });
 

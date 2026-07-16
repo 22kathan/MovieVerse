@@ -62,35 +62,86 @@ export default function SafeImage({
 
   useEffect(() => {
     if (!src) {
-      setImgSrc(getFallbackImage(title, fallbackType));
       setError(true);
     } else {
       setImgSrc(src);
       setError(false);
     }
-  }, [src, title, fallbackType]);
+  }, [src]);
 
   const handleError = () => {
-    if (!error) {
-      setError(true);
-      setImgSrc(getFallbackImage(title, fallbackType));
-    }
+    setError(true);
   };
+
+  // If image fails to load or no source is provided, return high-quality SVG placeholders
+  if (error || !src) {
+    if (fallbackType === "profile") {
+      return (
+        <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[var(--bg-surface)] to-[var(--bg-tertiary)] border border-[var(--border-primary)] ${className} min-h-[120px]`}>
+          <svg
+            className="w-12 h-12 text-[var(--text-muted)] opacity-60 mb-2"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+          <span className="text-[10px] font-bold text-[var(--text-muted)] text-center px-2 line-clamp-1">
+            {title}
+          </span>
+        </div>
+      );
+    }
+
+    if (fallbackType === "poster") {
+      return (
+        <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[var(--bg-surface)] to-[var(--bg-tertiary)] border border-[var(--border-primary)] p-4 text-center ${className} aspect-[2/3]`}>
+          <svg
+            className="w-10 h-10 text-[var(--brand-primary-light)] opacity-40 mb-3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v16.5h16.5V3.75H3.75zm16.5 4.5H3.75m16.5 4.5H3.75m16.5 4.5H3.75" />
+          </svg>
+          <span className="text-xs font-bold text-[var(--text-secondary)] line-clamp-2 px-1 mb-1">
+            {title}
+          </span>
+          <span className="text-[9px] uppercase tracking-wider font-extrabold text-[var(--brand-primary-light)] opacity-90 px-2 py-0.5 rounded bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+            Preview
+          </span>
+        </div>
+      );
+    }
+
+    // Default: Backdrop fallback
+    return (
+      <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[var(--bg-surface)] to-[var(--bg-tertiary)] border border-[var(--border-primary)] p-6 text-center ${className} aspect-video`}>
+        <svg
+          className="w-12 h-12 text-[var(--brand-primary-light)] opacity-30 mb-2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
+        <span className="text-sm font-semibold text-[var(--text-secondary)] line-clamp-1">
+          {title}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">
       <Image
         {...props}
-        src={imgSrc || getFallbackImage(title, fallbackType)}
+        src={imgSrc}
         alt={title}
         className={`${className} object-cover`}
         onError={handleError}
       />
-      {error && (
-        <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-[9px] font-bold text-white/95 uppercase tracking-wider border border-white/10 select-none">
-          Preview
-        </div>
-      )}
     </div>
   );
 }
