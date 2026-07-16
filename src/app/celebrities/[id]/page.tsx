@@ -13,7 +13,7 @@ export async function generateStaticParams() {
   return ["101", "102", "104", "105", "106", "201", "202"].map((id) => ({ id }));
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: CelebrityPageProps): Promise<Metadata> {
   const resolvedParams = await params;
