@@ -839,7 +839,13 @@ function getMockDataForEndpoint(endpoint: string): unknown {
       });
     } else if (!isTv && cleanEndpoint.endsWith('/movie/now_playing')) {
       const now = Date.now();
-      items = items.filter((m: any) => m.release_date && new Date(m.release_date).getTime() <= now);
+      // "Now Playing" = released within the last 90 days (currently in theaters)
+      const ninetyDaysAgo = now - (90 * 24 * 60 * 60 * 1000);
+      items = items.filter((m: any) => {
+        if (!m.release_date) return false;
+        const releaseTime = new Date(m.release_date).getTime();
+        return releaseTime <= now && releaseTime >= ninetyDaysAgo;
+      });
       items.sort((a: any, b: any) => {
         const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
         const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
