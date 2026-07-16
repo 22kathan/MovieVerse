@@ -2484,9 +2484,11 @@ export async function getTopRatedMovies(
 
 /** Get upcoming movies */
 export async function getUpcomingMovies(
-  page: number = 1
+  page: number = 1,
+  region: string = 'IN'
 ): Promise<TMDBResponse<TMDBMovie>> {
-  return tmdbFetch('/movie/upcoming', { page, language: 'en-US' });
+  const params: Record<string, string | number | boolean> = { page, language: 'en-US', region };
+  return tmdbFetch('/movie/upcoming', params);
 }
 
 /** Get now playing movies */

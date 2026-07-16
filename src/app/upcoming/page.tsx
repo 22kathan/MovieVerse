@@ -36,7 +36,7 @@ function UpcomingContent() {
     async function loadData() {
       setLoading(true);
       try {
-        const response = await getUpcomingMovies(page);
+        const response = await getUpcomingMovies(page, "IN");
         const results = response?.results || [];
         setTotalPages(response?.total_pages || 1);
 
