@@ -1156,8 +1156,8 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "The Eye of the Enemy is moving.",
     budget: 94000000,
     revenue: 1146030912,
-    poster_path: "/rCzpDGLb0zkC2f1F69n56J5D16j.jpg",
-    backdrop_path: "/r9fS5l34P57p4Z522vY1o7g1S2J.jpg"
+    poster_path: "/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg",
+    backdrop_path: "/2u7zbn8EudG6kLlBzUYqP8RyFU4.jpg"
   },
   32: {
     id: 32,
@@ -2129,7 +2129,7 @@ const MOCK_MOVIES_DB: Record<number, {
     runtime: 135,
     tagline: "The divine prophecy unfolds.",
     poster_path: "/jt8pfSIdi47YpFMMWVRr8w5u2S0.jpg",
-    backdrop_path: "/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
+    backdrop_path: "/yD924S1XvS6cM9w6t2g68P940z2.jpg"
   },
   103: {
     id: 103,
