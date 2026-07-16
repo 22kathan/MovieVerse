@@ -31,8 +31,6 @@ interface MovieCardData {
   justReleased?: boolean;
 }
 
-const TMDB_IMAGE = "https://image.tmdb.org/t/p";
-
 const GENRE_MAP: Record<number, string> = {
   28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
   80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
@@ -48,6 +46,13 @@ function getRatingColor(score: number): string {
   return "#ef4444";
 }
 
+function getRatingGlow(score: number): string {
+  if (score >= 8) return "0 0 8px rgba(34, 197, 94, 0.3)";
+  if (score >= 7) return "0 0 8px rgba(132, 204, 22, 0.3)";
+  if (score >= 5) return "0 0 8px rgba(245, 158, 11, 0.3)";
+  return "0 0 8px rgba(239, 68, 68, 0.3)";
+}
+
 export default function MovieCard({
   movie,
   index = 0,
@@ -56,7 +61,6 @@ export default function MovieCard({
   variant?: "default" | "compact" | "wide";
   index?: number;
 }) {
-  console.log("MovieCard prop:", movie);
   const posterUrl = getImageUrl(movie.poster_path, "poster", "lg");
   const year = movie.release_date
     ? new Date(movie.release_date).getFullYear()
@@ -169,14 +173,14 @@ export default function MovieCard({
   };
 
   return (
-    <div className="animate-fade-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
+    <div className="animate-fade-in-up" style={{ animationDelay: `${index * 0.06}s` }}>
       <Link
         href={`/${mediaType}/${movie.id}`}
         className="group relative block"
       >
         {/* Poster Container */}
         <div
-          className="relative aspect-[2/3] rounded-xl overflow-hidden transition-all duration-300 group-hover:-translate-y-1.5"
+          className="relative aspect-[2/3] rounded-2xl overflow-hidden transition-all duration-400 group-hover:-translate-y-2"
           style={{
             backgroundColor: "var(--bg-surface)",
             boxShadow: "var(--shadow-card)",
@@ -194,26 +198,35 @@ export default function MovieCard({
             alt={movie.title}
             fallbackType="poster"
             fill
-            className="transition-transform duration-500 group-hover:scale-105"
+            className="transition-transform duration-600 group-hover:scale-[1.06]"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
           />
 
+          {/* Subtle inner border for depth */}
+          <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] pointer-events-none" />
+
           {/* Gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Rating / Release Status Badges */}
           {movie.countdownText ? (
-            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600/90 text-white animate-pulse border border-indigo-400/30 backdrop-blur-md shadow-lg shadow-indigo-500/20 z-10">
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-600/90 text-white animate-pulse border border-indigo-400/30 backdrop-blur-md shadow-lg shadow-indigo-500/20 z-10">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
               <span>{movie.countdownText}</span>
             </div>
           ) : movie.justReleased ? (
-            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-400/30 backdrop-blur-md shadow-lg shadow-emerald-500/30 z-10 animate-bounce">
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white border border-emerald-400/30 backdrop-blur-md shadow-lg shadow-emerald-500/30 z-10 animate-bounce">
               <span>🎉 JUST RELEASED</span>
             </div>
           ) : (
-            <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold"
-              style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+            <div
+              className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold z-10"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.65)",
+                backdropFilter: "blur(12px)",
+                boxShadow: getRatingGlow(movie.vote_average),
+              }}
+            >
               <Star
                 className="w-3 h-3"
                 style={{ color: getRatingColor(movie.vote_average) }}
@@ -225,7 +238,14 @@ export default function MovieCard({
             </div>
           )}
 
-          {/* Hover Actions */}
+          {/* Media type badge */}
+          {movie.media_type === "tv" && (
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 backdrop-blur-sm z-10">
+              TV
+            </div>
+          )}
+
+          {/* Hover Actions — glass panel slides up */}
           <div 
             onClick={(e) => {
               e.preventDefault();
@@ -236,8 +256,11 @@ export default function MovieCard({
             <div className="flex gap-2">
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-xs font-semibold transition-all"
-                style={{ backgroundColor: "#6366f1" }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+                  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+                }}
               >
                 <Play className="w-3.5 h-3.5" fill="white" />
                 Trailer
@@ -245,10 +268,11 @@ export default function MovieCard({
               <button
                 onClick={handleWatchlistToggle}
                 disabled={loading}
-                className="p-2.5 rounded-lg text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="p-2.5 rounded-xl text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 style={{
-                  backgroundColor: isSaved ? "#6366f1" : "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(4px)",
+                  backgroundColor: isSaved ? "#6366f1" : "rgba(255,255,255,0.12)",
+                  backdropFilter: "blur(8px)",
+                  border: isSaved ? "1px solid rgba(99, 102, 241, 0.5)" : "1px solid rgba(255,255,255,0.12)",
                 }}
                 aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
               >
@@ -265,8 +289,8 @@ export default function MovieCard({
         </div>
 
         {/* Title & Info */}
-        <div className="mt-3 space-y-1">
-          <h3 className="text-sm font-semibold truncate transition-colors"
+        <div className="mt-3 space-y-1 px-0.5">
+          <h3 className="text-sm font-semibold truncate transition-colors group-hover:text-[var(--brand-primary-light)]"
             style={{ color: "var(--text-primary)" }}>
             {movie.title}
           </h3>
@@ -276,7 +300,7 @@ export default function MovieCard({
             {genres && genres.length > 0 && (
               <>
                 <span className="w-1 h-1 rounded-full" style={{ backgroundColor: "var(--text-muted)" }} />
-                <span className="truncate">{genres.join(", ")}</span>
+                <span className="truncate">{genres.join(" · ")}</span>
               </>
             )}
           </div>

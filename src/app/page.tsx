@@ -97,10 +97,13 @@ export default async function HomePage() {
       <HeroBanner movies={trendingList} />
 
       {/* Content Sections */}
-      <div className="px-6 py-8 space-y-12 mx-auto" style={{ maxWidth: "var(--container-max)" }}>
+      <div className="px-6 py-10 space-y-16 mx-auto relative" style={{ maxWidth: "var(--container-max)" }}>
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,rgba(99,102,241,0.06)_0%,transparent_70%)] pointer-events-none" />
+
         {/* API Key Banner if missing */}
         {!hasApiKey && (
-          <div className="p-4 rounded-xl border border-dashed border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+          <div className="p-5 rounded-2xl border border-dashed border-[var(--brand-primary)]/25 bg-gradient-to-r from-[var(--brand-primary)]/5 to-transparent flex flex-col sm:flex-row items-center justify-between gap-4 text-sm backdrop-blur-sm">
             <div>
               <p className="font-semibold text-[var(--text-primary)]">✨ Prototyping Mode (Mock Data Active)</p>
               <p className="text-[var(--text-secondary)] mt-1">To load real movies, TV shows, and cast images, add your TMDB API key to <code className="px-1.5 py-0.5 rounded bg-[var(--bg-surface)] text-[var(--brand-primary-light)]">.env.local</code></p>
@@ -109,7 +112,7 @@ export default async function HomePage() {
               href="https://www.themoviedb.org/settings/api"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-lg bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white font-medium shrink-0 transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold shrink-0 transition-all hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               Get Free API Key
             </a>
@@ -136,6 +139,8 @@ export default async function HomePage() {
           <MovieGrid movies={normalize(trendingList)} shuffle limit={12} />
         </section>
 
+        <div className="section-divider" />
+
         <section>
           <SectionHeader
             title="🍿 Popular Movies"
@@ -145,6 +150,8 @@ export default async function HomePage() {
           <MovieGrid movies={normalize(popularList)} shuffle limit={6} />
         </section>
 
+        <div className="section-divider" />
+
         <section>
           <SectionHeader
             title="⭐ Top Rated"
@@ -153,6 +160,8 @@ export default async function HomePage() {
           />
           <MovieGrid movies={normalize(topRatedList)} shuffle limit={6} />
         </section>
+
+        <div className="section-divider" />
 
         {/* Real-time synchronization section for Now Playing & Coming Soon */}
         <LiveMoviesSection
