@@ -25,7 +25,7 @@ export async function generateStaticParams() {
   return Array.from({ length: 25 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: TVPageProps): Promise<Metadata> {
   const resolvedParams = await params;

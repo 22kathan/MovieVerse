@@ -36,9 +36,38 @@ function TopRatedContent() {
     async function loadData() {
       setLoading(true);
       try {
-        const response = await getTopRatedMovies(page);
-        const results = response?.results || [];
-        setTotalPages(response?.total_pages || 1);
+        const pageSize = 12;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = page * pageSize;
+
+        const tmdbPageStart = Math.floor(startIndex / 20) + 1;
+        const tmdbPageEnd = Math.floor((endIndex - 1) / 20) + 1;
+
+        let results: any[] = [];
+        let totalResults = 0;
+
+        if (tmdbPageStart === tmdbPageEnd) {
+          const response = await getTopRatedMovies(tmdbPageStart);
+          const tmdbResults = response?.results || [];
+          totalResults = response?.total_results || 0;
+          
+          const sliceStart = startIndex % 20;
+          results = tmdbResults.slice(sliceStart, sliceStart + pageSize);
+        } else {
+          const [response1, response2] = await Promise.all([
+            getTopRatedMovies(tmdbPageStart),
+            getTopRatedMovies(tmdbPageEnd),
+          ]);
+          const tmdbResults1 = response1?.results || [];
+          const tmdbResults2 = response2?.results || [];
+          totalResults = response1?.total_results || 0;
+
+          const combined = [...tmdbResults1, ...tmdbResults2];
+          const sliceStart = startIndex % 20;
+          results = combined.slice(sliceStart, sliceStart + pageSize);
+        }
+
+        setTotalPages(Math.ceil(totalResults / pageSize));
 
         const normalized = results.map((item: any) => ({
           id: item.id,

@@ -24,10 +24,10 @@ interface MoviePageProps {
 }
 
 export async function generateStaticParams() {
-  return Array.from({ length: 110 }, (_, i) => ({ id: (i + 1).toString() }));
+  return Array.from({ length: 115 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
   const resolvedParams = await params;

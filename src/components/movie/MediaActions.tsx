@@ -197,14 +197,7 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
     }
   };
 
-  // Deterministic Rotten Tomatoes scores based on media.id and community rating
-  const criticScore = Math.max(
-    40,
-    Math.min(
-      100,
-      Math.round(media.vote_average * 10 + ((media.id * 7) % 15) - 6)
-    )
-  );
+
   const audienceScore = Math.max(
     45,
     Math.min(
@@ -223,17 +216,6 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
         </span>
       </div>
 
-      {/* Rotten Tomatoes Critic Score */}
-      <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold shadow-md shrink-0 border ${
-        criticScore >= 60 
-          ? "bg-red-500/10 text-red-400 border-red-500/30" 
-          : "bg-green-500/10 text-green-400 border-green-500/30"
-      }`}>
-        <span className="text-base">{criticScore >= 60 ? "🍅" : "🤢"}</span>
-        <span className="text-sm">
-          {criticScore}% <span className="text-xs font-medium opacity-80">Critics</span>
-        </span>
-      </div>
 
       {/* Rotten Tomatoes Audience Score */}
       <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold shadow-md shrink-0 border ${

@@ -59,8 +59,132 @@ export const IMAGE_SIZES = {
 } as const;
 
 // ============================================
-// API CLIENT
+// API CLIENT & MEMORY CACHES FOR OFFLINE FALLBACKS
 // ============================================
+
+declare global {
+  var tmdbMovieCache: Map<number, any> | undefined;
+  var tmdbTVCache: Map<number, any> | undefined;
+}
+
+const movieCache = global.tmdbMovieCache || new Map<number, any>();
+const tvCache = global.tmdbTVCache || new Map<number, any>();
+
+if (process.env.NODE_ENV !== 'production') {
+  global.tmdbMovieCache = movieCache;
+  global.tmdbTVCache = tvCache;
+}
+
+const TMDB_TO_MOCK_MOVIE_MAP: Record<number, number> = {
+  1084244: 113, // Toy Story 5
+  1132644: 114, // The Batman: Part II
+  1115623: 115, // Avatar: Fire and Ash
+  822119: 101,  // Project Hail Mary
+  1022789: 111, // Spider-Man: Beyond the Spider-Verse
+  1003596: 112, // Avengers: Secret Wars
+};
+
+function getGenreName(id: number, isTv: boolean): string {
+  const genres = [
+    { id: 28, name: "Action" },
+    { id: 12, name: "Adventure" },
+    { id: 16, name: "Animation" },
+    { id: 35, name: "Comedy" },
+    { id: 80, name: "Crime" },
+    { id: 99, name: "Documentary" },
+    { id: 18, name: "Drama" },
+    { id: 10751, name: "Family" },
+    { id: 14, name: "Fantasy" },
+    { id: 36, name: "History" },
+    { id: 27, name: "Horror" },
+    { id: 10402, name: "Music" },
+    { id: 9648, name: "Mystery" },
+    { id: 10749, name: "Romance" },
+    { id: 878, name: "Sci-Fi" },
+    { id: 10770, name: "TV Movie" },
+    { id: 53, name: "Thriller" },
+    { id: 10752, name: "War" },
+    { id: 37, name: "Western" },
+    { id: 10759, name: "Action & Adventure" },
+    { id: 10762, name: "Kids" },
+    { id: 10763, name: "News" },
+    { id: 10764, name: "Reality" },
+    { id: 10765, name: "Sci-Fi & Fantasy" },
+    { id: 10766, name: "Soap" },
+    { id: 10767, name: "Talk" },
+    { id: 10768, name: "War & Politics" }
+  ];
+  return genres.find(g => g.id === id)?.name || "Drama";
+}
+
+function cacheTMDBData(endpoint: string, data: any) {
+  if (!data) return;
+  const cleanEndpoint = endpoint.split('?')[0];
+
+  const addMovie = (m: any) => {
+    if (m && m.id) {
+      movieCache.set(m.id, {
+        id: m.id,
+        title: m.title || m.original_title,
+        overview: m.overview,
+        poster_path: m.poster_path,
+        backdrop_path: m.backdrop_path,
+        vote_average: m.vote_average,
+        vote_count: m.vote_count,
+        release_date: m.release_date,
+        genres: m.genres || m.genre_ids?.map((id: number) => ({ id, name: getGenreName(id, false) })),
+        runtime: m.runtime,
+        tagline: m.tagline,
+        budget: m.budget,
+        revenue: m.revenue,
+      });
+    }
+  };
+
+  const addTV = (t: any) => {
+    if (t && t.id) {
+      tvCache.set(t.id, {
+        id: t.id,
+        name: t.name || t.original_name,
+        overview: t.overview,
+        poster_path: t.poster_path,
+        backdrop_path: t.backdrop_path,
+        vote_average: t.vote_average,
+        vote_count: t.vote_count,
+        first_air_date: t.first_air_date,
+        genres: t.genres || t.genre_ids?.map((id: number) => ({ id, name: getGenreName(id, true) })),
+        episode_run_time: t.episode_run_time,
+        number_of_seasons: t.number_of_seasons,
+        number_of_episodes: t.number_of_episodes,
+        tagline: t.tagline,
+      });
+    }
+  };
+
+  if (data.results && Array.isArray(data.results)) {
+    const isTvEndpoint = cleanEndpoint.includes('/tv/') || cleanEndpoint.endsWith('/tv');
+    const isMovieEndpoint = cleanEndpoint.includes('/movie/') || cleanEndpoint.endsWith('/movie');
+    
+    data.results.forEach((item: any) => {
+      if (item.media_type === 'tv') {
+        addTV(item);
+      } else if (item.media_type === 'movie') {
+        addMovie(item);
+      } else if (isTvEndpoint) {
+        addTV(item);
+      } else if (isMovieEndpoint) {
+        addMovie(item);
+      }
+    });
+  }
+
+  if (cleanEndpoint.startsWith('/movie/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
+    addMovie(data);
+  } else if (cleanEndpoint.startsWith('/tv/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
+    addTV(data);
+  }
+}
+
 
 async function getApiKey(): Promise<string> {
   // 1. Client-side localStorage check
@@ -92,7 +216,7 @@ async function tmdbFetch<T>(
 ): Promise<T> {
   const cleanEndpoint = endpoint.split('?')[0];
   
-  // Route details pages of mock database movies/TV shows (IDs 1-110) to mock data
+  // Route details pages of mock database movies/TV shows (IDs 1-115) to mock data
   // to avoid 404s and mismatches during static builds and runtime.
   if (cleanEndpoint.startsWith('/movie/') || cleanEndpoint.startsWith('/tv/')) {
     const parts = cleanEndpoint.split('/');
@@ -101,7 +225,7 @@ async function tmdbFetch<T>(
       const movieListEndpoints = ['upcoming', 'now_playing', 'popular', 'top_rated', 'latest'];
       const isListEndpoint = parts[2] && movieListEndpoints.includes(parts[2]);
       
-      if (!isListEndpoint && !isNaN(id) && id >= 1 && id <= 110) {
+      if (!isListEndpoint && !isNaN(id) && id >= 1 && id <= 115) {
         return getMockDataForEndpoint(endpoint) as T;
       }
     }
@@ -156,7 +280,13 @@ async function fetchDirectTMDB<T>(
       return getMockDataForEndpoint(endpoint) as T;
     }
 
-    return response.json();
+    const data = await response.json();
+    try {
+      cacheTMDBData(endpoint, data);
+    } catch (cacheErr) {
+      console.warn("Failed to cache TMDB data:", cacheErr);
+    }
+    return data;
   } catch (error) {
     console.error("TMDB Fetch error, using mock data fallback:", error);
     return getMockDataForEndpoint(endpoint) as T;
@@ -172,7 +302,35 @@ function getMockDataForEndpoint(endpoint: string): unknown {
 
   // Movie details
   if (cleanEndpoint.startsWith('/movie/') && !isMovieListEndpoint && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
-    const id = parseInt(cleanEndpoint.split('/')[2]) || 1;
+    let id = parseInt(cleanEndpoint.split('/')[2]) || 1;
+    
+    // Map TMDB ID to Mock Movie ID if applicable
+    if (TMDB_TO_MOCK_MOVIE_MAP[id]) {
+      id = TMDB_TO_MOCK_MOVIE_MAP[id];
+    }
+    
+    if (movieCache.has(id)) {
+      const cached = movieCache.get(id);
+      return {
+        id: cached.id,
+        title: cached.title,
+        overview: cached.overview,
+        poster_path: cached.poster_path,
+        backdrop_path: cached.backdrop_path,
+        vote_average: cached.vote_average,
+        vote_count: cached.vote_count || 1420,
+        release_date: cached.release_date,
+        runtime: cached.runtime || 120,
+        genres: cached.genres || [{ id: 28, name: "Action" }],
+        tagline: cached.tagline || "Discover the truth.",
+        budget: cached.budget || 100000000,
+        revenue: cached.revenue || 350000000,
+        status: "Released",
+        production_companies: [{ id: 1, name: "Warner Bros. Pictures", logo_path: null, origin_country: "US" }],
+        spoken_languages: [{ english_name: "English", iso_639_1: "en", name: "English" }],
+      };
+    }
+
     const mockMovie = MOCK_MOVIES_DB[id] || MOCK_MOVIES_DB[1];
     return {
       id: mockMovie.id,
@@ -197,6 +355,27 @@ function getMockDataForEndpoint(endpoint: string): unknown {
   // TV Details
   if (cleanEndpoint.startsWith('/tv/') && !cleanEndpoint.endsWith('/credits') && !cleanEndpoint.endsWith('/videos') && !cleanEndpoint.endsWith('/images') && !cleanEndpoint.endsWith('/watch/providers') && !cleanEndpoint.endsWith('/similar') && !cleanEndpoint.endsWith('/recommendations')) {
     const id = parseInt(cleanEndpoint.split('/')[2]) || 1;
+    
+    if (tvCache.has(id)) {
+      const cached = tvCache.get(id);
+      return {
+        id: cached.id,
+        name: cached.name,
+        overview: cached.overview,
+        poster_path: cached.poster_path,
+        backdrop_path: cached.backdrop_path,
+        vote_average: cached.vote_average,
+        vote_count: cached.vote_count || 8500,
+        first_air_date: cached.first_air_date,
+        episode_run_time: cached.episode_run_time || [45],
+        genres: cached.genres || [{ id: 18, name: "Drama" }],
+        number_of_seasons: cached.number_of_seasons || 3,
+        number_of_episodes: cached.number_of_episodes || 30,
+        status: "Released",
+        tagline: cached.tagline || "Must-watch TV series.",
+      };
+    }
+
     const mockShow = MOCK_TV_SHOWS_DB[id] || MOCK_TV_SHOWS_DB[1];
     return {
       id: mockShow.id,
@@ -301,7 +480,7 @@ function getMockDataForEndpoint(endpoint: string): unknown {
           { id: 10111, name: "Phil Lord", department: "Directing", job: "Director", profile_path: null },
           { id: 10112, name: "Christopher Miller", department: "Directing", job: "Director", profile_path: null }
         ];
-      } else if (id >= 102 && id <= 110) {
+      } else if (id >= 102 && id <= 115) {
         const upcomingCreditsMap: Record<number, { cast: any[], crew: any[] }> = {
           102: {
             cast: [
@@ -385,6 +564,53 @@ function getMockDataForEndpoint(endpoint: string): unknown {
             crew: [
               { id: 11011, name: "Atlee", department: "Directing", job: "Director", profile_path: null }
             ]
+          },
+          111: {
+            cast: [
+              { id: 11101, name: "Shameik Moore", character: "Miles Morales (voice)", profile_path: null, order: 0 },
+              { id: 11102, name: "Hailee Steinfeld", character: "Gwen Stacy (voice)", profile_path: null, order: 1 }
+            ],
+            crew: [
+              { id: 11111, name: "Joaquim Dos Santos", department: "Directing", job: "Director", profile_path: null },
+              { id: 11112, name: "Kemp Powers", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          112: {
+            cast: [
+              { id: 11201, name: "Robert Downey Jr.", character: "Victor von Doom / Doctor Doom", profile_path: null, order: 0 },
+              { id: 11202, name: "Tom Holland", character: "Peter Parker / Spider-Man", profile_path: null, order: 1 }
+            ],
+            crew: [
+              { id: 11211, name: "Anthony Russo", department: "Directing", job: "Director", profile_path: null },
+              { id: 11212, name: "Joe Russo", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          113: {
+            cast: [
+              { id: 11301, name: "Tom Hanks", character: "Woody (voice)", profile_path: null, order: 0 },
+              { id: 11302, name: "Tim Allen", character: "Buzz Lightyear (voice)", profile_path: null, order: 1 }
+            ],
+            crew: [
+              { id: 11311, name: "Andrew Stanton", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          114: {
+            cast: [
+              { id: 11401, name: "Robert Pattinson", character: "Bruce Wayne / The Batman", profile_path: null, order: 0 },
+              { id: 11402, name: "Zoë Kravitz", character: "Selina Kyle / Catwoman", profile_path: null, order: 1 }
+            ],
+            crew: [
+              { id: 11411, name: "Matt Reeves", department: "Directing", job: "Director", profile_path: null }
+            ]
+          },
+          115: {
+            cast: [
+              { id: 11501, name: "Sam Worthington", character: "Jake Sully", profile_path: null, order: 0 },
+              { id: 11502, name: "Zoe Saldaña", character: "Neytiri", profile_path: null, order: 1 }
+            ],
+            crew: [
+              { id: 11511, name: "James Cameron", department: "Directing", job: "Director", profile_path: null }
+            ]
           }
         };
         const creds = upcomingCreditsMap[id];
@@ -431,7 +657,7 @@ function getMockDataForEndpoint(endpoint: string): unknown {
   if (cleanEndpoint.endsWith('/watch/providers')) {
     const parts = cleanEndpoint.split('/');
     const id = parseInt(parts[2]) || 1;
-    if (id >= 102 && id <= 110) {
+    if (id >= 102 && id <= 115) {
       return {
         id,
         results: {}
@@ -2110,7 +2336,7 @@ const MOCK_MOVIES_DB: Record<number, {
     id: 101,
     title: "Project Hail Mary",
     vote_average: 8.3,
-    release_date: "2026-03-20",
+    release_date: "2026-12-20",
     overview: "A lone astronaut wakes up on a spaceship with no memory, only to discover he's humanity's last hope to solve an extinction-level threat to Earth — with the help of an unlikely alien friend.",
     genres: [{ id: 878, name: "Sci-Fi" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
     runtime: 142,
@@ -2226,6 +2452,66 @@ const MOCK_MOVIES_DB: Record<number, {
     tagline: "The voice of the people.",
     poster_path: "/p6140P43S8lM4RzE61W1h27jFwM.jpg",
     backdrop_path: "/v3lNH2gCojWYXVuXcT9FZLBxcSq.jpg"
+  },
+  111: {
+    id: 111,
+    title: "Spider-Man: Beyond the Spider-Verse",
+    vote_average: 8.5,
+    release_date: "2027-06-17",
+    overview: "Hunted by Miguel O'Hara's Spider Society and betrayed by his friends, Miles finds himself in the darkest corners of the Spider-Verse in search of a way home. Knowing that his family has been not only fractured but endangered by his calling, it's a race against the clock for Miles to travel across the wildest reaches of time and space to fight for and reunite everything he holds most dear.",
+    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 16, name: "Animation" }, { id: 878, name: "Sci-Fi" }],
+    runtime: 140,
+    tagline: "The final chapter of the Spider-Verse.",
+    poster_path: "/9PIhQqqI6Q4a5YjwMjxvzZcPJhf.jpg",
+    backdrop_path: "/6yZgfrPJGhXEHD2jH7hzmRt9KpQ.jpg"
+  },
+  112: {
+    id: 112,
+    title: "Avengers: Secret Wars",
+    vote_average: 8.7,
+    release_date: "2027-12-16",
+    overview: "An upcoming film in Phase Six of the Marvel Cinematic Universe (MCU) and the finale of The Multiverse Saga. The remaining Avengers and heroes must unite across time and dimensions to stop a threat to all existence.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 28, name: "Action" }, { id: 12, name: "Adventure" }],
+    runtime: 180,
+    tagline: "The Multiverse Saga reaches its epic climax.",
+    poster_path: "/f0YBuh4hyiAheXhh4JnJWoKi9g5.jpg",
+    backdrop_path: "/rytc6Lf4447C0CDncwFa4gxe0vY.jpg"
+  },
+  113: {
+    id: 113,
+    title: "Toy Story 5",
+    vote_average: 7.4,
+    release_date: "2026-06-17",
+    overview: "When Bonnie receives a Lilypad tablet as a gift and becomes obsessed, Buzz, Woody, Jessie and the rest of the gang's jobs become exponentially harder when they have to go head to head with the all-new threat to playtime.",
+    genres: [{ id: 16, name: "Animation" }, { id: 10751, name: "Family" }, { id: 35, name: "Comedy" }, { id: 12, name: "Adventure" }],
+    runtime: 100,
+    tagline: "It's on.",
+    poster_path: "/sfQtVlIHljToOwYjhe21KPGzZWK.jpg",
+    backdrop_path: "/qjTqY5coNiz6sVtPng40IzltsoN.jpg"
+  },
+  114: {
+    id: 114,
+    title: "The Batman: Part II",
+    vote_average: 8.3,
+    release_date: "2028-02-17",
+    overview: "Sequel to the 2022 film The Batman. Bruce Wayne continues his crusade in the dark underworld of Gotham City.",
+    genres: [{ id: 9648, name: "Mystery" }, { id: 18, name: "Drama" }, { id: 80, name: "Crime" }],
+    runtime: 165,
+    tagline: "Uncover the darkness.",
+    poster_path: "/caeBJHLNld1h14uvcLvzyHf3Rlk.jpg",
+    backdrop_path: "/naZFeXyIBdqIZo1JjSrrhbcTB4P.jpg"
+  },
+  115: {
+    id: 115,
+    title: "Avatar: Fire and Ash",
+    vote_average: 7.6,
+    release_date: "2025-12-17",
+    overview: "In the wake of the devastating war against the RDA and the loss of their eldest son, Jake Sully and Neytiri face a new threat on Pandora: the Ash People, a violent and power-hungry Na'vi tribe led by the ruthless Varang. Jake's family must fight for their survival and the future of Pandora in a conflict that pushes them to their emotional and physical limits.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
+    runtime: 160,
+    tagline: "The world of Pandora will change forever.",
+    poster_path: "/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg",
+    backdrop_path: "/u8DU5fkLoM5tTRukzPC31oGPxaQ.jpg"
   }
 };
 
@@ -2627,33 +2913,149 @@ export async function getUpcomingMovies(
   page: number = 1,
   region: string = 'IN'
 ): Promise<TMDBResponse<TMDBMovie>> {
-  // Always return the curated BookMyShow upcoming movies (IDs 102 to 110)
-  const upcomingIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
-  const results = upcomingIds
-    .map(id => MOCK_MOVIES_DB[id])
-    .filter(Boolean)
-    .map(m => ({
-      id: m.id,
-      title: m.title,
-      vote_average: m.vote_average,
-      release_date: m.release_date,
-      overview: m.overview,
-      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
-      poster_path: m.poster_path || null,
-      backdrop_path: m.backdrop_path || null,
-      popularity: 10.0,
-      video: false,
-      vote_count: 0,
-      original_language: 'en',
-      adult: false
-    }));
+  try {
+    // 1. Fetch upcoming Hollywood/general movies from TMDB API
+    // We use region 'US' or no region to guarantee Hollywood/global releases,
+    // and let tmdbFetch handle the API key check / mock fallback.
+    const tmdbRes = await tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/upcoming', { 
+      page, 
+      language: 'en-US',
+      region: 'US'
+    });
 
-  return {
-    page: 1,
-    results: results as unknown as TMDBMovie[],
-    total_pages: 1,
-    total_results: results.length
-  };
+    const hollywoodMovies = tmdbRes?.results || [];
+
+    // Let's check if we are in mock mode.
+    // If hollywoodMovies contains mock movies (IDs <= 115), we know it's mock fallback.
+    const isMock = hollywoodMovies.length > 0 && hollywoodMovies.some((m) => m.id <= 115);
+
+    let finalHollywood: TMDBMovie[] = [];
+    let finalRegional: TMDBMovie[] = [];
+
+    // Curated regional BookMyShow upcoming movies (IDs 102 to 110)
+    const regionalIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
+    const mockRegionalMovies = regionalIds
+      .map(id => MOCK_MOVIES_DB[id])
+      .filter(Boolean)
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        vote_average: m.vote_average,
+        release_date: m.release_date,
+        overview: m.overview,
+        genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+        poster_path: m.poster_path || null,
+        backdrop_path: m.backdrop_path || null,
+        popularity: 10.0,
+        video: false,
+        vote_count: 0,
+        original_language: 'en',
+        adult: false
+      })) as unknown as TMDBMovie[];
+
+    let combinedSorted: TMDBMovie[] = [];
+    let totalResults = 0;
+
+    if (isMock) {
+      // In mock mode, we have all future movies (IDs 101, 102-110, 111-115) in MOCK_MOVIES_DB
+      const mockHollywoodIds = [101, 111, 112, 113, 114, 115];
+      const mockHollywoodMovies = mockHollywoodIds
+        .map(id => MOCK_MOVIES_DB[id])
+        .filter(Boolean)
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          vote_average: m.vote_average,
+          release_date: m.release_date,
+          overview: m.overview,
+          genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+          poster_path: m.poster_path || null,
+          backdrop_path: m.backdrop_path || null,
+          popularity: 10.0,
+          video: false,
+          vote_count: 0,
+          original_language: 'en',
+          adult: false
+        })) as unknown as TMDBMovie[];
+
+      combinedSorted = [...mockHollywoodMovies, ...mockRegionalMovies];
+      totalResults = combinedSorted.length;
+    } else {
+      // In real API mode, fetch additional pages of upcoming movies if needed to cover up to the current page.
+      const tmdbPageCountNeeded = Math.max(1, Math.ceil((page * 12 - 9) / 20));
+      let allHollywoodMovies = [...hollywoodMovies];
+
+      if (tmdbPageCountNeeded > 1) {
+        const fetchPromises = [];
+        for (let p = 2; p <= tmdbPageCountNeeded; p++) {
+          fetchPromises.push(
+            tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/upcoming', { 
+              page: p, 
+              language: 'en-US',
+              region: 'US'
+            })
+          );
+        }
+        const responses = await Promise.all(fetchPromises);
+        for (const res of responses) {
+          if (res?.results) {
+            allHollywoodMovies.push(...res.results);
+          }
+        }
+      }
+
+      combinedSorted = [...allHollywoodMovies, ...mockRegionalMovies];
+      totalResults = (tmdbRes?.total_results || hollywoodMovies.length) + mockRegionalMovies.length;
+    }
+
+    // Sort chronologically by release_date (closest date first)
+    combinedSorted.sort((a, b) => {
+      const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
+      const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    const itemsPerPage = 12;
+    const startIdx = (page - 1) * itemsPerPage;
+    const pageResults = combinedSorted.slice(startIdx, startIdx + itemsPerPage);
+    const totalPages = Math.ceil(totalResults / itemsPerPage);
+
+    return {
+      page,
+      results: pageResults,
+      total_pages: totalPages,
+      total_results: totalResults,
+    };
+  } catch (error) {
+    console.error("Error in getUpcomingMovies combined fetch:", error);
+    // Fallback: return curated BookMyShow upcoming movies directly if everything fails
+    const upcomingIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
+    const results = upcomingIds
+      .map(id => MOCK_MOVIES_DB[id])
+      .filter(Boolean)
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        vote_average: m.vote_average,
+        release_date: m.release_date,
+        overview: m.overview,
+        genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+        poster_path: m.poster_path || null,
+        backdrop_path: m.backdrop_path || null,
+        popularity: 10.0,
+        video: false,
+        vote_count: 0,
+        original_language: 'en',
+        adult: false
+      }));
+
+    return {
+      page: 1,
+      results: results as unknown as TMDBMovie[],
+      total_pages: 1,
+      total_results: results.length
+    };
+  }
 }
 
 /** Get now playing movies */
@@ -2677,9 +3079,9 @@ export async function getNowPlayingMovies(
     let finalBollywood = bollywoodResults;
     let finalNowPlaying = nowPlayingResults;
 
-    // Check if we are in mock mode (detecting by mock movie IDs <= 110)
+    // Check if we are in mock mode (detecting by mock movie IDs <= 115)
     const isMock = nowPlayingResults.length > 0 && 
-                   nowPlayingResults.some((m) => m.id <= 110);
+                   nowPlayingResults.some((m) => m.id <= 115);
 
     if (isMock) {
       // Hindi/Indian movie IDs in the new mock database

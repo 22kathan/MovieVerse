@@ -177,6 +177,36 @@ export async function POST(request: Request) {
           sentiment: "positive",
           keyThemes: ["Political Action", "Atlee Mass", "Thalapathy Vijay"],
           basedOn: 520
+        },
+        111: {
+          summary: "Fans are thrilled for the final chapter of the Spider-Verse trilogy, expecting ground-breaking animation and a satisfying conclusion to Miles Morales' story.",
+          sentiment: "positive",
+          keyThemes: ["Spider-Verse Climax", "Stunning Animation", "Miles Morales"],
+          basedOn: 480
+        },
+        112: {
+          summary: "Anticipation is off the charts for the conclusion of the Multiverse Saga, with fans eager to see the return of legacy Marvel characters alongside Robert Downey Jr. as Doctor Doom.",
+          sentiment: "positive",
+          keyThemes: ["Multiverse Climax", "Doctor Doom", "Robert Downey Jr."],
+          basedOn: 650
+        },
+        113: {
+          summary: "Audiences are curious but excited to see where Pixar takes Buzz and Woody next, with the new storyline centering around kids' obsession with tech/tablets.",
+          sentiment: "positive",
+          keyThemes: ["Toy Story Franchise", "Pixar Animation", "Woody & Buzz"],
+          basedOn: 320
+        },
+        114: {
+          summary: "Critics and fans are highly anticipating Matt Reeves' sequel to the noir detective take on the Caped Crusader, starring Robert Pattinson.",
+          sentiment: "positive",
+          keyThemes: ["Gothic Noir", "Matt Reeves", "Robert Pattinson"],
+          basedOn: 410
+        },
+        115: {
+          summary: "James Cameron's third entry in the sci-fi franchise is highly anticipated for its new Na'vi tribes and cutting-edge underwater/visual technology.",
+          sentiment: "positive",
+          keyThemes: ["Pandora Exploration", "Ash People", "James Cameron Visuals"],
+          basedOn: 580
         }
       };
 
