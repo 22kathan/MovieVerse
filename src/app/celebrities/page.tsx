@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import { getPopularPeople, getImageUrl } from "@/lib/tmdb";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+
+const PAGE_SIZE = 12;
 
 export default function CelebritiesPage() {
   return (
@@ -22,23 +24,23 @@ export default function CelebritiesPage() {
 
 function CelebritiesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const page = parseInt(searchParams.get("page") || "1");
 
-  const [people, setPeople] = useState<any[]>([]);
+  const [allPeople, setAllPeople] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     document.title = "Celebrities | MovieVerse";
   }, []);
 
+  // Fetch ALL data once, then paginate client-side
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const response = await getPopularPeople(page);
-        setPeople(response?.results || []);
-        setTotalPages(response?.total_pages || 1);
+        const response = await getPopularPeople(1);
+        setAllPeople(response?.results || []);
       } catch (error) {
         console.error("Error fetching popular people:", error);
       } finally {
@@ -47,10 +49,15 @@ function CelebritiesContent() {
     }
 
     loadData();
-  }, [page]);
+  }, []);
 
-  const buildPageUrl = (pageNumber: number) => {
-    return `/celebrities?page=${pageNumber}`;
+  const totalPages = Math.max(1, Math.ceil(allPeople.length / PAGE_SIZE));
+  const startIndex = (page - 1) * PAGE_SIZE;
+  const paginatedPeople = allPeople.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const goToPage = (pageNumber: number) => {
+    router.push(`/celebrities?page=${pageNumber}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -66,9 +73,9 @@ function CelebritiesContent() {
         <div className="flex items-center justify-center py-40">
           <Loader2 className="w-10 h-10 animate-spin text-[var(--brand-primary)]" />
         </div>
-      ) : people.length > 0 ? (
+      ) : paginatedPeople.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {people.map((person) => {
+          {paginatedPeople.map((person) => {
             const profileUrl = getImageUrl(person.profile_path, "profile", "md");
             const knownForTitles = person.known_for
               ?.slice(0, 2)
@@ -128,13 +135,13 @@ function CelebritiesContent() {
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-8">
           {page > 1 ? (
-            <Link
-              href={buildPageUrl(page - 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+            <button
+              onClick={() => goToPage(page - 1)}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               Previous
-            </Link>
+            </button>
           ) : (
             <button
               disabled
@@ -146,17 +153,17 @@ function CelebritiesContent() {
           )}
 
           <span className="text-xs font-medium text-[var(--text-secondary)]">
-            Page {page} of {Math.min(totalPages, 500)}
+            Page {page} of {totalPages}
           </span>
 
-          {page < totalPages && page < 500 ? (
-            <Link
-              href={buildPageUrl(page + 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+          {page < totalPages ? (
+            <button
+              onClick={() => goToPage(page + 1)}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
             >
               Next
               <ChevronRight className="w-4 h-4" />
-            </Link>
+            </button>
           ) : (
             <button
               disabled
