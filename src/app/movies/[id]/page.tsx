@@ -27,7 +27,7 @@ export async function generateStaticParams() {
   return Array.from({ length: 110 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
   const resolvedParams = await params;

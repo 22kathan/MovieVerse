@@ -90,6 +90,23 @@ async function tmdbFetch<T>(
   endpoint: string,
   params: Record<string, string | number | boolean> = {}
 ): Promise<T> {
+  const cleanEndpoint = endpoint.split('?')[0];
+  
+  // Route details pages of mock database movies/TV shows (IDs 1-110) to mock data
+  // to avoid 404s and mismatches during static builds and runtime.
+  if (cleanEndpoint.startsWith('/movie/') || cleanEndpoint.startsWith('/tv/')) {
+    const parts = cleanEndpoint.split('/');
+    if (parts.length >= 3) {
+      const id = parseInt(parts[2]);
+      const movieListEndpoints = ['upcoming', 'now_playing', 'popular', 'top_rated', 'latest'];
+      const isListEndpoint = parts[2] && movieListEndpoints.includes(parts[2]);
+      
+      if (!isListEndpoint && !isNaN(id) && id >= 1 && id <= 110) {
+        return getMockDataForEndpoint(endpoint) as T;
+      }
+    }
+  }
+
   const apiKey = await getApiKey();
   if (!apiKey) {
     return getMockDataForEndpoint(endpoint) as T;
@@ -2005,87 +2022,111 @@ const MOCK_MOVIES_DB: Record<number, {
   // ===== 2026 COMING SOON (Upcoming releases) =====
   102: {
     id: 102,
-    title: "The Odyssey",
-    vote_average: 8.5,
+    title: "Achyuta Avataaram",
+    vote_average: 8.2,
     release_date: "2026-07-17",
-    overview: "Christopher Nolan's mythic action epic brings Homer's Odyssey to IMAX screens, following Odysseus on his harrowing decade-long journey home from the Trojan War, battling gods, monsters, and fate itself.",
-    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 18, name: "Drama" }],
-    runtime: 170,
-    tagline: "The journey home is the greatest battle.",
-    poster_path: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
-    backdrop_path: "/m3Pom6pbD51bBv3syz8NMHda3fz.jpg"
+    overview: "A grand Telugu mythological drama that explores destiny, divine justice, and the power of faith as a local temple custodian uncovers an ancient prophecy.",
+    genres: [{ id: 18, name: "Drama" }, { id: 14, name: "Fantasy" }],
+    runtime: 135,
+    tagline: "The divine prophecy unfolds.",
+    poster_path: "/jt8pfSIdi47YpFMMWVRr8w5u2S0.jpg",
+    backdrop_path: "/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
   },
   103: {
     id: 103,
-    title: "Spider-Man: Brand New Day",
-    vote_average: 8.4,
-    release_date: "2026-07-31",
-    overview: "Peter Parker balances college life with his duties as Spider-Man when a mysterious new villain threatens New York City, forcing him to confront the consequences of his secret identity.",
-    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 878, name: "Sci-Fi" }],
-    runtime: 138,
-    tagline: "Every hero needs a fresh start.",
-    poster_path: "/yyB2VJEW3an2xCdcYCPQhn9QERR.jpg",
-    backdrop_path: "/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
+    title: "Father's Day",
+    vote_average: 7.8,
+    release_date: "2026-07-17",
+    overview: "A heartwarming and emotional comedy-drama about the complex yet loving relationship between a single father and his three eccentric children who plan a surprise celebration.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 18, name: "Drama" }, { id: 10751, name: "Family" }],
+    runtime: 122,
+    tagline: "The greatest dad deserves the best surprise.",
+    poster_path: "/cFLVe7dfz7m3AT3egd97As3oC0Y.jpg",
+    backdrop_path: "/8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg"
   },
   104: {
     id: 104,
-    title: "Mirzapur: The Movie",
-    vote_average: 7.9,
-    release_date: "2026-09-03",
-    overview: "The battle for Mirzapur's throne reaches its explosive climax as Guddu Pandit and Kaleen Bhaiya face off in a no-holds-barred war for power, revenge, and survival.",
-    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }, { id: 53, name: "Thriller" }],
-    runtime: 155,
-    tagline: "The final war for the throne.",
+    title: "MRP (Neekentha Naakentha)",
+    vote_average: 7.5,
+    release_date: "2026-07-17",
+    overview: "An action-packed thriller confronting the underground retail cartels and pricing scams, following an honest auditor who turns vigilante to protect middle-class consumer rights.",
+    genres: [{ id: 28, name: "Action" }, { id: 53, name: "Thriller" }],
+    runtime: 145,
+    tagline: "Fighting the price of greed.",
     poster_path: "/jbmZPjSfCdIHo269QZK203WZSm.jpg",
     backdrop_path: "/fjaR5w0LoRb20LN6DaYxmolWE4p.jpg"
   },
   105: {
     id: 105,
-    title: "Resident Evil",
-    vote_average: 7.5,
-    release_date: "2026-09-18",
-    overview: "A faithful reboot of the survival horror classic. When a deadly virus is unleashed in Raccoon City, a group of survivors must navigate zombie-infested streets and uncover the truth behind the Umbrella Corporation.",
-    genres: [{ id: 27, name: "Horror" }, { id: 28, name: "Action" }, { id: 878, name: "Sci-Fi" }],
-    runtime: 120,
-    tagline: "Welcome to the nightmare.",
-    poster_path: "/zP83bIkBViw5b1s9bDemYJ3AAgX.jpg",
-    backdrop_path: "/ddfXMkaPViSrg0P5aoYGFMc58x2.jpg"
+    title: "Oh..! Sukumari",
+    vote_average: 8.0,
+    release_date: "2026-07-17",
+    overview: "A sparkling musical romance and thriller about a small-town musician and a free-spirited girl whose chance encounter leads to a high-speed adventure across the country.",
+    genres: [{ id: 10749, name: "Romance" }, { id: 35, name: "Comedy" }, { id: 53, name: "Thriller" }],
+    runtime: 130,
+    tagline: "Love, music, and a wild ride.",
+    poster_path: "/9FdB3kXZbQnZVLoOv37by69VS1K.jpg",
+    backdrop_path: "/w4NLVXJxiLZjknrzRsukAwk5Fr.jpg"
   },
   106: {
     id: 106,
-    title: "Digger",
-    vote_average: 8.0,
-    release_date: "2026-10-02",
-    overview: "From visionary director Alejandro G. Iñárritu, Tom Cruise stars as a man haunted by the past who unearths a discovery that could change the course of human history.",
-    genres: [{ id: 18, name: "Drama" }, { id: 53, name: "Thriller" }, { id: 12, name: "Adventure" }],
-    runtime: 148,
-    tagline: "Some truths should stay buried.",
-    poster_path: "/1ATXKrIPJyKNwnJ6lcG088Sa6zi.jpg",
-    backdrop_path: "/hG1tXuommFDedfdrzaEHfMY1Q3W.jpg"
+    title: "Oka Court Case",
+    vote_average: 7.9,
+    release_date: "2026-07-17",
+    overview: "A gripping courtroom drama about a land-grabbing scandal where an idealistic rookie lawyer challenges a formidable corporate conglomerate to seek justice for an elderly community.",
+    genres: [{ id: 18, name: "Drama" }, { id: 80, name: "Crime" }],
+    runtime: 140,
+    tagline: "Justice is a battle of truth.",
+    poster_path: "/zWgm7OZv8B4XUKEhU8BWB4pW3z0.jpg",
+    backdrop_path: "/xBT0oNq6rsTFv4SxG5uGRIEOrq6.jpg"
   },
   107: {
     id: 107,
-    title: "Ramayana: Part 1",
-    vote_average: 8.2,
-    release_date: "2026-11-08",
-    overview: "An epic retelling of the ancient Indian saga of Lord Rama, following his journey from prince to divine warrior as he battles the demon king Ravana to rescue his beloved Sita.",
-    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
-    runtime: 175,
-    tagline: "The legend begins.",
-    poster_path: "/f3yZZw7zIsWo6m9xJStfjDauIZX.jpg",
-    backdrop_path: "/yHVZncPRZr63mezRX20IyKLrSkv.jpg"
+    title: "Antappante Athbudha Pravarthikal",
+    vote_average: 8.1,
+    release_date: "2026-07-17",
+    overview: "A whimsical Malayalam fantasy comedy tracking the magical, chaotic, and hilarious consequences when a simple villager named Antappan accidentally acquires the ability to grant wishes.",
+    genres: [{ id: 35, name: "Comedy" }, { id: 14, name: "Fantasy" }],
+    runtime: 128,
+    tagline: "Be careful what you wish for.",
+    poster_path: "/pPxsw4KnZbsklyHUCTKSCHKaC8F.jpg",
+    backdrop_path: "/v3lNH2gCojWYXVuXcT9FZLBxcSq.jpg"
   },
   108: {
     id: 108,
-    title: "Avengers: Doomsday",
-    vote_average: 8.6,
-    release_date: "2026-12-18",
-    overview: "Earth's mightiest heroes assemble for a battle unlike any before when Doctor Doom threatens to unravel the multiverse, forcing new and returning Avengers to unite or face total annihilation.",
-    genres: [{ id: 28, name: "Action" }, { id: 12, name: "Adventure" }, { id: 878, name: "Sci-Fi" }],
-    runtime: 165,
-    tagline: "All roads lead to Doom.",
-    poster_path: "/8HkIe2i4ScpCkcX9SzZ9IPasqWV.jpg",
-    backdrop_path: "/3eOINbgRs8WiWfQfViXeuZ3enrs.jpg"
+    title: "Mister Middle Class",
+    vote_average: 7.6,
+    release_date: "2026-07-17",
+    overview: "A realistic family drama focusing on the values, struggles, and quiet triumphs of a hard-working software engineer navigating corporate politics, family expectations, and new-found love.",
+    genres: [{ id: 18, name: "Drama" }, { id: 10751, name: "Family" }],
+    runtime: 138,
+    tagline: "Extraordinary dreams of an ordinary man.",
+    poster_path: "/7ru6YpK7U4QH8cO3OKMKo5ZXgXj.jpg",
+    backdrop_path: "/m3Pom6pbD51bBv3syz8NMHda3fz.jpg"
+  },
+  109: {
+    id: 109,
+    title: "Vadala",
+    vote_average: 8.3,
+    release_date: "2026-07-17",
+    overview: "A suspenseful psychological thriller tracking a series of unexplained disappearances in a secluded mountain village, leading a determined detective to uncover a dark family secret.",
+    genres: [{ id: 9648, name: "Mystery" }, { id: 53, name: "Thriller" }],
+    runtime: 132,
+    tagline: "Every secret leaves a trail.",
+    poster_path: "/dxjbpaEkwm81FU9m4jCtXtnjmax.jpg",
+    backdrop_path: "/ddfXMkaPViSrg0P5aoYGFMc58x2.jpg"
+  },
+  110: {
+    id: 110,
+    title: "Jana Nayagan",
+    vote_average: 8.5,
+    release_date: "2026-07-23",
+    overview: "A high-octane political action saga where a dynamic local activist rises to power to shield his community from corporate exploitation and government apathy, redefining true leadership.",
+    genres: [{ id: 28, name: "Action" }, { id: 18, name: "Drama" }],
+    runtime: 152,
+    tagline: "The voice of the people.",
+    poster_path: "/jt8pfSIdi47YpFMMWVRr8w5u2S0.jpg",
+    backdrop_path: "/v3lNH2gCojWYXVuXcT9FZLBxcSq.jpg"
   }
 };
 
@@ -2487,8 +2528,33 @@ export async function getUpcomingMovies(
   page: number = 1,
   region: string = 'IN'
 ): Promise<TMDBResponse<TMDBMovie>> {
-  const params: Record<string, string | number | boolean> = { page, language: 'en-US', region };
-  return tmdbFetch('/movie/upcoming', params);
+  // Always return the curated BookMyShow upcoming movies (IDs 102 to 110)
+  const upcomingIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
+  const results = upcomingIds
+    .map(id => MOCK_MOVIES_DB[id])
+    .filter(Boolean)
+    .map(m => ({
+      id: m.id,
+      title: m.title,
+      vote_average: m.vote_average,
+      release_date: m.release_date,
+      overview: m.overview,
+      genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
+      poster_path: m.poster_path || null,
+      backdrop_path: m.backdrop_path || null,
+      popularity: 10.0,
+      video: false,
+      vote_count: 0,
+      original_language: 'en',
+      adult: false
+    }));
+
+  return {
+    page: 1,
+    results: results as unknown as TMDBMovie[],
+    total_pages: 1,
+    total_results: results.length
+  };
 }
 
 /** Get now playing movies */
