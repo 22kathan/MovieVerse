@@ -218,22 +218,22 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
       <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-transparent to-[var(--bg-primary)]/30" />
 
       {/* Content */}
-      <div className="relative h-full flex items-center pt-20 pb-10">
-        <div className="container mx-auto px-6 max-w-[var(--container-max)]">
-          <div className={`max-w-2xl space-y-5 transition-all duration-500 transform ease-in-out ${isTransitioning ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"}`}>
+      <div className="relative h-full flex items-center pt-16 sm:pt-20 pb-8 sm:pb-10">
+        <div className="container mx-auto px-4 sm:px-6 max-w-[var(--container-max)]">
+          <div className={`max-w-2xl space-y-3 sm:space-y-5 transition-all duration-500 transform ease-in-out ${isTransitioning ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"}`}>
             {/* Genre Tags */}
             {genres && genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {genres.map((g) => (
                   <span
                     key={g}
-                    className="px-3 py-1 text-xs font-semibold rounded-full bg-white/10 text-white/90 backdrop-blur-md border border-white/10"
+                    className="px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full bg-white/10 text-white/90 backdrop-blur-md border border-white/10"
                   >
                     {g}
                   </span>
                 ))}
                 {year && (
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[var(--brand-primary)]/20 text-[var(--brand-primary-light)] border border-[var(--brand-primary)]/30">
+                  <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full bg-[var(--brand-primary)]/20 text-[var(--brand-primary-light)] border border-[var(--brand-primary)]/30">
                     {year}
                   </span>
                 )}
@@ -241,7 +241,7 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
             )}
 
             {/* Title */}
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white"
+            <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white"
               style={{ fontFamily: "var(--font-display)" }}>
               {title}
             </h2>
