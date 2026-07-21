@@ -112,7 +112,7 @@ export default function TrailerModal({
 
   const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 min-w-full min-h-full">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 w-full h-full min-w-full min-h-full overflow-y-auto bg-black/90 backdrop-blur-md">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -131,23 +131,23 @@ export default function TrailerModal({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ type: "spring", duration: 0.5 }}
+          transition={{ type: "spring", duration: 0.4 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-5xl bg-[#12141d] rounded-2xl border border-amber-500/30 overflow-hidden shadow-2xl z-10 space-y-0"
+          className="relative w-[95vw] sm:w-[90vw] md:w-full max-w-4xl min-w-[300px] bg-[#12141d] rounded-2xl border border-amber-500/30 overflow-hidden shadow-2xl z-10 space-y-0 my-auto shrink-0"
         >
           {/* Header Bar */}
-          <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-500/10 via-black to-black border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500 text-black font-extrabold text-xs shadow-md">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-r from-amber-500/10 via-black to-black border-b border-white/10 shrink-0 gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500 text-black font-extrabold text-xs shadow-md shrink-0">
                 IMDb
               </span>
-              <div>
-                <h3 className="font-bold text-white text-base md:text-lg flex items-center gap-2 truncate max-w-md">
-                  <Film className="w-4 h-4 text-amber-400" />
-                  {title} — Official Trailer
+              <div className="min-w-0">
+                <h3 className="font-bold text-white text-sm sm:text-base md:text-lg flex items-center gap-2 truncate max-w-[200px] sm:max-w-md">
+                  <Film className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="truncate">{title} — Official Trailer</span>
                 </h3>
-                <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-amber-400" /> High Definition Cinema Teaser
+                <p className="text-[10px] sm:text-xs text-[var(--text-tertiary)] flex items-center gap-1.5 truncate">
+                  <Sparkles className="w-3 h-3 text-amber-400 shrink-0" /> High Definition Cinema Teaser
                 </p>
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function TrailerModal({
                 e.stopPropagation();
                 onClose();
               }}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white transition-colors border border-white/10 cursor-pointer"
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white transition-colors border border-white/10 cursor-pointer shrink-0"
               aria-label="Close trailer"
             >
               <X className="w-5 h-5" />
@@ -166,7 +166,7 @@ export default function TrailerModal({
           </div>
 
           {/* Video Container */}
-          <div className="relative w-full aspect-video bg-black flex items-center justify-center">
+          <div className="relative w-full aspect-video min-h-[200px] sm:min-h-[350px] bg-black flex items-center justify-center">
             {loading ? (
               <div className="flex flex-col items-center justify-center gap-3 text-amber-400">
                 <Loader2 className="w-10 h-10 animate-spin" />
@@ -183,15 +183,15 @@ export default function TrailerModal({
               />
             ) : (
               /* No trailer found — show a clean card directing user to YouTube */
-              <div className="flex flex-col items-center justify-center gap-5 text-center px-8 py-12">
-                <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                  <Film className="w-10 h-10 text-amber-400" />
+              <div className="flex flex-col items-center justify-center gap-5 text-center px-6 py-8">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                  <Film className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-lg mb-2">
+                  <h4 className="text-white font-bold text-base sm:text-lg mb-1">
                     No Trailer Available on TMDB
                   </h4>
-                  <p className="text-white/50 text-sm max-w-md">
+                  <p className="text-white/50 text-xs sm:text-sm max-w-md">
                     We couldn&apos;t find an official trailer for <span className="text-amber-400 font-semibold">&ldquo;{title}&rdquo;</span> in TMDB&apos;s database. You can search for it directly on YouTube.
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export default function TrailerModal({
                   href={youtubeSearchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.97]"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-xs sm:text-sm transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.97]"
                 >
                   <Search className="w-4 h-4" />
                   Search &ldquo;{title} Official Trailer&rdquo; on YouTube
@@ -209,9 +209,9 @@ export default function TrailerModal({
           </div>
 
           {/* Footer Bar */}
-          <div className="flex items-center justify-between px-6 py-3.5 bg-black/60 text-xs text-[var(--text-secondary)] flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-3 bg-black/80 text-[11px] sm:text-xs text-[var(--text-secondary)] gap-2 border-t border-white/10 shrink-0 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <Volume2 className="w-4 h-4 text-amber-400" />
+              <Volume2 className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{noTrailer ? "Trailer not available via TMDB" : "Use controls inside video to adjust sound & resolution"}</span>
             </div>
             <div className="flex items-center gap-3">
@@ -219,7 +219,7 @@ export default function TrailerModal({
                 href={youtubeSearchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:underline"
+                className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-400 hover:underline"
               >
                 <span>Search on YouTube</span>
                 <ExternalLink className="w-3 h-3" />
