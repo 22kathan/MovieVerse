@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Play, Film, Sparkles, Loader2, RefreshCw, ExternalLink, Maximize2 } from "lucide-react";
 import SafeImage from "@/components/shared/SafeImage";
 import TrailerModal from "./TrailerModal";
+import { getTrailerKeyForMovie } from "@/lib/tmdb";
 
 interface DetailTrailerSectionProps {
   id: number;
@@ -29,6 +30,8 @@ export default function DetailTrailerSection({
     let isMounted = true;
     setLoading(true);
 
+    const fallbackKey = getTrailerKeyForMovie(id);
+
     fetch(`/api/videos?id=${id}&type=${mediaType}&title=${encodeURIComponent(title)}`)
       .then((res) => res.json())
       .then((data) => {
@@ -36,11 +39,11 @@ export default function DetailTrailerSection({
         if (data?.key) {
           setVideoKey(data.key);
         } else {
-          setVideoKey(null);
+          setVideoKey(fallbackKey);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load trailer for detail page:", err);
+      .catch(() => {
+        if (isMounted) setVideoKey(fallbackKey);
       })
       .finally(() => {
         if (isMounted) setLoading(false);

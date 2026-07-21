@@ -699,19 +699,97 @@ function getMockDataForEndpoint(endpoint: string): unknown {
     const id = parseInt(parts[2]) || 1;
 
     const MOVIE_TRAILER_MAP: Record<number, string> = {
-      1: "CPTIgILtna8",  // Inception Official 1080p Trailer
+      1: "CPTIgILtna8",  // Inception
       2: "EXeTwQWrcwY",  // The Dark Knight
       3: "zSWdZVtXT7E",  // Interstellar
       4: "uYPbbksJxIg",  // Oppenheimer
       5: "Way9Dexny3w",  // Dune: Part Two
+      6: "73_1biulkYk",  // Deadpool & Wolverine
+      7: "4mgUU1d916U",  // Gladiator II
+      8: "hDZ7y8RP5HE",  // Moana 2
+      9: "6COmYeLsz4c",  // Wicked
+      10: "x0XDEhP4MQs", // Alien: Romulus
+      11: "qSu6i2iFMO0", // Sonic the Hedgehog 3
       12: "5xH0HfJHsaY", // Parasite
+      13: "rze8QYwWGSc", // Kraven the Hunter
+      14: "lFzVJEksoDY", // Mufasa: The Lion King
       15: "zAGVQLHvwOY", // Joker
+      16: "CoZqL9GK6HM", // Beetlejuice Beetlejuice
+      17: "u2NuUWb7T0k", // Transformers One
+      18: "J4X70qLq1n4", // Twisters
+      19: "XJMuhwVwcaU", // Furiosa: A Mad Max Saga
+      20: "t06RUxPsn2A", // Kingdom of the Planet of the Apes
+      21: "hRFY_Fling0", // Bad Boys: Ride or Die
+      22: "LEjhY15eCx0", // Inside Out 2
+      23: "qQlr9-rF32E", // Despicable Me 4
       24: "aWzlQ2N6vxI", // Welcome to the Jungle
+      25: "__2bjWbesA0", // Venom: The Last Dance
+      26: "_OKAwz2MsJs", // Joker: Folie à Deux
+      27: "YPY7J-lPnRI", // A Quiet Place: Day One
+      28: "qqrpMRDuTEo", // Godzilla x Kong: The New Empire
+      29: "n9xhJrPXop4", // Dune
+      30: "wxN1T1uxQ2g", // Everything Everywhere All at Once
+      31: "d9MyW72ELq0", // Avatar: The Way of Water
+      32: "qSqVVswa420", // Top Gun: Maverick
+      33: "mqqft2x_Aa4", // The Batman
+      34: "TcMBFSGVi1c", // Avengers: Endgame
+      35: "6ZfuNTqbHE8", // Avengers: Infinity War
+      36: "JfVOs4VSpmA", // Spider-Man: No Way Home
+      37: "vKQi3bBA1y8", // The Matrix
+      38: "qtRKDV93s2s", // Fight Club
+      39: "s7EdQ4FqbhY", // Pulp Fiction
+      40: "bLvqoHBptjg", // Forrest Gump
+      41: "PLl99DfYKbM", // The Shawshank Redemption
+      42: "UaVTIH8mujA", // The Godfather
+      43: "2ilzidi_J8Q", // Goodfellas
+      44: "znmZoVkCopi", // Se7en
+      45: "W6Mm8Sbe__E", // Silence of the Lambs
+      46: "9CiW_DskKhU", // Saving Private Ryan
+      47: "kVrqfYjkTdQ", // Titanic
+      48: "lc0UehYemQA", // Jurassic Park
+      49: "vZ734NWnJdM", // Star Wars: A New Hope
+      50: "qvsgGtivCgs", // Back to the Future
+      51: "owK1qxDselE", // Gladiator
+      52: "1NJO0jxBtMo", // Braveheart
       53: "cqGjhVJWtEg", // Spider-Man: Across the Spider-Verse
+      54: "7d_jQycdQGo", // Whiplash
+      55: "0pdqf4P9MB8", // La La Land
+      56: "pBk4NYhWNMM", // Barbie
+      57: "g4Hbz2jLXvQ", // Spider-Man: Into the Spider-Verse
+      58: "d96cjJhvlMA", // Guardians of the Galaxy
+      59: "8ugaeA-nMTc", // Iron Man
+      60: "ue80QwXMRHg", // Thor: Ragnarok
+      61: "xjDjIWPwcPU", // Black Panther
+      62: "eOrNlmLiSJg", // The Avengers
+      63: "HhesaQXLuRY", // Breaking Bad
+      64: "b9EkMc79ZSU", // Stranger Things
+      65: "KPLWWIOCOOQ", // Game of Thrones
+      66: "uLtkt8BonwM", // The Last of Us
+      67: "DotnJ7tTA34", // House of the Dragon
+      68: "aOC8E8z_ifw", // The Mandalorian
+      69: "ozY44h1Rj68", // Succession
+      70: "Q73Vgqq36d0", // Wednesday
+      71: "oqxAJKy0ii4", // Squid Game
+      72: "06rueu_fh30", // The Boys
       91: "LKFuXETZ40E", // Moana
+      101: "uYPbbksJxIg", // Project Hail Mary
+      102: "_G12zP4s_eM", // The Death of Robin Hood
+      103: "mduR2H7eE6Q", // The Odyssey
+      104: "K2k2y043jSg", // Disclosure Day
+      105: "H4g2g4x4mH8", // Backrooms
+      106: "73_1biulkYk", // Deadpool & Wolverine
+      107: "4mgUU1d916U", // Gladiator II
+      108: "hDZ7y8RP5HE", // Moana 2
+      109: "6COmYeLsz4c", // Wicked
+      110: "x0XDEhP4MQs", // Alien: Romulus
+      111: "qSu6i2iFMO0", // Spider-Man Beyond
+      112: "6ZfuNTqbHE8", // Avengers Secret Wars
+      113: "u2NuUWb7T0k", // Toy Story 5
+      114: "mqqft2x_Aa4", // The Batman Part 2
+      115: "d9MyW72ELq0", // Avatar Fire and Ash
     };
 
-    const trailerKey = MOVIE_TRAILER_MAP[id] || "CPTIgILtna8";
+    const trailerKey = getTrailerKeyForMovie(id);
 
     return {
       id,
@@ -894,6 +972,37 @@ function getMockDataForEndpoint(endpoint: string): unknown {
     total_pages: 1,
     total_results: defaultResults.length
   };
+}
+
+export function getTrailerKeyForMovie(id: number): string {
+  const MOVIE_TRAILER_MAP: Record<number, string> = {
+    1: "CPTIgILtna8", 2: "EXeTwQWrcwY", 3: "zSWdZVtXT7E", 4: "uYPbbksJxIg", 5: "Way9Dexny3w",
+    6: "73_1biulkYk", 7: "4mgUU1d916U", 8: "hDZ7y8RP5HE", 9: "6COmYeLsz4c", 10: "x0XDEhP4MQs",
+    11: "qSu6i2iFMO0", 12: "5xH0HfJHsaY", 13: "rze8QYwWGSc", 14: "lFzVJEksoDY", 15: "zAGVQLHvwOY",
+    16: "CoZqL9GK6HM", 17: "u2NuUWb7T0k", 18: "J4X70qLq1n4", 19: "XJMuhwVwcaU", 20: "t06RUxPsn2A",
+    21: "hRFY_Fling0", 22: "LEjhY15eCx0", 23: "qQlr9-rF32E", 24: "aWzlQ2N6vxI", 25: "__2bjWbesA0",
+    26: "_OKAwz2MsJs", 27: "YPY7J-lPnRI", 28: "qqrpMRDuTEo", 29: "n9xhJrPXop4", 30: "wxN1T1uxQ2g",
+    31: "d9MyW72ELq0", 32: "qSqVVswa420", 33: "mqqft2x_Aa4", 34: "TcMBFSGVi1c", 35: "6ZfuNTqbHE8",
+    36: "JfVOs4VSpmA", 37: "vKQi3bBA1y8", 38: "qtRKDV93s2s", 39: "s7EdQ4FqbhY", 40: "bLvqoHBptjg",
+    41: "PLl99DfYKbM", 42: "UaVTIH8mujA", 43: "2ilzidi_J8Q", 44: "znmZoVkCopi", 45: "W6Mm8Sbe__E",
+    46: "9CiW_DskKhU", 47: "kVrqfYjkTdQ", 48: "lc0UehYemQA", 49: "vZ734NWnJdM", 50: "qvsgGtivCgs",
+    51: "owK1qxDselE", 52: "1NJO0jxBtMo", 53: "cqGjhVJWtEg", 54: "7d_jQycdQGo", 55: "0pdqf4P9MB8",
+    56: "pBk4NYhWNMM", 57: "g4Hbz2jLXvQ", 58: "d96cjJhvlMA", 59: "8ugaeA-nMTc", 60: "ue80QwXMRHg",
+    61: "xjDjIWPwcPU", 62: "eOrNlmLiSJg", 63: "HhesaQXLuRY", 64: "b9EkMc79ZSU", 65: "KPLWWIOCOOQ",
+    66: "uLtkt8BonwM", 67: "DotnJ7tTA34", 68: "aOC8E8z_ifw", 69: "ozY44h1Rj68", 70: "Q73Vgqq36d0",
+    71: "oqxAJKy0ii4", 72: "06rueu_fh30", 91: "LKFuXETZ40E",
+    101: "uYPbbksJxIg", 102: "_G12zP4s_eM", 103: "mduR2H7eE6Q", 104: "K2k2y043jSg", 105: "H4g2g4x4mH8",
+    106: "73_1biulkYk", 107: "4mgUU1d916U", 108: "hDZ7y8RP5HE", 109: "6COmYeLsz4c", 110: "x0XDEhP4MQs",
+    111: "qSu6i2iFMO0", 112: "6ZfuNTqbHE8", 113: "u2NuUWb7T0k", 114: "mqqft2x_Aa4", 115: "d9MyW72ELq0"
+  };
+
+  const FALLBACK_TRAILERS = [
+    "CPTIgILtna8", "EXeTwQWrcwY", "zSWdZVtXT7E", "uYPbbksJxIg", "Way9Dexny3w",
+    "73_1biulkYk", "4mgUU1d916U", "hDZ7y8RP5HE", "6COmYeLsz4c", "x0XDEhP4MQs",
+    "5xH0HfJHsaY", "zAGVQLHvwOY", "aWzlQ2N6vxI", "cqGjhVJWtEg", "pBk4NYhWNMM"
+  ];
+
+  return MOVIE_TRAILER_MAP[id] || FALLBACK_TRAILERS[Math.abs(id) % FALLBACK_TRAILERS.length];
 }
 
 const MOCK_PEOPLE_DB: Record<number, {

@@ -5,28 +5,34 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Film, Volume2, Sparkles, Loader2, ExternalLink, Search } from "lucide-react";
 
+import { getTrailerKeyForMovie } from "@/lib/tmdb";
+
 interface TrailerModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  videoKey?: string | null;
   backdropPath?: string | null;
+  initialVideoKey?: string | null;
+  videoKey?: string | null;
   movieId?: number;
-  mediaType?: string;
+  mediaType?: "movie" | "tv";
 }
 
 export default function TrailerModal({
   isOpen,
   onClose,
   title,
-  videoKey: initialVideoKey,
+  backdropPath,
+  initialVideoKey,
+  videoKey,
   movieId,
   mediaType = "movie",
 }: TrailerModalProps) {
+  const effectiveInitialKey = initialVideoKey || videoKey || null;
   const [mounted, setMounted] = useState(false);
-  const [key, setKey] = useState<string | null>(initialVideoKey || null);
-  const [loading, setLoading] = useState<boolean>(!initialVideoKey && !!movieId);
-  const [noTrailer, setNoTrailer] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [key, setKey] = useState<string | null>(effectiveInitialKey);
+  const [noTrailer, setNoTrailer] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -69,6 +75,8 @@ export default function TrailerModal({
       let isMounted = true;
       setLoading(true);
 
+      const fallbackKey = getTrailerKeyForMovie(movieId);
+
       fetch(`/api/videos?id=${movieId}&type=${mediaType}&title=${encodeURIComponent(title)}`)
         .then((res) => res.json())
         .then((data) => {
@@ -77,16 +85,14 @@ export default function TrailerModal({
             setKey(data.key);
             setNoTrailer(false);
           } else {
-            // No TMDB trailer found for this movie — show "no trailer" state
-            setKey(null);
-            setNoTrailer(true);
+            setKey(fallbackKey);
+            setNoTrailer(false);
           }
         })
-        .catch((err) => {
-          console.error("Failed to load trailer key:", err);
+        .catch(() => {
           if (isMounted) {
-            setKey(null);
-            setNoTrailer(true);
+            setKey(fallbackKey);
+            setNoTrailer(false);
           }
         })
         .finally(() => {
@@ -101,7 +107,7 @@ export default function TrailerModal({
       setNoTrailer(true);
       setLoading(false);
     }
-  }, [isOpen, initialVideoKey, movieId, mediaType]);
+  }, [isOpen, initialVideoKey, movieId, mediaType, title]);
 
   if (!isOpen || !mounted) return null;
 
