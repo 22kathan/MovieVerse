@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import SessionProvider from "@/components/shared/SessionProvider";
 import { ToastProvider } from "@/components/shared/Toast";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const inter = Inter({
   variable: "--font-body",
@@ -72,9 +73,10 @@ export default function RootLayout({
               <Sidebar />
               <div className="flex flex-1 flex-col md:ml-[260px]">
                 <Header />
-                <main className="flex-1 pt-[64px]">{children}</main>
+                <main className="flex-1 pt-[64px] pb-20 md:pb-0">{children}</main>
               </div>
             </div>
+            <MobileBottomNav />
           </ToastProvider>
         </SessionProvider>
       </body>

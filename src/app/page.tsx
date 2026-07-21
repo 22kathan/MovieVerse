@@ -3,6 +3,7 @@ import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
 import Top10Section from "@/components/movie/Top10Section";
 import WhereToWatchSection from "@/components/movie/WhereToWatchSection";
+import MobileCategoryBar from "@/components/shared/MobileCategoryBar";
 import {
   getTrending,
   getPopularMovies,
@@ -94,6 +95,9 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Mobile Category Pill Touch Bar */}
+      <MobileCategoryBar />
+
       {/* Hero Banner (uses top trending items) */}
       <HeroBanner movies={trendingList} />
 
