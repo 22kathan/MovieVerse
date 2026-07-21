@@ -102,7 +102,7 @@ export default async function HomePage() {
       <HeroBanner movies={trendingList} />
 
       {/* Content Sections */}
-      <div className="px-6 py-10 space-y-16 mx-auto relative" style={{ maxWidth: "var(--container-max)" }}>
+      <div className="px-3.5 sm:px-6 py-6 sm:py-10 space-y-10 sm:space-y-16 mx-auto relative" style={{ maxWidth: "var(--container-max)" }}>
         {/* Ambient glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,rgba(99,102,241,0.06)_0%,transparent_70%)] pointer-events-none" />
 

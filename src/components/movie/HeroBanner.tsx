@@ -15,15 +15,16 @@ import {
 } from "@/lib/storage";
 import { getImageUrl } from "@/lib/tmdb";
 import SafeImage from "@/components/shared/SafeImage";
+import TrailerModal from "@/components/movie/TrailerModal";
 
 interface HeroMovie {
   id: number;
   title?: string;
   name?: string;
-  overview: string;
-  backdrop_path: string | null;
-  poster_path: string | null;
-  vote_average: number;
+  overview?: string;
+  backdrop_path?: string | null;
+  poster_path?: string | null;
+  vote_average?: number;
   release_date?: string;
   first_air_date?: string;
   genre_ids?: number[];
@@ -44,6 +45,7 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [featured, setFeatured] = useState<HeroMovie[]>(() => movies.slice(0, 5));
+  const [showTrailer, setShowTrailer] = useState(false);
   const current = featured[currentIndex];
 
   const { status } = useSession();
@@ -106,8 +108,8 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
             localAddToWatchlist({
               id: current.id,
               title: current.title || current.name || "",
-              poster_path: current.poster_path,
-              vote_average: current.vote_average,
+              poster_path: current.poster_path || null,
+              vote_average: current.vote_average || 0,
               release_date: current.release_date || current.first_air_date || "",
               media_type: current.media_type === "tv" ? "tv" : "movie",
             });
@@ -122,8 +124,8 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
           localAddToWatchlist({
             id: current.id,
             title: current.title || current.name || "",
-            poster_path: current.poster_path,
-            vote_average: current.vote_average,
+            poster_path: current.poster_path || null,
+            vote_average: current.vote_average || 0,
             release_date: current.release_date || current.first_air_date || "",
             media_type: current.media_type === "tv" ? "tv" : "movie",
           });
@@ -138,8 +140,8 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
         localAddToWatchlist({
           id: current.id,
           title: current.title || current.name || "",
-          poster_path: current.poster_path,
-          vote_average: current.vote_average,
+          poster_path: current.poster_path || null,
+          vote_average: current.vote_average || 0,
           release_date: current.release_date || current.first_air_date || "",
           media_type: current.media_type === "tv" ? "tv" : "movie",
         });
@@ -266,34 +268,39 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-semibold text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-[var(--brand-primary)]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                <Play className="w-5 h-5 fill-current" />
+            <div className="flex flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 pt-2">
+              <button
+                onClick={() => setShowTrailer(true)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[var(--brand-primary)]/30 hover:shadow-[var(--brand-primary)]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+              >
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                 Play Trailer
               </button>
+
               <button
                 onClick={handleWatchlistToggle}
                 disabled={loading}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl backdrop-blur-sm font-medium text-sm border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 cursor-pointer ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl backdrop-blur-sm font-bold text-xs sm:text-sm border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 cursor-pointer ${
                   isSaved
                     ? "bg-[#6366f1] text-white border-[#6366f1] hover:bg-[#5356e2]"
                     : "bg-white/10 text-white border-white/20 hover:bg-white/20"
                 }`}
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                 ) : isSaved ? (
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
-                {isSaved ? "In Watchlist" : "Watchlist"}
+                {isSaved ? "Saved" : "Watchlist"}
               </button>
+
               <Link
                 href={`/${mediaType}/${current.id}`}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 text-white/70 font-medium text-sm hover:bg-white/10 hover:text-white transition-all duration-200"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/15 transition-all duration-200"
               >
-                <Info className="w-5 h-5" />
+                <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                 Details
               </Link>
             </div>
@@ -341,6 +348,14 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
+
+      <TrailerModal
+        isOpen={showTrailer}
+        onClose={() => setShowTrailer(false)}
+        movieId={current.id}
+        mediaType={current.media_type === "tv" ? "tv" : "movie"}
+        title={title}
+      />
     </section>
   );
 }

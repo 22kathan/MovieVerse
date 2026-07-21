@@ -91,7 +91,7 @@ export default function Top10Section({ movies }: Top10SectionProps) {
       </div>
 
       {/* Top 1 to 3 Featured Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-5">
         {top3.map((movie, index) => {
           const rank = index + 1;
           const posterUrl = getImageUrl(movie.poster_path, "poster", "md");
