@@ -24,7 +24,14 @@ interface TVPageProps {
 }
 
 export async function generateStaticParams() {
-  return Array.from({ length: 25 }, (_, i) => ({ id: (i + 1).toString() }));
+  const localIds = Array.from({ length: 150 }, (_, i) => (i + 1).toString());
+  const tmdbTvIds = [
+    "1399", "66732", "119051", "100088", "94605", "84958", "114472", "71446", "93405",
+    "113988", "108978", "82856", "90802", "110492", "202250", "94997", "114461", "1396",
+    "60625", "76479", "85552", "110492", "92749", "90521", "88396", "93405", "100088"
+  ];
+  const allIds = Array.from(new Set([...localIds, ...tmdbTvIds]));
+  return allIds.map((id) => ({ id }));
 }
 
 export const dynamicParams = true;
