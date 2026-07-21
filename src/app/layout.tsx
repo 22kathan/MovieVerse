@@ -5,7 +5,6 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import SessionProvider from "@/components/shared/SessionProvider";
 import { ToastProvider } from "@/components/shared/Toast";
-import SpaRouteRestorer from "@/components/shared/SpaRouteRestorer";
 
 const inter = Inter({
   variable: "--font-body",
@@ -69,7 +68,6 @@ export default function RootLayout({
       <body className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased">
         <SessionProvider>
           <ToastProvider>
-            <SpaRouteRestorer />
             <div className="flex min-h-screen">
               <Sidebar />
               <div className="flex flex-1 flex-col md:ml-[260px]">

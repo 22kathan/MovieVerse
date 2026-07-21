@@ -1,14 +1,7 @@
 import type { NextConfig } from "next";
 
-const isStaticExport = process.env.STATIC_EXPORT === "true";
-const basePath = isStaticExport ? "/portfolio/movieverse" : "";
-
 const nextConfig: NextConfig = {
-  output: isStaticExport ? "export" : undefined,
-  basePath: basePath,
-  trailingSlash: true,
   images: {
-    unoptimized: isStaticExport ? true : false,
     remotePatterns: [
       {
         protocol: "https",

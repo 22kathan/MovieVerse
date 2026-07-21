@@ -26,16 +26,7 @@ interface MoviePageProps {
 }
 
 export async function generateStaticParams() {
-  const localIds = Array.from({ length: 200 }, (_, i) => (i + 1).toString());
-  const tmdbPopularIds = [
-    "1368337", "1022789", "533535", "823464", "939243", "693134", "1184918", "912649", "519182",
-    "573435", "1051891", "93405", "1084736", "945961", "822119", "1241982", "1034541", "1159311",
-    "1214509", "653346", "762441", "872585", "929590", "1011985", "1001311", "804616", "1111873",
-    "1215162", "1079091", "1182387", "1032823", "550", "157336", "27205", "19995", "299536",
-    "299534", "634649", "603", "680", "13", "278", "238", "240", "497", "429", "155"
-  ];
-  const allIds = Array.from(new Set([...localIds, ...tmdbPopularIds]));
-  return allIds.map((id) => ({ id }));
+  return Array.from({ length: 50 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
 export const dynamicParams = true;
