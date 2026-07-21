@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const isStaticExport = process.env.STATIC_EXPORT === "true";
-const basePath = isStaticExport ? (process.env.NEXT_PUBLIC_BASE_PATH || "/MovieVerse") : "";
+const basePath = isStaticExport ? "/portfolio" : "";
 
 const nextConfig: NextConfig = {
   output: isStaticExport ? "export" : undefined,
-  basePath: basePath === "/" ? "" : basePath,
+  basePath: basePath,
   trailingSlash: true,
   images: {
     unoptimized: isStaticExport ? true : false,
