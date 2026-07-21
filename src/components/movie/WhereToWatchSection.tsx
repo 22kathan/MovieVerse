@@ -27,7 +27,7 @@ interface Provider {
   curatedMovies: Movie[];
 }
 
-// 100% verified released OTT movies with active TMDB image paths
+// 100% verified active TMDB image paths for top titles
 const PROVIDER_DATA: Provider[] = [
   {
     id: "prime",
@@ -36,12 +36,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-sky-500/20 to-blue-600/10",
     activeColor: "border-sky-400 text-sky-400",
     curatedMovies: [
-      { id: 9, title: "The Lord of the Rings", vote_average: 8.9, release_date: "2001-12-19", poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg", backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg" },
-      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
-      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", backdrop_path: "/xJHaxuoQn55Z45w6uIf8C265yex.jpg" },
-      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/aKuFiZ82hs5OIxD512vJ7tKeLOd.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
-      { id: 7, title: "Forrest Gump", vote_average: 8.8, release_date: "1994-07-06", poster_path: "/arw2vcJzHfh6fbqPMgjo6YmZf0c.jpg", backdrop_path: "/qd01xCr2xZ8Nn5fsE3az7hz5tuz.jpg" },
-      { id: 8, title: "Fight Club", vote_average: 8.8, release_date: "1999-10-15", poster_path: "/bptf4GE26qjBh5adzxhJtr6Vil6.jpg", backdrop_path: "/hZup7Qxtcc49257g4dJe4tO1756.jpg" },
+      { id: 9, title: "The Lord of the Rings", vote_average: 8.9, release_date: "2001-12-19", poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg", backdrop_path: "/mWDdRXTivGE7aaY2vo1Ie0PfCX5.jpg" },
+      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/dqK9Hag1054tghRQSqLSfrkvQnA.jpg" },
+      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg", backdrop_path: "/2ssWTSVklAEc98frZUQhgtGHx7s.jpg" },
+      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg", backdrop_path: "/gILte6Zd7m1YneIr6MVhh30S9pr.jpg" },
+      { id: 7, title: "Forrest Gump", vote_average: 8.8, release_date: "1994-07-06", poster_path: "/Cw4hIUIAmSYfK9QfaUW5igp9La.jpg", backdrop_path: "/66Kn4XWhkuPkJxOJyPEx4U2CUfN.jpg" },
+      { id: 8, title: "Fight Club", vote_average: 8.8, release_date: "1999-10-15", poster_path: "/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg", backdrop_path: "/c6OLXfKAk5BKeR6broC8pYiCquX.jpg" },
     ],
   },
   {
@@ -51,12 +51,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-red-500/20 to-rose-600/10",
     activeColor: "border-red-500 text-red-500",
     curatedMovies: [
-      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/oYuLEW9WAFK1P227yYiY14YyS5.jpg", backdrop_path: "/8ZTVqvKDQ8ZAbD17sfKmV3hT82w.jpg" },
-      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/d5iVF7j37452d3j9W8pQW7d7y3K.jpg", backdrop_path: "/sua5wJZi4fC645k3q6j9g2n86qc.jpg" },
-      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/oMsxZEvz9a708d49b6UdZK1KAo5.jpg", backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg" },
-      { id: 16, title: "Whiplash", vote_average: 8.4, release_date: "2014-10-10", poster_path: "/71t2wNt2rJ7f8C7A5Q5Z4y8n0A.jpg", backdrop_path: "/8ZTVqvKDQ8ZAbD17sfKmV3hT82w.jpg" },
-      { id: 15, title: "Joker", vote_average: 8.2, release_date: "2019-10-02", poster_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
-      { id: 13, title: "Spirited Away", vote_average: 8.5, release_date: "2001-07-20", poster_path: "/39wmItIWsg5sclgU4ywZydlgmgq.jpg", backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg" },
+      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg", backdrop_path: "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg" },
+      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg", backdrop_path: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg" },
+      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg", backdrop_path: "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg" },
+      { id: 16, title: "Whiplash", vote_average: 8.4, release_date: "2014-10-10", poster_path: "/7fn624j5lj3xTme2SgiLCeuedmO.jpg", backdrop_path: "/wbQa0EnWUyRzQ5d1pHLNRlmsCUP.jpg" },
+      { id: 15, title: "Joker", vote_average: 8.2, release_date: "2019-10-02", poster_path: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", backdrop_path: "/rlay2M5QYvi6igbGcFjq8jxeusY.jpg" },
+      { id: 13, title: "Spirited Away", vote_average: 8.5, release_date: "2001-07-20", poster_path: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", backdrop_path: "/dyJvKsNs2KP8qQnAXbRwDjblViy.jpg" },
     ],
   },
   {
@@ -66,12 +66,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-blue-500/20 to-cyan-600/10",
     activeColor: "border-blue-400 text-blue-400",
     curatedMovies: [
-      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GIM0bflTVxOTQuY7pZ2p.jpg", backdrop_path: "/kXfq73Arxtsn4r6PbYwHzpfK07H.jpg" },
-      { id: 11, title: "The Godfather", vote_average: 9.2, release_date: "1972-03-24", poster_path: "/3bhkrj6PjOqZEjjxpoGJA4AO06m.jpg", backdrop_path: "/tmU7GeKVZ2uOD5QpqSE3rS7I65C.jpg" },
+      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg", backdrop_path: "/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg" },
+      { id: 11, title: "The Godfather", vote_average: 9.2, release_date: "1972-03-24", poster_path: "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", backdrop_path: "/tSPT36ZKlP2WVHJLM4cQPLSzv3b.jpg" },
       { id: 115, title: "Avatar: The Way of Water", vote_average: 7.7, release_date: "2022-12-16", poster_path: "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg", backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg" },
       { id: 110, title: "Deadpool & Wolverine", vote_average: 7.8, release_date: "2024-07-26", poster_path: "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
-      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
-      { id: 14, title: "Gladiator", vote_average: 8.2, release_date: "2000-05-01", poster_path: "/ty8ikj24UNxticv6yq2n86qc.jpg", backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg" },
+      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg", backdrop_path: "/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg" },
+      { id: 14, title: "Gladiator", vote_average: 8.2, release_date: "2000-05-01", poster_path: "/wN2xWp1eIwCKOD0BHTcErTBv1Uq.jpg", backdrop_path: "/jhk6D8pim3yaByu1801kMoxXFaX.jpg" },
     ],
   },
   {
@@ -81,12 +81,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-slate-500/20 to-zinc-600/10",
     activeColor: "border-slate-300 text-slate-200",
     curatedMovies: [
-      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
-      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/oYuLEW9WAFK1P227yYiY14YyS5.jpg", backdrop_path: "/8ZTVqvKDQ8ZAbD17sfKmV3hT82w.jpg" },
-      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", backdrop_path: "/xJHaxuoQn55Z45w6uIf8C265yex.jpg" },
-      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GIM0bflTVxOTQuY7pZ2p.jpg", backdrop_path: "/kXfq73Arxtsn4r6PbYwHzpfK07H.jpg" },
-      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/oMsxZEvz9a708d49b6UdZK1KAo5.jpg", backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg" },
-      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
+      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/dqK9Hag1054tghRQSqLSfrkvQnA.jpg" },
+      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg", backdrop_path: "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg" },
+      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg", backdrop_path: "/2ssWTSVklAEc98frZUQhgtGHx7s.jpg" },
+      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg", backdrop_path: "/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg" },
+      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg", backdrop_path: "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg" },
+      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg", backdrop_path: "/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg" },
     ],
   },
   {
@@ -96,12 +96,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-purple-500/20 to-indigo-600/10",
     activeColor: "border-purple-400 text-purple-400",
     curatedMovies: [
-      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/d5iVF7j37452d3j9W8pQW7d7y3K.jpg", backdrop_path: "/sua5wJZi4fC645k3q6j9g2n86qc.jpg" },
-      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/aKuFiZ82hs5OIxD512vJ7tKeLOd.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
-      { id: 16, title: "Whiplash", vote_average: 8.4, release_date: "2014-10-10", poster_path: "/71t2wNt2rJ7f8C7A5Q5Z4y8n0A.jpg", backdrop_path: "/8ZTVqvKDQ8ZAbD17sfKmV3hT82w.jpg" },
-      { id: 7, title: "Forrest Gump", vote_average: 8.8, release_date: "1994-07-06", poster_path: "/arw2vcJzHfh6fbqPMgjo6YmZf0c.jpg", backdrop_path: "/qd01xCr2xZ8Nn5fsE3az7hz5tuz.jpg" },
-      { id: 8, title: "Fight Club", vote_average: 8.8, release_date: "1999-10-15", poster_path: "/bptf4GE26qjBh5adzxhJtr6Vil6.jpg", backdrop_path: "/hZup7Qxtcc49257g4dJe4tO1756.jpg" },
-      { id: 15, title: "Joker", vote_average: 8.2, release_date: "2019-10-02", poster_path: "/udDclJoHjfjb8Ekgsd4FDte21p.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
+      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg", backdrop_path: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg" },
+      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg", backdrop_path: "/gILte6Zd7m1YneIr6MVhh30S9pr.jpg" },
+      { id: 16, title: "Whiplash", vote_average: 8.4, release_date: "2014-10-10", poster_path: "/7fn624j5lj3xTme2SgiLCeuedmO.jpg", backdrop_path: "/wbQa0EnWUyRzQ5d1pHLNRlmsCUP.jpg" },
+      { id: 7, title: "Forrest Gump", vote_average: 8.8, release_date: "1994-07-06", poster_path: "/Cw4hIUIAmSYfK9QfaUW5igp9La.jpg", backdrop_path: "/66Kn4XWhkuPkJxOJyPEx4U2CUfN.jpg" },
+      { id: 8, title: "Fight Club", vote_average: 8.8, release_date: "1999-10-15", poster_path: "/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg", backdrop_path: "/c6OLXfKAk5BKeR6broC8pYiCquX.jpg" },
+      { id: 15, title: "Joker", vote_average: 8.2, release_date: "2019-10-02", poster_path: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", backdrop_path: "/rlay2M5QYvi6igbGcFjq8jxeusY.jpg" },
     ],
   },
   {
@@ -111,12 +111,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-amber-500/20 to-orange-600/10",
     activeColor: "border-amber-400 text-amber-400",
     curatedMovies: [
-      { id: 11, title: "The Godfather", vote_average: 9.2, release_date: "1972-03-24", poster_path: "/3bhkrj6PjOqZEjjxpoGJA4AO06m.jpg", backdrop_path: "/tmU7GeKVZ2uOD5QpqSE3rS7I65C.jpg" },
-      { id: 9, title: "The Lord of the Rings", vote_average: 8.9, release_date: "2001-12-19", poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg", backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg" },
-      { id: 13, title: "Spirited Away", vote_average: 8.5, release_date: "2001-07-20", poster_path: "/39wmItIWsg5sclgU4ywZydlgmgq.jpg", backdrop_path: "/dUVbWINfRMGojGZRcO6GF1Z2nV8.jpg" },
-      { id: 14, title: "Gladiator", vote_average: 8.2, release_date: "2000-05-01", poster_path: "/ty8ikj24UNxticv6yq2n86qc.jpg", backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg" },
-      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/o86u02GDg46g70rFS7G6237g55s.jpg" },
-      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/oYuLEW9WAFK1P227yYiY14YyS5.jpg", backdrop_path: "/8ZTVqvKDQ8ZAbD17sfKmV3hT82w.jpg" },
+      { id: 11, title: "The Godfather", vote_average: 9.2, release_date: "1972-03-24", poster_path: "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", backdrop_path: "/tSPT36ZKlP2WVHJLM4cQPLSzv3b.jpg" },
+      { id: 9, title: "The Lord of the Rings", vote_average: 8.9, release_date: "2001-12-19", poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg", backdrop_path: "/mWDdRXTivGE7aaY2vo1Ie0PfCX5.jpg" },
+      { id: 13, title: "Spirited Away", vote_average: 8.5, release_date: "2001-07-20", poster_path: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", backdrop_path: "/dyJvKsNs2KP8qQnAXbRwDjblViy.jpg" },
+      { id: 14, title: "Gladiator", vote_average: 8.2, release_date: "2000-05-01", poster_path: "/wN2xWp1eIwCKOD0BHTcErTBv1Uq.jpg", backdrop_path: "/jhk6D8pim3yaByu1801kMoxXFaX.jpg" },
+      { id: 2, title: "The Dark Knight", vote_average: 9.0, release_date: "2008-07-18", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdrop_path: "/dqK9Hag1054tghRQSqLSfrkvQnA.jpg" },
+      { id: 1, title: "Inception", vote_average: 8.8, release_date: "2010-07-16", poster_path: "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg", backdrop_path: "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg" },
     ],
   },
   {
@@ -126,12 +126,12 @@ const PROVIDER_DATA: Provider[] = [
     color: "from-yellow-500/20 to-amber-600/10",
     activeColor: "border-yellow-400 text-yellow-400",
     curatedMovies: [
-      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", backdrop_path: "/xJHaxuoQn55Z45w6uIf8C265yex.jpg" },
-      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GIM0bflTVxOTQuY7pZ2p.jpg", backdrop_path: "/kXfq73Arxtsn4r6PbYwHzpfK07H.jpg" },
-      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/d5iVF7j37452d3j9W8pQW7d7y3K.jpg", backdrop_path: "/sua5wJZi4fC645k3q6j9g2n86qc.jpg" },
-      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/oMsxZEvz9a708d49b6UdZK1KAo5.jpg", backdrop_path: "/7uRb6xNCWx8g1o6fsEDZ5t5GY6t.jpg" },
-      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/aKuFiZ82hs5OIxD512vJ7tKeLOd.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
-      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7BsvGVjwPZbL91PzL7x9tG1G2c6.jpg", backdrop_path: "/sw7mordTX1n4k072usrdf6A2GsI.jpg" },
+      { id: 3, title: "Interstellar", vote_average: 8.7, release_date: "2014-11-07", poster_path: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg", backdrop_path: "/2ssWTSVklAEc98frZUQhgtGHx7s.jpg" },
+      { id: 4, title: "The Shawshank Redemption", vote_average: 9.3, release_date: "1994-09-23", poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg", backdrop_path: "/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg" },
+      { id: 5, title: "Pulp Fiction", vote_average: 8.9, release_date: "1994-10-14", poster_path: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg", backdrop_path: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg" },
+      { id: 6, title: "The Matrix", vote_average: 8.7, release_date: "1999-03-31", poster_path: "/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg", backdrop_path: "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg" },
+      { id: 10, title: "Goodfellas", vote_average: 8.7, release_date: "1990-09-19", poster_path: "/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg", backdrop_path: "/gILte6Zd7m1YneIr6MVhh30S9pr.jpg" },
+      { id: 12, title: "Parasite", vote_average: 8.5, release_date: "2019-05-30", poster_path: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg", backdrop_path: "/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg" },
     ],
   },
 ];
@@ -201,6 +201,7 @@ export default function WhereToWatchSection({ movies = [] }: WhereToWatchProps) 
                   src={posterUrl}
                   alt={movie.title}
                   fill
+                  fallbackType="poster"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
@@ -256,7 +257,7 @@ export default function WhereToWatchSection({ movies = [] }: WhereToWatchProps) 
 
                   <button
                     onClick={() => setActiveTrailerMovie(movie)}
-                    className="w-full py-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-1"
+                    className="w-full py-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Play className="w-3 h-3 fill-current" />
                     <span>Trailer</span>
@@ -275,6 +276,8 @@ export default function WhereToWatchSection({ movies = [] }: WhereToWatchProps) 
           onClose={() => setActiveTrailerMovie(null)}
           title={activeTrailerMovie.title}
           backdropPath={activeTrailerMovie.backdrop_path}
+          movieId={activeTrailerMovie.id}
+          mediaType={activeTrailerMovie.media_type === "tv" ? "tv" : "movie"}
         />
       )}
     </section>

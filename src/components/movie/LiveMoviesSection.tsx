@@ -90,6 +90,8 @@ export default function LiveMoviesSection({
           onClose={() => setActiveTrailerMovie(null)}
           title={activeTrailerMovie.title}
           backdropPath={activeTrailerMovie.backdrop_path}
+          movieId={activeTrailerMovie.id}
+          mediaType={activeTrailerMovie.media_type === "tv" ? "tv" : "movie"}
         />
       )}
     </div>

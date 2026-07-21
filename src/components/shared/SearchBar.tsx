@@ -8,7 +8,9 @@ import { Search as SearchIcon, Film, Tv, User } from 'lucide-react';
 
 // Using the TMDB types from your types file for the search results
 import { TMDBMovie, TMDBPerson } from '@/types';
-import { searchWithElastic } from '@/lib/elasticsearch';
+import { searchWithElastic, searchWithElasticSync } from '@/lib/elasticsearch';
+import { getImageUrl } from '@/lib/tmdb';
+import SafeImage from '@/components/shared/SafeImage';
 
 type SearchResultItem = (TMDBMovie | TMDBPerson) & { media_type: 'movie' | 'tv' | 'person' };
 
@@ -19,53 +21,52 @@ export default function SearchBar() {
   const router = useRouter();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Debounce search input
+  // Instant 0ms response on every keystroke
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    if (query.trim().length > 0) {
+      // 1. Instant 0ms Sync Local Result
+      const instantData = searchWithElasticSync(query.trim());
+      const instantNormalized = (instantData.results || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        name: item.title,
+        media_type: item.media_type,
+        poster_path: item.poster_path || null,
+        profile_path: item.poster_path || null,
+        vote_average: item.rating || 0,
+        release_date: item.release_date || '',
+        overview: item.overview || '',
+        score: item.score,
+        highlightedTitle: item.highlightedTitle,
+        highlightedOverview: item.highlightedOverview
+      })) as unknown as SearchResultItem[];
 
-    if (query.length > 0) {
-      const timer = setTimeout(async () => {
+      setResults(instantNormalized);
+      setIsOpen(true);
+
+      // 2. Asynchronous background network supplement
+      let active = true;
+      async function fetchNetworkResults() {
         try {
-          const isStatic = window.location.hostname.includes("github.io") ||
-                           window.location.port === "8000" ||
-                           process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
-
-          if (isStatic) {
-            const searchData = await searchWithElastic(query.trim());
-            const normalized = (searchData.results || []).map((item: any) => ({
-              id: item.id,
-              title: item.title,
-              name: item.title,
-              media_type: item.media_type,
-              poster_path: item.poster_path || null,
-              profile_path: item.poster_path || null,
-              vote_average: item.rating || 0,
-              release_date: item.release_date || '',
-              overview: item.overview || '',
-              score: item.score,
-              highlightedTitle: item.highlightedTitle,
-              highlightedOverview: item.highlightedOverview
-            })) as unknown as SearchResultItem[];
-            setResults(normalized);
-            setIsOpen(true);
-          } else {
-            const response = await fetch(`/api/search?query=${query}`, { signal });
-            if (!response.ok) return;
+          const response = await fetch(`/api/search?query=${encodeURIComponent(query.trim())}`);
+          if (response.ok) {
             const data = await response.json();
-            setResults(data.results || []);
-            setIsOpen(true);
+            if (active && data.results && data.results.length > 0) {
+              const combinedMap = new Map<number, any>();
+              instantNormalized.forEach(item => combinedMap.set(item.id, item));
+              data.results.forEach((item: any) => combinedMap.set(item.id, item));
+              setResults(Array.from(combinedMap.values()));
+            }
           }
-        } catch (error) {
-          if ((error as Error).name !== 'AbortError') {
-            console.error('Search failed:', error);
-          }
+        } catch {
+          // Keep instant sync results
         }
-      }, 150); // 150ms debounce delay
+      }
+
+      fetchNetworkResults();
 
       return () => {
-        clearTimeout(timer);
-        controller.abort();
+        active = false;
       };
     } else {
       setResults([]);
@@ -128,18 +129,18 @@ export default function SearchBar() {
           {results.slice(0, 10).map((item) => (
             <li key={item.id} className="border-b border-gray-700 last:border-b-0">
               <Link href={getResultLink(item)} onClick={handleResultClick} className="flex items-center p-3 hover:bg-gray-700 transition-colors duration-150">
-                <div className="w-10 h-14 bg-gray-700 rounded-md flex-shrink-0 flex items-center justify-center">
-                  {((item as any).poster_path || (item as any).profile_path) ? (
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w92${(item as any).poster_path || (item as any).profile_path}`}
-                      alt={getResultTitle(item) || 'Movie Poster'}
-                      width={40}
-                      height={56}
-                      className="rounded-md object-cover"
-                    />
-                  ) : (
-                    getResultIcon(item.media_type)
-                  )}
+                <div className="w-10 h-14 bg-gray-700 rounded-md flex-shrink-0 relative overflow-hidden flex items-center justify-center">
+                  <SafeImage
+                    src={getImageUrl(
+                      (item as any).poster_path || (item as any).profile_path,
+                      item.media_type === "person" ? "profile" : "poster",
+                      "sm"
+                    )}
+                    alt={getResultTitle(item) || 'Movie Poster'}
+                    fallbackType={item.media_type === "person" ? "profile" : "poster"}
+                    fill
+                    className="rounded-md object-cover"
+                  />
                 </div>
                 <div className="ml-3">
                   <p className="font-semibold text-sm text-[var(--text-primary)]">{getResultTitle(item)}</p>

@@ -14,10 +14,12 @@ import {
   getOfficialTrailer,
 } from "@/lib/tmdb";
 import MovieCard from "@/components/movie/MovieCard";
-import MediaActions from "@/components/movie/MediaActions";
+import DetailHeroActions from "@/components/movie/DetailHeroActions";
+import DetailTrailerSection from "@/components/movie/DetailTrailerSection";
 import ReviewForm from "@/components/movie/ReviewForm";
 import AIReviewSummary from "@/components/movie/AIReviewSummary";
 import AISimilarContent from "@/components/movie/AISimilarContent";
+import RottenTomatoesSection from "@/components/movie/RottenTomatoesSection";
 
 interface MoviePageProps {
   params: Promise<{ id: string }>;
@@ -27,7 +29,7 @@ export async function generateStaticParams() {
   return Array.from({ length: 115 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
   const resolvedParams = await params;
@@ -47,7 +49,22 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
 
 export default async function MovieDetailsPage({ params }: MoviePageProps) {
   const resolvedParams = await params;
-  const movieId = parseInt(resolvedParams.id);
+  const movieId = parseInt(resolvedParams.id, 10);
+
+  if (isNaN(movieId) || movieId <= 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="text-5xl">🎬</div>
+        <h3 className="text-xl font-bold">Invalid Movie ID</h3>
+        <p className="text-[var(--text-secondary)] max-w-md">
+          The movie you are looking for does not exist or has an invalid ID.
+        </p>
+        <Link href="/" className="px-4 py-2 rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)] transition-colors">
+          Back to Browse
+        </Link>
+      </div>
+    );
+  }
 
   let movie;
   let credits;
@@ -185,11 +202,12 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
             </div>
 
             {/* Ratings & Call to actions */}
-            <MediaActions
+            <DetailHeroActions
               media={{
                 id: movie.id,
                 title: movie.title || movie.name || "Untitled",
                 poster_path: movie.poster_path,
+                backdrop_path: movie.backdrop_path,
                 vote_average: movie.vote_average,
                 release_date: movie.release_date || movie.first_air_date || "",
                 media_type: "movie",
@@ -215,6 +233,23 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
             )}
           </div>
         </div>
+
+        {/* Embedded Trailer Video Box */}
+        <DetailTrailerSection
+          id={movie.id}
+          title={movie.title || "Untitled"}
+          backdropPath={movie.backdrop_path}
+          posterPath={movie.poster_path}
+          mediaType="movie"
+        />
+
+        {/* Rotten Tomatoes Section */}
+        <RottenTomatoesSection
+          mediaId={movie.id}
+          title={movie.title || "Untitled"}
+          voteAverage={movie.vote_average || 7.0}
+          releaseDate={movie.release_date}
+        />
 
         {/* Watch Providers Section */}
         {USProviders && (
@@ -323,21 +358,6 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
                   </Link>
                 );
               })}
-            </div>
-          </section>
-        )}
-
-        {/* Video / Trailer Embed */}
-        {trailer && (
-          <section className="space-y-5">
-            <h3 className="text-xl font-bold text-white">🎥 Official Trailer</h3>
-            <div className="aspect-video w-full rounded-2xl overflow-hidden border border-white/5 shadow-2xl relative bg-[#0a0e17]">
-              <iframe
-                src={`https://www.youtube.com/embed/${trailer.key}`}
-                title={movie.title || "Trailer"}
-                allowFullScreen
-                className="absolute inset-0 w-full h-full border-0"
-              />
             </div>
           </section>
         )}

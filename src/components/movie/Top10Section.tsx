@@ -265,6 +265,8 @@ export default function Top10Section({ movies }: Top10SectionProps) {
           onClose={() => setActiveTrailerMovie(null)}
           title={activeTrailerMovie.title}
           backdropPath={activeTrailerMovie.backdrop_path}
+          movieId={activeTrailerMovie.id}
+          mediaType={activeTrailerMovie.media_type === "tv" ? "tv" : "movie"}
         />
       )}
     </section>

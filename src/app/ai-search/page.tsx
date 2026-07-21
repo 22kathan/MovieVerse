@@ -46,19 +46,20 @@ export default function AISearchPage() {
   const [searched, setSearched] = useState(false);
   const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
   const [thinkingPhase, setThinkingPhase] = useState("");
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const isPremium = session?.user && ((session.user as any).isPremium || (session.user as any).role === "ADMIN");
 
-  // Load search history from localStorage
-  useEffect(() => {
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const saved = localStorage.getItem("movieverse_ai_history");
-      if (saved) setSearchHistory(JSON.parse(saved));
-    } catch { /* ignore */ }
-  }, []);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Streaming "thinking" phases
   const thinkingPhases = [

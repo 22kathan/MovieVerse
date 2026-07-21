@@ -5,7 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { searchWithElastic } from "@/lib/elasticsearch";
+import { searchWithElastic, searchWithElasticSync } from "@/lib/elasticsearch";
+import { getImageUrl } from "@/lib/tmdb";
+import SafeImage from "@/components/shared/SafeImage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -53,6 +55,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [correctedQuery, setCorrectedQuery] = useState<string | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -117,51 +120,55 @@ export default function Header() {
   useEffect(() => {
     if (searchQuery.trim().length < 1) {
       setSuggestions([]);
+      setCorrectedQuery(undefined);
       return;
     }
 
-    const delayDebounce = setTimeout(async () => {
-      setLoadingSuggestions(true);
-      try {
-        const isStatic = window.location.hostname.includes("github.io") ||
-                         window.location.port === "8000" ||
-                         process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+    // 1. Instant 0ms Zero-Latency Local Index Match on every keystroke (with fuzzy/typo tolerance)
+    const instantResults = searchWithElasticSync(searchQuery.trim(), "all");
+    setCorrectedQuery(instantResults.correctedQuery);
+    const instantMapped = (instantResults.results || [])
+      .slice(0, 6)
+      .map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        highlightedTitle: item.highlightedTitle || item.title,
+        media_type: item.media_type,
+        release_year: item.release_year || null,
+        image_path: item.poster_path || null,
+        rating: item.rating || null,
+        score: item.score,
+      }));
 
-        if (isStatic) {
-          const response = await searchWithElastic(searchQuery.trim(), "all", 1);
-          const mappedSuggestions = (response.results || [])
-            .slice(0, 6)
-            .map((item: any) => {
-              return {
-                id: item.id,
-                title: item.title,
-                highlightedTitle: item.highlightedTitle || item.title,
-                media_type: item.media_type,
-                release_year: item.release_year || null,
-                image_path: item.poster_path || null,
-                rating: item.rating || null,
-                score: item.score
-              };
-            });
-          setSuggestions(mappedSuggestions);
-        } else {
-          const res = await fetch(
-            `/api/search/suggestions?q=${encodeURIComponent(searchQuery.trim())}`
-          );
+    setSuggestions(instantMapped);
+
+    // 2. Asynchronously supplement suggestions from API in the background
+    //    Use corrected query for network fetch if spelling was fixed
+    let active = true;
+    const networkQuery = instantResults.correctedQuery || searchQuery.trim();
+    async function fetchSupplementarySuggestions() {
+      try {
+        const res = await fetch(
+          `/api/search/suggestions?q=${encodeURIComponent(networkQuery)}`
+        );
+        if (res.ok) {
           const data = await res.json();
-          if (data.suggestions) {
-            setSuggestions(data.suggestions);
+          if (active && data.suggestions && data.suggestions.length > 0) {
+            const combinedMap = new Map<string, any>();
+            instantMapped.forEach(item => combinedMap.set(`${item.media_type}-${item.id}`, item));
+            data.suggestions.forEach((item: any) => combinedMap.set(`${item.media_type}-${item.id}`, item));
+            setSuggestions(Array.from(combinedMap.values()).slice(0, 8));
           }
         }
       } catch (err) {
-        console.error("Error fetching suggestions", err);
-      } finally {
-        setLoadingSuggestions(false);
+        // Fallback silently to instant sync results
       }
-    }, 150);
+    }
+
+    fetchSupplementarySuggestions();
 
     return () => {
-      clearTimeout(delayDebounce);
+      active = false;
     };
   }, [searchQuery]);
 
@@ -294,6 +301,25 @@ export default function Header() {
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-surface)] border border-[var(--border-primary)] rounded-xl shadow-[var(--shadow-xl)] overflow-hidden z-50 divide-y divide-[var(--border-primary)]/50"
               >
+                {/* "Did you mean..." spelling correction banner */}
+                {correctedQuery && (
+                  <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="text-[var(--text-secondary)]">
+                      Showing results for{" "}
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSearchQuery(correctedQuery);
+                        }}
+                        className="text-amber-400 font-semibold hover:underline cursor-pointer"
+                      >
+                        &ldquo;{correctedQuery}&rdquo;
+                      </button>
+                    </span>
+                  </div>
+                )}
+
                 {suggestions.length > 0 ? (
                   <div className="py-1">
                     {suggestions.map((item) => (
@@ -307,23 +333,14 @@ export default function Header() {
                       >
                         {/* Thumbnail */}
                         <div className="w-9 h-12 bg-[var(--bg-tertiary)] rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center border border-[var(--border-primary)]/50 text-base shadow-sm">
-                          {item.image_path ? (
-                            <Image
-                              src={`https://image.tmdb.org/t/p/w92${item.image_path}`}
-                              alt={item.title}
-                              fill
-                              sizes="36px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <span>
-                              {item.media_type === "movie"
-                                ? "🎬"
-                                : item.media_type === "tv"
-                                ? "📺"
-                                : "👤"}
-                            </span>
-                          )}
+                          <SafeImage
+                            src={getImageUrl(item.image_path, item.media_type === "person" ? "profile" : "poster", "sm")}
+                            alt={item.title}
+                            fallbackType={item.media_type === "person" ? "profile" : "poster"}
+                            fill
+                            sizes="36px"
+                            className="object-cover"
+                          />
                         </div>
 
                         {/* Title and details */}

@@ -8,6 +8,8 @@ import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { searchMulti, getImageUrl } from "@/lib/tmdb";
 import { searchWithElastic } from "@/lib/elasticsearch";
+import TrailerModal from "@/components/movie/TrailerModal";
+import { Play, Star, ExternalLink } from "lucide-react";
 
 export default function SearchClient() {
   const searchParams = useSearchParams();
@@ -17,6 +19,7 @@ export default function SearchClient() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "elastic">("grid");
+  const [activeTrailerMovie, setActiveTrailerMovie] = useState<any | null>(null);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -118,7 +121,7 @@ export default function SearchClient() {
           <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-primary)] self-start sm:self-center shrink-0">
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 viewMode === "grid"
                   ? "bg-[var(--brand-primary)] text-white shadow-sm"
                   : "text-[var(--text-secondary)] hover:text-white"
@@ -128,9 +131,9 @@ export default function SearchClient() {
             </button>
             <button
               onClick={() => setViewMode("elastic")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === "elastic"
-                  ? "bg-amber-600/90 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold shadow-sm"
                   : "text-[var(--text-secondary)] hover:text-white"
               }`}
             >
@@ -202,7 +205,7 @@ export default function SearchClient() {
           <h3 className="text-lg font-bold text-white border-b border-[var(--border-primary)] pb-2 flex items-center gap-2">
             <span>🎬</span> Movies & TV Shows
             {viewMode === "elastic" && (
-              <span className="text-[10px] font-extrabold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 uppercase tracking-widest ml-2">
+              <span className="text-[10px] font-extrabold bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30 uppercase tracking-widest ml-2">
                 Elasticsearch Ranked
               </span>
             )}
@@ -213,44 +216,66 @@ export default function SearchClient() {
           ) : (
             <div className="space-y-3 pt-2">
               {movieAndTvResults.map((movie) => {
-                const posterUrl = movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w185${movie.poster_path}`
-                  : null;
+                const posterUrl = getImageUrl(movie.poster_path, "poster", "md");
                 const path = movie.media_type === "tv" ? "tv" : "movies";
                 return (
-                  <div key={movie.id} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] hover:border-[var(--border-secondary)] transition-all flex gap-4 relative overflow-hidden group">
+                  <div key={movie.id} className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-primary)] hover:border-amber-500/40 transition-all flex flex-col sm:flex-row gap-4 relative overflow-hidden group shadow-lg">
                     {/* Score badge */}
-                    <div className="absolute top-3 right-3 text-[10px] font-black bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg">
-                      SCORE: {movie.score.toFixed(1)}
+                    <div className="absolute top-3 right-3 text-[10px] font-black bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg z-10">
+                      RELEVANCE SCORE: {movie.score.toFixed(1)}
                     </div>
                     
                     {/* Poster */}
-                    <Link href={`/${path}/${movie.id}`} className="w-14 sm:w-16 shrink-0 aspect-[2/3] relative rounded-lg overflow-hidden border border-white/5 bg-black/25">
+                    <Link href={`/${path}/${movie.id}`} className="w-20 sm:w-24 shrink-0 aspect-[2/3] relative rounded-xl overflow-hidden border border-white/10 bg-black/40">
                       <SafeImage
                         src={posterUrl}
                         alt={movie.title}
                         fallbackType="poster"
                         fill
-                        className="group-hover:scale-105 transition-transform"
-                        sizes="100px"
+                        className="group-hover:scale-105 transition-transform duration-300"
+                        sizes="120px"
                       />
                     </Link>
                     
                     {/* Info */}
-                    <div className="flex-1 min-w-0 pr-20 space-y-1.5">
-                      <div>
-                        <Link href={`/${path}/${movie.id}`} className="text-sm sm:text-base font-extrabold text-white group-hover:text-[var(--brand-primary-light)] transition-colors inline-block" dangerouslySetInnerHTML={{ __html: movie.highlightedTitle || movie.title }} />
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] sm:text-xs text-[var(--text-secondary)]">
-                          <span className="capitalize font-bold text-[var(--brand-primary-light)]">
-                            {movie.media_type === "tv" ? "TV Show" : "Movie"}
+                    <div className="flex-1 min-w-0 pr-0 sm:pr-24 space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <Link href={`/${path}/${movie.id}`} className="text-base sm:text-lg font-extrabold text-white group-hover:text-amber-400 transition-colors inline-block leading-snug" dangerouslySetInnerHTML={{ __html: movie.highlightedTitle || movie.title }} />
+                        
+                        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                          <span className="capitalize px-2 py-0.5 rounded bg-white/10 text-white font-bold text-[10px]">
+                            {movie.media_type === "tv" ? "TV Series" : "Movie"}
                           </span>
                           {movie.release_date && <span>• {new Date(movie.release_date).getFullYear()}</span>}
-                          {movie.vote_average > 0 && <span>• ⭐ {movie.vote_average.toFixed(1)}</span>}
+                          {movie.vote_average > 0 && (
+                            <span className="flex items-center gap-1 font-bold text-white">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                              {movie.vote_average.toFixed(1)}
+                            </span>
+                          )}
                         </div>
+
+                        {/* Highlighted overview snippet */}
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3 pt-1" dangerouslySetInnerHTML={{ __html: movie.highlightedOverview || movie.overview || "Explore this title on MovieVerse." }} />
                       </div>
-                      
-                      {/* Highlighted overview snippet */}
-                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-2" dangerouslySetInnerHTML={{ __html: movie.highlightedOverview || movie.overview || "No description available." }} />
+
+                      {/* Actions */}
+                      <div className="pt-2 flex items-center gap-2">
+                        <button
+                          onClick={() => setActiveTrailerMovie(movie)}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-black text-black" />
+                          <span>Trailer</span>
+                        </button>
+                        <Link
+                          href={`/${path}/${movie.id}`}
+                          className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/10"
+                        >
+                          <span>Full Details</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );
@@ -258,6 +283,18 @@ export default function SearchClient() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Trailer Modal Lightbox */}
+      {activeTrailerMovie && (
+        <TrailerModal
+          isOpen={!!activeTrailerMovie}
+          onClose={() => setActiveTrailerMovie(null)}
+          title={activeTrailerMovie.title}
+          backdropPath={activeTrailerMovie.backdrop_path}
+          movieId={activeTrailerMovie.id}
+          mediaType={activeTrailerMovie.media_type === "tv" ? "tv" : "movie"}
+        />
       )}
     </div>
   );

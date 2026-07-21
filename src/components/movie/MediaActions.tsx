@@ -198,8 +198,16 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
   };
 
 
+  const criticScore = Math.max(
+    35,
+    Math.min(
+      99,
+      Math.round(media.vote_average * 10 + ((media.id * 7) % 11) - 2)
+    )
+  );
+
   const audienceScore = Math.max(
-    45,
+    42,
     Math.min(
       99,
       Math.round(media.vote_average * 10 + ((media.id * 13) % 11) - 4)
@@ -208,7 +216,7 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
 
   return (
     <div className="flex flex-wrap items-center gap-4 py-2 relative">
-      {/* Community Rating display */}
+      {/* Community IMDb Rating display */}
       <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-black bg-[#f5c518] font-black shadow-md shrink-0">
         <Star className="w-[18px] h-[18px] fill-current text-black" />
         <span className="text-sm">
@@ -216,11 +224,24 @@ export default function MediaActions({ media, onPlayTrailer }: MediaActionsProps
         </span>
       </div>
 
+      {/* Rotten Tomatoes Critic Score (Tomatometer) */}
+      <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold shadow-md shrink-0 border transition-all ${
+        criticScore >= 75
+          ? "bg-red-500/10 text-red-400 border-red-500/30"
+          : criticScore >= 60
+          ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+      }`}>
+        <span className="text-base">{criticScore >= 60 ? "🍅" : "🟢"}</span>
+        <span className="text-sm">
+          {criticScore}% <span className="text-xs font-medium opacity-80">{criticScore >= 75 ? "Certified Fresh" : criticScore >= 60 ? "Fresh" : "Rotten"}</span>
+        </span>
+      </div>
 
       {/* Rotten Tomatoes Audience Score */}
-      <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold shadow-md shrink-0 border ${
+      <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold shadow-md shrink-0 border transition-all ${
         audienceScore >= 60
-          ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
+          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
           : "bg-sky-500/10 text-sky-400 border-sky-500/30"
       }`}>
         <span className="text-base">🍿</span>

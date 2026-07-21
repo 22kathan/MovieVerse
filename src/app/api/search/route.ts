@@ -1,12 +1,9 @@
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
 import { searchWithElastic } from '@/lib/elasticsearch';
 
 /**
  * Handles multi-search queries using the Elasticsearch-like helper.
- *
- * @param {Request} request - The incoming request object, expected to have a `query` search parameter.
- * @returns {Promise<NextResponse>} A promise that resolves to the search results or an error response.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,7 +11,6 @@ export async function GET(request: Request) {
   const mediaType = (searchParams.get('type') || 'all') as 'movie' | 'tv' | 'all';
   const page = parseInt(searchParams.get('page') || '1');
 
-  // Validate that a search query was provided
   if (!query) {
     return NextResponse.json({ error: 'Search query is required.' }, { status: 400 });
   }

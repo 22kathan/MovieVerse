@@ -13,9 +13,11 @@ import {
   getSimilarTVShows,
 } from "@/lib/tmdb";
 import MovieCard from "@/components/movie/MovieCard";
-import MediaActions from "@/components/movie/MediaActions";
+import DetailHeroActions from "@/components/movie/DetailHeroActions";
+import DetailTrailerSection from "@/components/movie/DetailTrailerSection";
 import ReviewForm from "@/components/movie/ReviewForm";
 import AIReviewSummary from "@/components/movie/AIReviewSummary";
+import RottenTomatoesSection from "@/components/movie/RottenTomatoesSection";
 
 interface TVPageProps {
   params: Promise<{ id: string }>;
@@ -25,7 +27,7 @@ export async function generateStaticParams() {
   return Array.from({ length: 25 }, (_, i) => ({ id: (i + 1).toString() }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: TVPageProps): Promise<Metadata> {
   const resolvedParams = await params;
@@ -45,7 +47,22 @@ export async function generateMetadata({ params }: TVPageProps): Promise<Metadat
 
 export default async function TVShowDetailsPage({ params }: TVPageProps) {
   const resolvedParams = await params;
-  const tvId = parseInt(resolvedParams.id);
+  const tvId = parseInt(resolvedParams.id, 10);
+
+  if (isNaN(tvId) || tvId <= 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="text-5xl">📺</div>
+        <h3 className="text-xl font-bold">Invalid TV Show ID</h3>
+        <p className="text-[var(--text-secondary)] max-w-md">
+          The TV show you are looking for does not exist or has an invalid ID.
+        </p>
+        <Link href="/" className="px-4 py-2 rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)] transition-colors">
+          Back to Browse
+        </Link>
+      </div>
+    );
+  }
 
   let show;
   let credits;
@@ -176,11 +193,12 @@ export default async function TVShowDetailsPage({ params }: TVPageProps) {
             </div>
 
             {/* Ratings & Call to actions */}
-            <MediaActions
+            <DetailHeroActions
               media={{
                 id: show.id,
                 title: show.name || show.title || "Untitled",
                 poster_path: show.poster_path,
+                backdrop_path: show.backdrop_path,
                 vote_average: show.vote_average,
                 release_date: show.first_air_date || show.release_date || "",
                 media_type: "tv",
@@ -196,6 +214,23 @@ export default async function TVShowDetailsPage({ params }: TVPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Embedded Trailer Video Box */}
+        <DetailTrailerSection
+          id={show.id}
+          title={show.name || "Untitled"}
+          backdropPath={show.backdrop_path}
+          posterPath={show.poster_path}
+          mediaType="tv"
+        />
+
+        {/* Rotten Tomatoes Section */}
+        <RottenTomatoesSection
+          mediaId={show.id}
+          title={show.name || "Untitled"}
+          voteAverage={show.vote_average || 7.0}
+          releaseDate={show.first_air_date}
+        />
 
         {/* Watch Providers Section */}
         {USProviders && (
@@ -269,21 +304,6 @@ export default async function TVShowDetailsPage({ params }: TVPageProps) {
                   </Link>
                 );
               })}
-            </div>
-          </section>
-        )}
-
-        {/* Video / Trailer Embed */}
-        {trailer && (
-          <section className="space-y-5">
-            <h3 className="text-xl font-bold text-white">🎥 Official Trailer</h3>
-            <div className="aspect-video w-full rounded-2xl overflow-hidden border border-white/5 shadow-2xl relative bg-[#0a0e17]">
-              <iframe
-                src={`https://www.youtube.com/embed/${trailer.key}`}
-                title={show.name || "Trailer"}
-                allowFullScreen
-                className="absolute inset-0 w-full h-full border-0"
-              />
             </div>
           </section>
         )}

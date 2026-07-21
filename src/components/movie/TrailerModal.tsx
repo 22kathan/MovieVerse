@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Film, Volume2, Sparkles } from "lucide-react";
+import { X, Film, Volume2, Sparkles, Loader2, ExternalLink, Search } from "lucide-react";
 
 interface TrailerModalProps {
   isOpen: boolean;
@@ -10,15 +11,27 @@ interface TrailerModalProps {
   title: string;
   videoKey?: string | null;
   backdropPath?: string | null;
+  movieId?: number;
+  mediaType?: string;
 }
 
 export default function TrailerModal({
   isOpen,
   onClose,
   title,
-  videoKey,
-  backdropPath,
+  videoKey: initialVideoKey,
+  movieId,
+  mediaType = "movie",
 }: TrailerModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [key, setKey] = useState<string | null>(initialVideoKey || null);
+  const [loading, setLoading] = useState<boolean>(!initialVideoKey && !!movieId);
+  const [noTrailer, setNoTrailer] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -40,23 +53,77 @@ export default function TrailerModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  if (!isOpen) return null;
+  // Fetch official trailer key if not explicitly passed
+  useEffect(() => {
+    if (!isOpen) return;
 
-  // Standard trailer fallback URL if no key provided
-  const embedUrl = videoKey
-    ? `https://www.youtube-nocookie.com/embed/${videoKey}?autoplay=1&modestbranding=1&rel=0`
-    : "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&modestbranding=1&rel=0"; // Fallback preview
+    setNoTrailer(false);
 
-  return (
+    if (initialVideoKey) {
+      setKey(initialVideoKey);
+      setLoading(false);
+      return;
+    }
+
+    if (movieId) {
+      let isMounted = true;
+      setLoading(true);
+
+      fetch(`/api/videos?id=${movieId}&type=${mediaType}&title=${encodeURIComponent(title)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!isMounted) return;
+          if (data?.key) {
+            setKey(data.key);
+            setNoTrailer(false);
+          } else {
+            // No TMDB trailer found for this movie — show "no trailer" state
+            setKey(null);
+            setNoTrailer(true);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load trailer key:", err);
+          if (isMounted) {
+            setKey(null);
+            setNoTrailer(true);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    } else {
+      setKey(null);
+      setNoTrailer(true);
+      setLoading(false);
+    }
+  }, [isOpen, initialVideoKey, movieId, mediaType]);
+
+  if (!isOpen || !mounted) return null;
+
+  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + " official trailer")}`;
+  const embedUrl = key
+    ? `https://www.youtube.com/embed/${key}?autoplay=1&rel=0&enablejsapi=1`
+    : null;
+
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 min-w-full min-h-full">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          className="fixed inset-0 bg-black/90 backdrop-blur-lg"
         />
 
         {/* Modal Dialog */}
@@ -65,12 +132,13 @@ export default function TrailerModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
+          onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-5xl bg-[#12141d] rounded-2xl border border-amber-500/30 overflow-hidden shadow-2xl z-10 space-y-0"
         >
           {/* Header Bar */}
           <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-500/10 via-black to-black border-b border-white/10">
             <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500 text-black font-extrabold text-xs">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500 text-black font-extrabold text-xs shadow-md">
                 IMDb
               </span>
               <div>
@@ -85,8 +153,12 @@ export default function TrailerModal({
             </div>
 
             <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white transition-colors border border-white/10"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-[var(--text-secondary)] hover:text-white transition-colors border border-white/10 cursor-pointer"
               aria-label="Close trailer"
             >
               <X className="w-5 h-5" />
@@ -95,30 +167,79 @@ export default function TrailerModal({
 
           {/* Video Container */}
           <div className="relative w-full aspect-video bg-black flex items-center justify-center">
-            <iframe
-              src={embedUrl}
-              title={`${title} Trailer`}
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            {loading ? (
+              <div className="flex flex-col items-center justify-center gap-3 text-amber-400">
+                <Loader2 className="w-10 h-10 animate-spin" />
+                <p className="text-xs font-semibold text-white/80">Fetching official trailer...</p>
+              </div>
+            ) : embedUrl ? (
+              <iframe
+                key={key}
+                src={embedUrl}
+                title={`${title} Trailer`}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              /* No trailer found — show a clean card directing user to YouTube */
+              <div className="flex flex-col items-center justify-center gap-5 text-center px-8 py-12">
+                <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                  <Film className="w-10 h-10 text-amber-400" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg mb-2">
+                    No Trailer Available on TMDB
+                  </h4>
+                  <p className="text-white/50 text-sm max-w-md">
+                    We couldn&apos;t find an official trailer for <span className="text-amber-400 font-semibold">&ldquo;{title}&rdquo;</span> in TMDB&apos;s database. You can search for it directly on YouTube.
+                  </p>
+                </div>
+                <a
+                  href={youtubeSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.97]"
+                >
+                  <Search className="w-4 h-4" />
+                  Search &ldquo;{title} Official Trailer&rdquo; on YouTube
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Footer Bar */}
-          <div className="flex items-center justify-between px-6 py-3.5 bg-black/60 text-xs text-[var(--text-secondary)]">
+          <div className="flex items-center justify-between px-6 py-3.5 bg-black/60 text-xs text-[var(--text-secondary)] flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Volume2 className="w-4 h-4 text-amber-400" />
-              <span>Use controls inside video to adjust sound & resolution</span>
+              <span>{noTrailer ? "Trailer not available via TMDB" : "Use controls inside video to adjust sound & resolution"}</span>
             </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition-all shadow-md shadow-amber-500/20"
-            >
-              Close Teaser
-            </button>
+            <div className="flex items-center gap-3">
+              <a
+                href={youtubeSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:underline"
+              >
+                <span>Search on YouTube</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+              >
+                Close Teaser
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -678,7 +678,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <p className="text-xs text-[var(--text-secondary)] bg-[var(--bg-tertiary)] p-3 rounded-xl italic leading-relaxed whitespace-pre-line border border-[var(--border-primary)]/40">
-                            "{r.content}"
+                            &ldquo;{r.content}&rdquo;
                           </p>
                         </div>
                       ))}
@@ -724,7 +724,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <p className="text-xs text-[var(--text-secondary)] bg-[var(--bg-tertiary)] p-3 rounded-xl italic leading-relaxed whitespace-pre-line border border-[var(--border-primary)]/40">
-                            "{c.content}"
+                            &ldquo;{c.content}&rdquo;
                           </p>
                         </div>
                       ))}

@@ -695,10 +695,28 @@ function getMockDataForEndpoint(endpoint: string): unknown {
 
   // Videos (Trailers)
   if (cleanEndpoint.endsWith('/videos')) {
+    const parts = cleanEndpoint.split('/');
+    const id = parseInt(parts[2]) || 1;
+
+    const MOVIE_TRAILER_MAP: Record<number, string> = {
+      1: "CPTIgILtna8",  // Inception Official 1080p Trailer
+      2: "EXeTwQWrcwY",  // The Dark Knight
+      3: "zSWdZVtXT7E",  // Interstellar
+      4: "uYPbbksJxIg",  // Oppenheimer
+      5: "Way9Dexny3w",  // Dune: Part Two
+      12: "5xH0HfJHsaY", // Parasite
+      15: "zAGVQLHvwOY", // Joker
+      24: "aWzlQ2N6vxI", // Welcome to the Jungle
+      53: "cqGjhVJWtEg", // Spider-Man: Across the Spider-Verse
+      91: "LKFuXETZ40E", // Moana
+    };
+
+    const trailerKey = MOVIE_TRAILER_MAP[id] || "CPTIgILtna8";
+
     return {
-      id: 1,
+      id,
       results: [
-        { id: "v1", key: "YoHD9OB-YLM", name: "Official Trailer", site: "YouTube", size: 1080, type: "Trailer", official: true }
+        { id: `v_${id}`, key: trailerKey, name: "Official Trailer", site: "YouTube", size: 1080, type: "Trailer", official: true }
       ]
     };
   }
@@ -3169,6 +3187,13 @@ export async function getMovieVideos(
   return tmdbFetch(`/movie/${movieId}/videos`, { language: 'en-US' });
 }
 
+/** Get TV show videos (trailers, teasers, etc.) */
+export async function getTVShowVideos(
+  tvId: number
+): Promise<{ id: number; results: TMDBVideo[] }> {
+  return tmdbFetch(`/tv/${tvId}/videos`, { language: 'en-US' });
+}
+
 /** Get movie images (posters, backdrops) */
 export async function getMovieImages(
   movieId: number
@@ -3438,24 +3463,17 @@ export async function getTVGenres(): Promise<{
 
 /** Build full image URL from TMDB path */
 const POSTER_PRESETS = [
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop", // sci-fi
-  "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop", // cyberpunk
-  "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop", // cosmic fantasy
-  "https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=500&auto=format&fit=crop", // horror
-  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop", // comedy/popcorn
-  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop", // drama/theater
-  "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=500&auto=format&fit=crop", // action/fire
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop", // mystery/detective
-  "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&auto=format&fit=crop", // romance
-  "https://images.unsplash.com/photo-1519074002996-a69e7ac46a42?w=500&auto=format&fit=crop", // fantasy/sword
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop", // Cinema projector
+  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop", // Theater seats
+  "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=500&auto=format&fit=crop", // Film reel
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&auto=format&fit=crop", // Cinema screen
+  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop", // Stage lights
 ];
 
 const BACKDROP_PRESETS = [
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop", // cosmic
-  "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200&auto=format&fit=crop", // neon street
-  "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=1200&auto=format&fit=crop", // fantasy castle
-  "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop", // misty woods
-  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop", // cinema seats
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&auto=format&fit=crop",
 ];
 
 function getDeterministicImage(path: string, type: 'poster' | 'backdrop'): string {
@@ -3477,18 +3495,18 @@ export function getImageUrl(
   type: keyof typeof IMAGE_SIZES = 'poster',
   size: 'sm' | 'md' | 'lg' | 'xl' | 'original' = 'md'
 ): string | null {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
+  if (!path || path.trim() === '') return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   
-  // Detect if this is a local mock path (does not start with a real TMDB alphanumeric slash pattern)
-  const isMockPath = path.includes('_poster') || path.includes('_backdrop') || !/^\/[a-zA-Z0-9]{15,}/.test(path);
-  if (isMockPath) {
-    return getDeterministicImage(path, type === 'backdrop' ? 'backdrop' : 'poster');
+  // Real TMDB image paths start with '/'
+  const isRealTmdbPath = path.startsWith('/') && !path.includes('_poster') && !path.includes('_backdrop');
+  if (isRealTmdbPath) {
+    const sizeMap = IMAGE_SIZES[type] as Record<string, string>;
+    const baseUrl = sizeMap[size] || sizeMap['md'];
+    return `${baseUrl}${path}`;
   }
 
-  const sizeMap = IMAGE_SIZES[type] as Record<string, string>;
-  const baseUrl = sizeMap[size] || sizeMap['md'];
-  return `${baseUrl}${path}`;
+  return getDeterministicImage(path, type === 'backdrop' ? 'backdrop' : 'poster');
 }
 
 /** Get YouTube embed URL from video key */
