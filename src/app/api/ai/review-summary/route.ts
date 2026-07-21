@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — AI Review Summary API
 // POST /api/ai/review-summary

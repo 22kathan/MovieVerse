@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Secured Premium Subscription API
 // POST: Process premium purchase and upgrade user role

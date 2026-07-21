@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — User Registration API
 // POST /api/auth/register

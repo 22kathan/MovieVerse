@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Notifications API
 // GET: Fetch notifications for authenticated user

@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — AI Search API
 // POST /api/ai/search

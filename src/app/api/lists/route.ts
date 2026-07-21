@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Custom Lists API
 // GET: Fetch user's lists

@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Admin Users API
 // GET: Fetch all users (ADMIN only)

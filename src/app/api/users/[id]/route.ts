@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma, isDatabaseOffline } from "@/lib/prisma";
@@ -177,3 +178,5 @@ export async function PUT(
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }
+
+export function generateStaticParams() { return [{ id: "1" }]; }

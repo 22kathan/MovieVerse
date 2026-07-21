@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Single List API
 // GET: Fetch a single list with all items
@@ -141,3 +142,5 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete list" }, { status: 500 });
   }
 }
+
+export function generateStaticParams() { return [{ id: "1" }]; }

@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Admin Moderation API
 // GET: Fetch reviews and comments for moderation (ADMIN only)

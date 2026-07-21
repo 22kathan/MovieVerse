@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Admin Analytics API
 // GET: Fetch analytics summary & trends (ADMIN only)

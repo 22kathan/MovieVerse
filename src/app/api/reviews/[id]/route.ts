@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Single Review API
 // GET: Fetch single review
@@ -158,3 +159,5 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
   }
 }
+
+export function generateStaticParams() { return [{ id: "1" }]; }

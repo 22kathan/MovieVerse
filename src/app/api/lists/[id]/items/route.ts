@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma, isDatabaseOffline } from "@/lib/prisma";
@@ -96,3 +97,5 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to remove item" }, { status: 500 });
   }
 }
+
+export function generateStaticParams() { return [{ id: "1" }]; }

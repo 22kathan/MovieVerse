@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Recommendations API
 // GET: Get personalized recommendations for a user

@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Reviews API
 // GET: Fetch reviews for a movie

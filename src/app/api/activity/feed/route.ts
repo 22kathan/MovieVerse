@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Activity Feed API
 // GET: Get social activity feed for a user

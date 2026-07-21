@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — Watchlist API
 // GET: Fetch user's watchlist

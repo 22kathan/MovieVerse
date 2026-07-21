@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 // ============================================
 // MovieVerse — OTP Generation & Delivery API
 // POST /api/auth/otp/send
