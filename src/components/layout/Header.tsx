@@ -35,8 +35,10 @@ import {
   Trophy,
   Heart,
   Activity,
+  Server,
 } from "lucide-react";
 import NotificationBell from "@/components/shared/NotificationBell";
+import ServerStatusModal from "@/components/layout/ServerStatusModal";
 
 interface SearchSuggestion {
   id: number;
@@ -56,6 +58,7 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [correctedQuery, setCorrectedQuery] = useState<string | undefined>(undefined);
+  const [showServerModal, setShowServerModal] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -404,6 +407,16 @@ export default function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Node.js Server Setup & Instruction Dialog */}
+          <button
+            onClick={() => setShowServerModal(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 font-extrabold text-xs border border-amber-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Node.js Server Setup"
+          >
+            <Server className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Node Server</span>
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -661,6 +674,11 @@ export default function Header() {
           </>
         )}
       </AnimatePresence>
+
+      <ServerStatusModal
+        isOpen={showServerModal}
+        onClose={() => setShowServerModal(false)}
+      />
     </header>
   );
 }
