@@ -112,8 +112,9 @@ export default function TrailerModal({
   if (!isOpen || !mounted) return null;
 
   const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + " official trailer")}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const embedUrl = key
-    ? `https://www.youtube.com/embed/${key}?autoplay=1&rel=0&enablejsapi=1`
+    ? `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(origin)}`
     : null;
 
   const modalContent = (

@@ -229,13 +229,6 @@ export default function MovieCard({
     <div className="animate-fade-in-up" style={{ animationDelay: `${index * 0.06}s` }}>
       <Link
         href={`/${mediaType}/${movie.id}`}
-        onClick={(e) => {
-          // If holding ctrl/cmd or middle click, let browser open link in new tab normally
-          if (e.ctrlKey || e.metaKey || e.button === 1) return;
-          // Open interactive movie details modal directly for instant 0-reload playback
-          e.preventDefault();
-          setShowPreview(true);
-        }}
         className={`group relative block ${variant === "wide" ? "flex gap-4 items-center" : ""}`}
       >
         {/* Poster Container with Spotlight Effect */}
