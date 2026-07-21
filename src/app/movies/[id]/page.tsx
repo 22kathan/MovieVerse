@@ -152,11 +152,11 @@ export default async function MovieDetailsPage({ params }: MoviePageProps) {
       </section>
 
       {/* Main Container */}
-      <div className="px-6 mx-auto -mt-32 md:-mt-48 relative z-10 space-y-12" style={{ maxWidth: "var(--container-max)" }}>
+      <div className="px-4 sm:px-6 mx-auto -mt-32 md:-mt-48 relative z-10 space-y-8 sm:space-y-12" style={{ maxWidth: "var(--container-max)" }}>
         {/* Detail Panel */}
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="flex flex-col md:flex-row gap-6 sm:gap-8 items-center md:items-start text-center md:text-left">
           {/* Left: Poster */}
-          <div className="w-48 sm:w-60 md:w-72 shrink-0 aspect-[2/3] relative rounded-2xl overflow-hidden shadow-[var(--shadow-card)] border border-white/5 bg-[#121824]">
+          <div className="w-44 sm:w-60 md:w-72 shrink-0 aspect-[2/3] relative rounded-2xl overflow-hidden shadow-[var(--shadow-card)] border border-white/10 bg-[#121824] mx-auto md:mx-0">
             <SafeImage
               src={posterUrl}
               alt={movie.title || "Poster"}
