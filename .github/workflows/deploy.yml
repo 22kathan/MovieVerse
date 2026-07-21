@@ -36,7 +36,7 @@ jobs:
       - name: Build with Next.js
         env:
           STATIC_EXPORT: "true"
-          NEXT_PUBLIC_BASE_PATH: "/portfolio"
+          NEXT_PUBLIC_BASE_PATH: "/portfolio/movieverse"
         run: npx next build
 
       - name: Upload artifact
