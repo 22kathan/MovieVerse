@@ -44,7 +44,7 @@ export default function ServerStatusModal({ isOpen, onClose }: ServerStatusModal
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ type: "spring", duration: 0.4 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-xl bg-[#12141d] rounded-2xl border border-amber-500/40 overflow-hidden shadow-2xl z-10 space-y-0 my-auto"
+          className="relative w-[95vw] sm:w-full max-w-xl max-h-[90vh] bg-[#12141d] rounded-2xl border border-amber-500/40 overflow-y-auto shadow-2xl z-10 space-y-0 my-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-500/20 via-black to-black border-b border-white/10">

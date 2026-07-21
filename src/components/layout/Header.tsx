@@ -268,11 +268,11 @@ export default function Header() {
               <input
                 ref={searchRef}
                 type="text"
-                placeholder="Search movies, shows, actors..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
-                className="flex-1 bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                className="flex-1 bg-transparent outline-none text-xs sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] min-w-0"
               />
               {loadingSuggestions && (
                 <Loader2 className="w-3.5 h-3.5 text-[var(--text-tertiary)] animate-spin shrink-0" />
