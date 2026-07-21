@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -126,20 +125,35 @@ export default function ServerStatusModal({ isOpen, onClose }: ServerStatusModal
             </div>
 
             {/* Local Server Link */}
-            <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row items-center gap-3">
-              <a
-                href="http://localhost:2000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs transition-all shadow-lg cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-black text-black" />
-                Open Local Node Server (localhost:2000)
-              </a>
+            <div className="pt-2 border-t border-white/10 flex flex-col space-y-2">
+              <div className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" /> Connect from any device on your local Wi-Fi:
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <a
+                  href="http://localhost:2000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs transition-all shadow-lg cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-black text-black" />
+                  Localhost (localhost:2000)
+                </a>
+
+                <a
+                  href="http://192.168.31.7:2000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold text-xs border border-emerald-500/40 transition-all cursor-pointer"
+                >
+                  <Globe className="w-4 h-4 text-emerald-400" />
+                  Wi-Fi (192.168.31.7:2000)
+                </a>
+              </div>
 
               <button
                 onClick={onClose}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 transition-all cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 transition-all cursor-pointer"
               >
                 Continue Live Web Demo
               </button>

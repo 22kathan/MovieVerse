@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 2000",
+    "dev": "next dev -H 0.0.0.0 -p 2000",
     "build": "next build",
-    "start": "next start -p 2000",
+    "start": "next start -H 0.0.0.0 -p 2000",
     "lint": "eslint",
     "tunnel": "npx localtunnel --port 2000"
   },
