@@ -1,7 +1,8 @@
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieGrid from "@/components/movie/MovieGrid";
 import SectionHeader from "@/components/shared/SectionHeader";
-import LiveMoviesSection from "@/components/movie/LiveMoviesSection";
+import Top10Section from "@/components/movie/Top10Section";
+import WhereToWatchSection from "@/components/movie/WhereToWatchSection";
 import {
   getTrending,
   getPopularMovies,
@@ -130,6 +131,11 @@ export default async function HomePage() {
           </section>
         )}
 
+        {/* IMDb Top 10 Module */}
+        <Top10Section movies={normalize(trendingList)} />
+
+        <div className="section-divider" />
+
         <section>
           <SectionHeader
             title="🔥 Trending Now"
@@ -138,6 +144,11 @@ export default async function HomePage() {
           />
           <MovieGrid movies={normalize(trendingList)} shuffle limit={12} />
         </section>
+
+        <div className="section-divider" />
+
+        {/* IMDb Where to Watch Streaming Filter Tabs */}
+        <WhereToWatchSection movies={normalize(popularList)} />
 
         <div className="section-divider" />
 
@@ -160,14 +171,6 @@ export default async function HomePage() {
           />
           <MovieGrid movies={normalize(topRatedList)} shuffle limit={6} />
         </section>
-
-        <div className="section-divider" />
-
-        {/* Real-time synchronization section for Now Playing & Coming Soon */}
-        <LiveMoviesSection
-          initialNowPlaying={normalize(nowPlayingList)}
-          initialUpcoming={normalize(upcomingList)}
-        />
       </div>
     </div>
   );

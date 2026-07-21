@@ -8,6 +8,7 @@ import { getImageUrl } from "@/lib/tmdb";
 import SafeImage from "@/components/shared/SafeImage";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import TrailerModal from "./TrailerModal";
 import {
   inWatchlist as checkInWatchlist,
   addToWatchlist as localAddToWatchlist,
@@ -47,25 +48,66 @@ function getRatingColor(score: number): string {
 }
 
 function getRatingGlow(score: number): string {
-  if (score >= 8) return "0 0 8px rgba(34, 197, 94, 0.3)";
-  if (score >= 7) return "0 0 8px rgba(132, 204, 22, 0.3)";
-  if (score >= 5) return "0 0 8px rgba(245, 158, 11, 0.3)";
-  return "0 0 8px rgba(239, 68, 68, 0.3)";
+  if (score >= 8) return "0 0 10px rgba(34, 197, 94, 0.35)";
+  if (score >= 7) return "0 0 10px rgba(132, 204, 22, 0.35)";
+  if (score >= 5) return "0 0 10px rgba(245, 158, 11, 0.35)";
+  return "0 0 10px rgba(239, 68, 68, 0.35)";
+}
+
+/** Circular SVG rating indicator */
+function RatingRing({ score }: { score: number }) {
+  const percentage = (score / 10) * 100;
+  const circumference = 2 * Math.PI * 16;
+  const offset = circumference - (percentage / 100) * circumference;
+  const color = getRatingColor(score);
+
+  return (
+    <div
+      className="relative w-10 h-10 flex items-center justify-center"
+      style={{ filter: `drop-shadow(${getRatingGlow(score)})` }}
+    >
+      <svg className="rating-ring w-10 h-10" viewBox="0 0 36 36">
+        <circle
+          cx="18" cy="18" r="16"
+          fill="rgba(0,0,0,0.7)"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth="2.5"
+        />
+        <circle
+          cx="18" cy="18" r="16"
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="ring-progress"
+          style={{ strokeLinecap: "round" }}
+        />
+      </svg>
+      <span
+        className="absolute text-[10px] font-bold"
+        style={{ color }}
+      >
+        {score.toFixed(1)}
+      </span>
+    </div>
+  );
 }
 
 export default function MovieCard({
   movie,
   index = 0,
+  hideDetails = false,
 }: {
   movie: MovieCardData;
   variant?: "default" | "compact" | "wide";
   index?: number;
+  hideDetails?: boolean;
 }) {
   const posterUrl = getImageUrl(movie.poster_path, "poster", "lg");
   const year = movie.release_date
     ? new Date(movie.release_date).getFullYear()
     : "";
-  const rating = movie.vote_average?.toFixed(1);
   const genres = movie.genre_ids
     ?.slice(0, 2)
     .map((id) => GENRE_MAP[id])
@@ -76,6 +118,7 @@ export default function MovieCard({
   const isAuthenticated = status === "authenticated";
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     setIsSaved(checkInWatchlist(movie.id, isAuthenticated));
@@ -178,18 +221,21 @@ export default function MovieCard({
         href={`/${mediaType}/${movie.id}`}
         className="group relative block"
       >
-        {/* Poster Container */}
+        {/* Poster Container with Spotlight Effect */}
         <div
-          className="relative aspect-[2/3] rounded-2xl overflow-hidden transition-all duration-400 group-hover:-translate-y-2"
+          className="relative aspect-[2/3] rounded-2xl overflow-hidden spotlight-hover"
           style={{
             backgroundColor: "var(--bg-surface)",
             boxShadow: "var(--shadow-card)",
+            transition: "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.boxShadow = "var(--shadow-card-hover)";
+            e.currentTarget.style.transform = "translateY(-6px)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.boxShadow = "var(--shadow-card)";
+            e.currentTarget.style.transform = "translateY(0)";
           }}
         >
           {/* Poster Image or Placeholder */}
@@ -198,50 +244,36 @@ export default function MovieCard({
             alt={movie.title}
             fallbackType="poster"
             fill
-            className="transition-transform duration-600 group-hover:scale-[1.06]"
+            className="transition-transform duration-600 group-hover:scale-[1.08]"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
           />
 
           {/* Subtle inner border for depth */}
           <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] pointer-events-none" />
 
-          {/* Gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Cinematic gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
 
-          {/* Rating / Release Status Badges */}
-          {movie.countdownText ? (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-600/90 text-white animate-pulse border border-indigo-400/30 backdrop-blur-md shadow-lg shadow-indigo-500/20 z-10">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-              <span>{movie.countdownText}</span>
-            </div>
-          ) : movie.justReleased ? (
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white border border-emerald-400/30 backdrop-blur-md shadow-lg shadow-emerald-500/30 z-10 animate-bounce">
-              <span>🎉 JUST RELEASED</span>
-            </div>
-          ) : (
-            <div
-              className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold z-10"
-              style={{
-                backgroundColor: "rgba(0,0,0,0.65)",
-                backdropFilter: "blur(12px)",
-                boxShadow: getRatingGlow(movie.vote_average),
-              }}
-            >
-              <Star
-                className="w-3 h-3"
-                style={{ color: getRatingColor(movie.vote_average) }}
-                fill="currentColor"
-              />
-              <span style={{ color: getRatingColor(movie.vote_average) }}>
-                {rating}
+          {/* Rating & Release Status Badges */}
+          <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+            <RatingRing score={movie.vote_average} />
+            {movie.justReleased && (
+              <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-black shadow-md">
+                NEW
               </span>
+            )}
+          </div>
+
+          {movie.countdownText && (
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-extrabold bg-[#f5c518] text-black shadow-md border border-amber-300/40 backdrop-blur-md z-10">
+              <span className="truncate max-w-[90px]">{movie.countdownText}</span>
             </div>
           )}
 
           {/* Media type badge */}
           {movie.media_type === "tv" && (
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 backdrop-blur-sm z-10">
-              TV
+            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 backdrop-blur-md z-10">
+              TV Series
             </div>
           )}
 
@@ -251,28 +283,33 @@ export default function MovieCard({
               e.preventDefault();
               e.stopPropagation();
             }}
-            className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
+            className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10"
           >
             <div className="flex gap-2">
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowTrailer(true);
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-bold transition-all hover:brightness-110 active:scale-95"
                 style={{
-                  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  boxShadow: "0 4px 16px rgba(245, 158, 11, 0.35)",
                 }}
               >
-                <Play className="w-3.5 h-3.5" fill="white" />
-                Trailer
+                <Play className="w-3.5 h-3.5 fill-black text-black" />
+                <span>Trailer</span>
               </button>
               <button
                 onClick={handleWatchlistToggle}
                 disabled={loading}
-                className="p-2.5 rounded-xl text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="p-2.5 rounded-xl text-white transition-all hover:scale-110 active:scale-95 disabled:opacity-50 cursor-pointer"
                 style={{
                   backgroundColor: isSaved ? "#6366f1" : "rgba(255,255,255,0.12)",
                   backdropFilter: "blur(8px)",
-                  border: isSaved ? "1px solid rgba(99, 102, 241, 0.5)" : "1px solid rgba(255,255,255,0.12)",
+                  border: isSaved ? "1px solid rgba(99, 102, 241, 0.5)" : "1px solid rgba(255,255,255,0.15)",
+                  boxShadow: isSaved ? "0 4px 12px rgba(99, 102, 241, 0.3)" : "none",
                 }}
                 aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
               >
@@ -289,23 +326,35 @@ export default function MovieCard({
         </div>
 
         {/* Title & Info */}
-        <div className="mt-3 space-y-1 px-0.5">
-          <h3 className="text-sm font-semibold truncate transition-colors group-hover:text-[var(--brand-primary-light)]"
-            style={{ color: "var(--text-primary)" }}>
-            {movie.title}
-          </h3>
-          <div className="flex items-center gap-2 text-xs"
-            style={{ color: "var(--text-tertiary)" }}>
-            {year && <span>{year}</span>}
-            {genres && genres.length > 0 && (
-              <>
-                <span className="w-1 h-1 rounded-full" style={{ backgroundColor: "var(--text-muted)" }} />
-                <span className="truncate">{genres.join(" · ")}</span>
-              </>
-            )}
+        {!hideDetails && (
+          <div className="mt-3 space-y-1.5 px-0.5">
+            <h3 className="text-sm font-semibold truncate transition-colors duration-300 group-hover:text-[var(--brand-primary-light)]"
+              style={{ color: "var(--text-primary)" }}>
+              {movie.title}
+            </h3>
+            <div className="flex items-center gap-2 text-xs"
+              style={{ color: "var(--text-tertiary)" }}>
+              {year && <span className="font-medium">{year}</span>}
+              {genres && genres.length > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full" style={{ backgroundColor: "var(--text-muted)" }} />
+                  <span className="truncate">{genres.join(" · ")}</span>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </Link>
+
+      {/* Trailer Modal Lightbox */}
+      {showTrailer && (
+        <TrailerModal
+          isOpen={showTrailer}
+          onClose={() => setShowTrailer(false)}
+          title={movie.title}
+          backdropPath={movie.backdrop_path}
+        />
+      )}
     </div>
   );
 }

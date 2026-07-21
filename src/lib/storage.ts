@@ -32,6 +32,7 @@ const STORAGE_KEYS = {
   WATCHLIST: "movieverse_watchlist",
   RATINGS: "movieverse_ratings",
   REVIEWS: "movieverse_reviews",
+  WATCHED: "movieverse_watched",
 };
 
 // Safe access helper
@@ -221,4 +222,32 @@ export function deleteReview(id: string): void {
     reviews.filter((r) => r.id !== id)
   );
   window.dispatchEvent(new Event("reviews-updated"));
+}
+
+// ============================================
+// WATCHED ACTIONS
+// ============================================
+
+export function getWatched(): number[] {
+  return getStorageItem<number[]>(STORAGE_KEYS.WATCHED, []);
+}
+
+export function isWatched(id: number): boolean {
+  const watched = getWatched();
+  return watched.includes(id);
+}
+
+export function toggleWatched(id: number): boolean {
+  const watched = getWatched();
+  let updated: number[];
+  let nowWatched = false;
+  if (watched.includes(id)) {
+    updated = watched.filter((mId) => mId !== id);
+  } else {
+    updated = [...watched, id];
+    nowWatched = true;
+  }
+  setStorageItem(STORAGE_KEYS.WATCHED, updated);
+  window.dispatchEvent(new Event("watched-updated"));
+  return nowWatched;
 }

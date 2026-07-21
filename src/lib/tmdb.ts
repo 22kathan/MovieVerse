@@ -2499,7 +2499,7 @@ const MOCK_MOVIES_DB: Record<number, {
     id: 114,
     title: "The Batman: Part II",
     vote_average: 8.3,
-    release_date: "2028-02-17",
+    release_date: "2026-10-02",
     overview: "Sequel to the 2022 film The Batman. Bruce Wayne continues his crusade in the dark underworld of Gotham City.",
     genres: [{ id: 9648, name: "Mystery" }, { id: 18, name: "Drama" }, { id: 80, name: "Crime" }],
     runtime: 165,
@@ -2511,13 +2511,61 @@ const MOCK_MOVIES_DB: Record<number, {
     id: 115,
     title: "Avatar: Fire and Ash",
     vote_average: 7.6,
-    release_date: "2025-12-17",
-    overview: "In the wake of the devastating war against the RDA and the loss of their eldest son, Jake Sully and Neytiri face a new threat on Pandora: the Ash People, a violent and power-hungry Na'vi tribe led by the ruthless Varang. Jake's family must fight for their survival and the future of Pandora in a conflict that pushes them to their emotional and physical limits.",
+    release_date: "2026-12-18",
+    overview: "In the wake of the devastating war against the RDA and the loss of their eldest son, Jake Sully and Neytiri face a new threat on Pandora: the Ash People, a violent and power-hungry Na'vi tribe led by the ruthless Varang.",
     genres: [{ id: 878, name: "Sci-Fi" }, { id: 12, name: "Adventure" }, { id: 14, name: "Fantasy" }],
     runtime: 160,
     tagline: "The world of Pandora will change forever.",
     poster_path: "/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg",
     backdrop_path: "/u8DU5fkLoM5tTRukzPC31oGPxaQ.jpg"
+  },
+  116: {
+    id: 116,
+    title: "War 2",
+    vote_average: 8.4,
+    release_date: "2026-08-14",
+    overview: "Major Kabir Dhaliwal and Agent Vikram take on an international espionage syndicate in a globe-trotting action thriller that redefines Indian spy cinema.",
+    genres: [{ id: 28, name: "Action" }, { id: 53, name: "Thriller" }],
+    runtime: 155,
+    tagline: "Clash of the Titans.",
+    poster_path: "/zWgm7OZv8B4XUKEhU8BWB4pW3z0.jpg",
+    backdrop_path: "/ddfXMkaPViSrg0P5aoYGFMc58x2.jpg"
+  },
+  117: {
+    id: 117,
+    title: "K.G.F: Chapter 3",
+    vote_average: 8.8,
+    release_date: "2026-10-15",
+    overview: "The international saga of Rocky continues as his empire expands overseas into global trade networks and military intelligence sectors.",
+    genres: [{ id: 28, name: "Action" }, { id: 80, name: "Crime" }],
+    runtime: 168,
+    tagline: "Monster's global reign.",
+    poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+    backdrop_path: "/m3Pom6pbD51bBv3syz8NMHda3fz.jpg"
+  },
+  118: {
+    id: 118,
+    title: "Toxic: A Fairy Tale for Grown-ups",
+    vote_average: 8.2,
+    release_date: "2026-04-10",
+    overview: "A dark action thriller exploring the ruthless drug cartels and underworld empire set against a retro backdrop.",
+    genres: [{ id: 28, name: "Action" }, { id: 53, name: "Thriller" }],
+    runtime: 150,
+    tagline: "A fairy tale for grown-ups.",
+    poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    backdrop_path: "/xBT0oNq6rsTFv4SxG5uGRIEOrq6.jpg"
+  },
+  119: {
+    id: 119,
+    title: "Kalki 2898 AD Part 2",
+    vote_average: 8.6,
+    release_date: "2026-09-25",
+    overview: "The futuristic mythological saga reaches its next phase as Karna and Ashwatthama unite to protect the divine child from Supreme Yaskin's forces.",
+    genres: [{ id: 878, name: "Sci-Fi" }, { id: 28, name: "Action" }, { id: 14, name: "Fantasy" }],
+    runtime: 175,
+    tagline: "The battle for Kashi begins.",
+    poster_path: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+    backdrop_path: "/yD924S1XvS6cM9w6t2g68P940z2.jpg"
   }
 };
 
@@ -2914,15 +2962,11 @@ export async function getTopRatedMovies(
   return tmdbFetch('/movie/top_rated', { page, language: 'en-US' });
 }
 
-/** Get upcoming movies */
 export async function getUpcomingMovies(
   page: number = 1,
   region: string = 'IN'
 ): Promise<TMDBResponse<TMDBMovie>> {
   try {
-    // 1. Fetch upcoming Hollywood/general movies from TMDB API
-    // We use region 'US' or no region to guarantee Hollywood/global releases,
-    // and let tmdbFetch handle the API key check / mock fallback.
     const tmdbRes = await tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/upcoming', { 
       page, 
       language: 'en-US',
@@ -2930,17 +2974,11 @@ export async function getUpcomingMovies(
     });
 
     const hollywoodMovies = tmdbRes?.results || [];
-
-    // Let's check if we are in mock mode.
-    // If hollywoodMovies contains mock movies (IDs <= 115), we know it's mock fallback.
     const isMock = hollywoodMovies.length > 0 && hollywoodMovies.some((m) => m.id <= 115);
 
-    let finalHollywood: TMDBMovie[] = [];
-    let finalRegional: TMDBMovie[] = [];
-
-    // Curated regional BookMyShow upcoming movies (IDs 102 to 110)
-    const regionalIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
-    const mockRegionalMovies = regionalIds
+    // Curated high-profile upcoming Indian & Hollywood blockbusters
+    const curatedUpcomingIds = [118, 116, 110, 113, 117, 119, 111, 114, 115, 112];
+    const mockUpcomingMovies = curatedUpcomingIds
       .map(id => MOCK_MOVIES_DB[id])
       .filter(Boolean)
       .map(m => ({
@@ -2952,9 +2990,9 @@ export async function getUpcomingMovies(
         genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
         poster_path: m.poster_path || null,
         backdrop_path: m.backdrop_path || null,
-        popularity: 10.0,
+        popularity: 100.0,
         video: false,
-        vote_count: 0,
+        vote_count: 5000,
         original_language: 'en',
         adult: false
       })) as unknown as TMDBMovie[];
@@ -2963,55 +3001,20 @@ export async function getUpcomingMovies(
     let totalResults = 0;
 
     if (isMock) {
-      // In mock mode, we have all future movies (IDs 101, 102-110, 111-115) in MOCK_MOVIES_DB
-      const mockHollywoodIds = [101, 111, 112, 113, 114, 115];
-      const mockHollywoodMovies = mockHollywoodIds
-        .map(id => MOCK_MOVIES_DB[id])
-        .filter(Boolean)
-        .map(m => ({
-          id: m.id,
-          title: m.title,
-          vote_average: m.vote_average,
-          release_date: m.release_date,
-          overview: m.overview,
-          genre_ids: m.genres ? m.genres.map((g: any) => g.id) : [],
-          poster_path: m.poster_path || null,
-          backdrop_path: m.backdrop_path || null,
-          popularity: 10.0,
-          video: false,
-          vote_count: 0,
-          original_language: 'en',
-          adult: false
-        })) as unknown as TMDBMovie[];
-
-      combinedSorted = [...mockHollywoodMovies, ...mockRegionalMovies];
+      combinedSorted = [...mockUpcomingMovies];
       totalResults = combinedSorted.length;
     } else {
-      // In real API mode, fetch additional pages of upcoming movies if needed to cover up to the current page.
-      const tmdbPageCountNeeded = Math.max(1, Math.ceil((page * 12 - 9) / 20));
-      let allHollywoodMovies = [...hollywoodMovies];
+      const validApiMovies = hollywoodMovies.filter(m => {
+        if (!m.release_date) return false;
+        const year = new Date(m.release_date).getFullYear();
+        return year >= 2026;
+      });
+      
+      const existingTitles = new Set(mockUpcomingMovies.map(m => (m.title || "").toLowerCase()));
+      const filteredApiMovies = validApiMovies.filter(m => !existingTitles.has((m.title || "").toLowerCase()));
 
-      if (tmdbPageCountNeeded > 1) {
-        const fetchPromises = [];
-        for (let p = 2; p <= tmdbPageCountNeeded; p++) {
-          fetchPromises.push(
-            tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/upcoming', { 
-              page: p, 
-              language: 'en-US',
-              region: 'US'
-            })
-          );
-        }
-        const responses = await Promise.all(fetchPromises);
-        for (const res of responses) {
-          if (res?.results) {
-            allHollywoodMovies.push(...res.results);
-          }
-        }
-      }
-
-      combinedSorted = [...allHollywoodMovies, ...mockRegionalMovies];
-      totalResults = (tmdbRes?.total_results || hollywoodMovies.length) + mockRegionalMovies.length;
+      combinedSorted = [...mockUpcomingMovies, ...filteredApiMovies];
+      totalResults = combinedSorted.length;
     }
 
     // Sort chronologically by release_date (closest date first)
@@ -3034,8 +3037,7 @@ export async function getUpcomingMovies(
     };
   } catch (error) {
     console.error("Error in getUpcomingMovies combined fetch:", error);
-    // Fallback: return curated BookMyShow upcoming movies directly if everything fails
-    const upcomingIds = [102, 103, 104, 105, 106, 107, 108, 109, 110];
+    const upcomingIds = [110, 116, 111, 114, 115, 112, 113, 117, 118, 119];
     const results = upcomingIds
       .map(id => MOCK_MOVIES_DB[id])
       .filter(Boolean)
@@ -3053,13 +3055,13 @@ export async function getUpcomingMovies(
         vote_count: 0,
         original_language: 'en',
         adult: false
-      }));
+      })) as unknown as TMDBMovie[];
 
     return {
       page: 1,
-      results: results as unknown as TMDBMovie[],
+      results,
       total_pages: 1,
-      total_results: results.length
+      total_results: results.length,
     };
   }
 }
@@ -3069,13 +3071,18 @@ export async function getNowPlayingMovies(
   page: number = 1
 ): Promise<TMDBResponse<TMDBMovie>> {
   try {
+    const today = new Date().toISOString().split('T')[0];
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
     const [nowPlayingRes, bollywoodRes] = await Promise.all([
-      tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/now_playing', { page, language: 'en-US' }),
+      tmdbFetch<TMDBResponse<TMDBMovie>>('/movie/now_playing', { page, language: 'en-US', region: 'IN' }),
       tmdbFetch<TMDBResponse<TMDBMovie>>('/discover/movie', {
         page,
         language: 'en-US',
-        with_original_language: 'hi',
-        sort_by: 'primary_release_date.desc',
+        with_original_language: 'hi|te|ta|ml|kn',
+        sort_by: 'popularity.desc',
+        'primary_release_date.lte': today,
+        'primary_release_date.gte': ninetyDaysAgo,
       }),
     ]);
 

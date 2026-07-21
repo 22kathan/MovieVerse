@@ -4,8 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getTopRatedMovies } from "@/lib/tmdb";
 import MovieGrid from "@/components/movie/MovieGrid";
-import SectionHeader from "@/components/shared/SectionHeader";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Award, Crown } from "lucide-react";
 
 const PAGE_SIZE = 12;
 
@@ -74,11 +73,34 @@ function TopRatedContent() {
 
   return (
     <div className="px-6 py-8 space-y-8 mx-auto min-h-screen" style={{ maxWidth: "var(--container-max)" }}>
-      <div>
-        <SectionHeader
-          title="⭐ Top Rated Movies"
-          subtitle="The highest critically-acclaimed movies of all time"
-        />
+      {/* Premium Page Header */}
+      <div className="page-header">
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/20">
+            <Crown className="w-6 h-6 text-amber-400" />
+          </div>
+          <div className="space-y-1.5">
+            <h1
+              className="text-2xl md:text-3xl font-extrabold tracking-tight"
+              style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}
+            >
+              Top Rated Movies
+            </h1>
+            <p className="text-sm text-[var(--text-secondary)] max-w-lg">
+              The highest critically-acclaimed masterpieces of all time, voted by millions
+            </p>
+          </div>
+        </div>
+        {/* Stats badges */}
+        <div className="relative z-10 flex items-center gap-3 mt-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-secondary)]">
+            <Award className="w-3.5 h-3.5 text-amber-400" />
+            {allMovies.length} masterpieces
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-tertiary)]">
+            Page {page} of {totalPages}
+          </span>
+        </div>
       </div>
 
       {loading ? (
@@ -97,48 +119,43 @@ function TopRatedContent() {
         </div>
       )}
 
-      {/* Pagination Controls */}
+      {/* Premium Pagination Controls */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-8">
-          {page > 1 ? (
-            <button
-              onClick={() => goToPage(page - 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </button>
-          ) : (
-            <button
-              disabled
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)]/50 border border-[var(--border-primary)]/50 text-[var(--text-muted)] cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </button>
-          )}
+        <div className="flex items-center justify-center gap-3 pt-8">
+          <button
+            onClick={() => goToPage(page - 1)}
+            disabled={page <= 1}
+            className="pagination-btn"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous
+          </button>
 
-          <span className="text-xs font-medium text-[var(--text-secondary)]">
-            Page {page} of {totalPages}
-          </span>
+          {/* Page numbers */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+              <button
+                key={num}
+                onClick={() => goToPage(num)}
+                className={`w-9 h-9 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  num === page
+                    ? "pagination-btn-active"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
 
-          {page < totalPages ? (
-            <button
-              onClick={() => goToPage(page + 1)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              disabled
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface)]/50 border border-[var(--border-primary)]/50 text-[var(--text-muted)] cursor-not-allowed"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
+          <button
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= totalPages}
+            className="pagination-btn"
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>

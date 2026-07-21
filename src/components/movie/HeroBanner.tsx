@@ -218,7 +218,7 @@ export default function HeroBanner({ movies }: { movies: HeroMovie[] }) {
       <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-transparent to-[var(--bg-primary)]/30" />
 
       {/* Content */}
-      <div className="relative h-full flex items-center">
+      <div className="relative h-full flex items-center pt-20 pb-10">
         <div className="container mx-auto px-6 max-w-[var(--container-max)]">
           <div className={`max-w-2xl space-y-5 transition-all duration-500 transform ease-in-out ${isTransitioning ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"}`}>
             {/* Genre Tags */}
